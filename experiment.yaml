@@ -1,6 +1,6 @@
 # FANCY PARSING: You can parse any value from previous experiments
 # DEFAULTS:
-directory: logs/11.20_trune_gumbel_things
+directory: temp/refactored_11.30
 precision: 16 # 16 or anything else for default 32
 repeat: 1
 name: skip # with default name=skip, training will be skipped if no name is specified
@@ -26,8 +26,8 @@ steps_per_epoch: 2000
 # EXPERIMENTS:
 ---
 name: VGG19truneTRY6
-checkpointBP: important_checkpoints/simple_pruning_smart_init17.h5
-checkpointAP: important_checkpoints/start/78125/0.h5
+checkpointBP: data/simple_pruning_smart_init17.h5
+checkpointAP: data/start/78125/0.h5
 
 model: VGG
 model_config:
