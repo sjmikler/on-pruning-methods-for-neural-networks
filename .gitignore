@@ -2,4 +2,7 @@ temp
 /data
 */__pycache__
 .idea
-.dvc
+.dvc/*
+!.dvc/tmp
+.dvc/tmp/*
+!.dvc/tmp/gdrive-user-credentials.json

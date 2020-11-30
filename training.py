@@ -16,7 +16,7 @@ set_memory_growth()
 from tools import datasets, layers, models, pruning
 
 experiments = list(yaml.safe_load_all(
-    open("train/experiment.yaml", "r")))
+    open("experiment.yaml", "r")))
 
 # Create YamlExperimentQueue
 unpacked_experiments = []
