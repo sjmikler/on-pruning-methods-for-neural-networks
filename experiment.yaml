@@ -1,0 +1,98 @@
+# FANCY PARSING: You can parse any value from previous experiments
+# DEFAULTS:
+directory: logs/11.20_trune_gumbel_things
+precision: 16 # 16 or anything else for default 32
+repeat: 1
+name: skip # with default name=skip, training will be skipped if no name is specified
+
+pruning: none # none|random|l1|snip|grasp + shuffle weight|layer|mask
+pruning_config:
+    structure: false # true for classic structural pruning | int N for enforcing N gorups
+    sparsity: 0
+
+dataset: cifar10 # mnist|cifar10
+model: lenet
+model_config:
+    input_shape: [28, 28, 1]
+    layer_sizes: [400, 400, 400]
+    n_classes: 10
+    l2_reg: 1e-4
+
+lr_boundaries: [6000, 12000]
+lr_values: [0.1, 0.01, 0.001]
+num_iterations: 18000
+steps_per_epoch: 2000
+
+# EXPERIMENTS:
+---
+name: VGG19truneTRY6
+checkpointBP: important_checkpoints/simple_pruning_smart_init17.h5
+checkpointAP: important_checkpoints/start/78125/0.h5
+
+model: VGG
+model_config:
+  version: 19
+  input_shape: [ 32, 32, 3 ]
+  n_classes: 10
+  l2_reg: 1e-4
+
+lr_boundaries: [ 32000, 48000, 64000 ]
+lr_values: [ 0.1, 0.02, 0.004, 0.0008 ]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 1
+#---
+#name: start
+#
+#model: VGG
+#model_config:
+#    version: 19
+#    input_shape: [32, 32, 3]
+#    n_classes: 10
+#    l2_reg: 1e-4
+#
+#lr_boundaries: [32000, 48000, 64000]
+#lr_values: [0.1, 0.02, 0.004, 0.0008]
+#num_iterations: 400
+#steps_per_epoch: 2000
+#repeat: 1
+#---
+#name: VGG19_full
+#checkpointAP: checkpoint[0]
+#
+#model: VGG
+#model_config:
+#    version: 19
+#    input_shape: [32, 32, 3]
+#    n_classes: 10
+#    l2_reg: 1e-4
+#
+#pruning_config:
+#    sparsity: 0
+#
+#lr_boundaries: [32000, 48000, 64000]
+#lr_values: [0.1, 0.02, 0.004, 0.0008]
+#num_iterations: 80000
+#steps_per_epoch: 2000
+#repeat: 1
+#---
+#name: VGG19ltr30
+#checkpointBP: checkpoint[-1]
+#checkpointAP: checkpoint[0]
+#
+#model: VGG
+#model_config:
+#    version: 19
+#    input_shape: [32, 32, 3]
+#    n_classes: 10
+#    l2_reg: 1e-4
+#
+#pruning: magnitude
+#pruning_config:
+#    sparsity: exec 1 - (1-sparsity[-1]) * 0.7
+#
+#lr_boundaries: [32000, 48000, 64000]
+#lr_values: [0.1, 0.02, 0.004, 0.0008]
+#num_iterations: 80000
+#steps_per_epoch: 2000
+#repeat: 10
