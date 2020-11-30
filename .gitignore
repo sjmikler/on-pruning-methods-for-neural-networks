@@ -4,5 +4,6 @@ temp
 .idea
 .dvc/*
 !.dvc/tmp
+!.dvc/config
 .dvc/tmp/*
 !.dvc/tmp/gdrive-user-credentials.json
