@@ -1,7 +1,7 @@
 # FANCY PARSING: You can parse any value from previous experiments
 # DEFAULTS:
-directory: temp/refactored_11.30
-precision: 16 # 16 or anything else for default 32
+directory: temp/reproducingLTR
+precision: 32 # 16 or anything else for default 32
 repeat: 1
 name: skip # with default name=skip, training will be skipped if no name is specified
 
@@ -25,60 +25,52 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: VGG19iterative_truning_init400
+name: VGG19start400
 
 model: VGG
 model_config:
-  version: 19
-  input_shape: [ 32, 32, 3 ]
-  n_classes: 10
-  l2_reg: 1e-4
+    version: 19
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l2_reg: 1e-4
 
-lr_boundaries: [ 32000, 48000, 64000 ]
-lr_values: [ 0.1, 0.02, 0.004, 0.0008 ]
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
 num_iterations: 400
 steps_per_epoch: 2000
-repeat: 1
 ---
-name: VGG19iterative_truning_init8000
-
+name: VGG19full
 checkpointAP: checkpoint[0]
 
 model: VGG
 model_config:
-  version: 19
-  input_shape: [ 32, 32, 3 ]
-  n_classes: 10
-  l2_reg: 1e-4
+    version: 19
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l2_reg: 1e-4
 
-lr_boundaries: [ 32000, 48000, 64000 ]
-lr_values: [ 0.1, 0.02, 0.004, 0.0008 ]
-num_iterations: 8000
-steps_per_epoch: 2000
-repeat: 1
----
-name: VGG19iterative_truning_init
-
-checkpointBP: checkpoint[-1]
-checkpointAP: checkpoint[0]
-
-model: VGG
-model_config:
-  version: 19
-  input_shape: [ 32, 32, 3 ]
-  n_classes: 10
-  l2_reg: 1e-4
-
-pruning: trune
-pruning_config:
-    learning_rate: 10
-    momentum: 0.999
-    weight_decay: 1e-7
-    num_iterations: 16000
-    steps_per_epoch: 2000
-
-lr_boundaries: [ 32000, 48000, 64000 ]
-lr_values: [ 0.1, 0.02, 0.004, 0.0008 ]
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
 num_iterations: 80000
 steps_per_epoch: 2000
-repeat: 20
+---
+name: VGG19ltr30
+checkpointAP: checkpoint[0]
+checkpointBP: checkpoint[-1]
+
+pruning: magnitude
+pruning_config:
+    sparsity: exec 1 - ((1-sparsity[-1]) * 0.7)
+
+model: VGG
+model_config:
+    version: 19
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l2_reg: 1e-4
+
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9

@@ -25,9 +25,9 @@ sns.set()
 dataset = datasets.cifar10()
 model = models.VGG((32, 32, 3), n_classes=10, version=19)
 # model.load_weights("temp/11.20_trune_gumbel_things/VGG19truneTRY4/63446/0.h5")
-# model.load_weights('temp/LTR444_shuffling_variants/start/21723/0.h5')  # 8000 it
+model.load_weights('temp/LTR444_shuffling_variants/start/21723/0.h5')  # 8000 it
 # model.load_weights('temp/11.20_trune_gumbel_things/VGG19truneTRY4/86664/0.h5')  # FULL
-model.load_weights('temp/11.20_trune_gumbel_things/VGG19truneTRY4/64921/0.h5')  # FULL it2
+# model.load_weights('temp/11.20_trune_gumbel_things/VGG19truneTRY4/64921/0.h5')  # FULL it2
 
 ds = datasets.cifar10()
 ds['train'] = ds['train'].map(
@@ -172,47 +172,5 @@ for ep in range(16):
     plt.show()
 
     # decay.assign_add((1e-6 - decay) / 2)
-
-# %%
-
-for i, bdistrib in enumerate(bernoulli_distribs):
-    distrib = tf.sigmoid(bdistrib).numpy()
-    plt.hist(distrib.flatten(), bins=20, density=True, width=(4 - i) / 30)
-    plt.xlim(-0.01, 1.1)
-plt.show()
-
-# %%
-# COMPARISON OF REPLICA WITH YET ANOTHER NET
-# COMPARISON OF TWO LTR TRAINED NETWORKS
-
-from tools.pruning import apply_pruning_masks, set_pruning_masks
-
-LTR_model = models.LeNet(
-    input_shape=(28, 28, 1), n_classes=10, layer_sizes=[400, 400, 400]
-)
-LTR_model.load_weights("logs/LTR444_shuffling_variants/LTR_recreation/48618/12.h5")
-LTR_masks = [
-    l.kernel_mask.numpy() for l in LTR_model.layers if hasattr(l, "kernel_mask")
-]
-
-LTR2_model = models.LeNet(
-    input_shape=(28, 28, 1), n_classes=10, layer_sizes=[400, 400, 400]
-)
-LTR2_model.load_weights("logs/LTR444_shuffling_variants/LTR_recreation/65577/8.h5")
-LTR2_masks = [
-    l.kernel_mask.numpy() for l in LTR2_model.layers if hasattr(l, "kernel_mask")
-]
-
-LTR3_model = models.LeNet(
-    input_shape=(28, 28, 1), n_classes=10, layer_sizes=[400, 400, 400]
-)
-LTR3_model.load_weights("logs/LTR444_shuffling_variants/LTR_recreation/48618/8.h5")
-LTR3_masks = [
-    l.kernel_mask.numpy() for l in LTR3_model.layers if hasattr(l, "kernel_mask")
-]
-
-compare_mask_sets(LTR_masks, LTR2_masks)
-compare_mask_sets(LTR3_masks, LTR2_masks)
-compare_mask_sets(kernel_masks, LTR2_masks)
 
 # %%
