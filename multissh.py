@@ -30,7 +30,7 @@ def print_host_outputs(process, host_name):
 processes = []
 
 while True:
-    command = 'ssh {h} ' + input()
+    command = '{h} ' + input()
     if '{h}' in command:
         for host in hosts:
             print(">>>", command.format(h=host))

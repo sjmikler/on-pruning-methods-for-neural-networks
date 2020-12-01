@@ -9,11 +9,11 @@ sns.set()
 
 name2path = {
     'LTR with step size 30%': (
-    'logs/VGG19_looking_for_tickets/VGG19IMP03/log.yaml', 95871),
+    'temp/VGG19_looking_for_tickets/VGG19IMP03/log.yaml', 95871),
     'LTR with step size 50%': (
-    'logs/VGG19_looking_for_tickets/VGG19IMP05/log.yaml', 32631, 33072),
+    'temp/VGG19_looking_for_tickets/VGG19IMP05/log.yaml', 32631, 33072),
     'LTR with step size 90%': (
-    'logs/VGG19_looking_for_tickets/VGG19IMP05/log.yaml', 12061, 24517),
+    'temp/VGG19_looking_for_tickets/VGG19IMP05/log.yaml', 12061, 24517),
 }
 name2result = defaultdict(list)
 sparsities = []

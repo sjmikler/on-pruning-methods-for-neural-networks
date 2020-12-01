@@ -17,19 +17,15 @@ def truning(model,
             dataset):
     print("TRUNE TRAINING...")
     assert isinstance(model, tf.keras.Model)
-    optimizer = tf.optimizers.SGD(learning_rate=learning_rate, momentum=momentum)
+    optimizer = tf.optimizers.SGD(learning_rate=learning_rate, momentum=momentum,
+                                  nesterov=True)
     loss_fn = tf.losses.SparseCategoricalCrossentropy(from_logits=True)
 
-    kernel_masks = [w for w in model.weights if 'kernel_mask' in w.name]
-    bernoulli_distribs = [tf.Variable(tf.zeros_like(mask),
-                                      dtype=mask.dtype,
-                                      trainable=True)
-                          for mask in kernel_masks]
+    kernel_masks = [w for w in model.weights if "kernel_mask" in w.name]
+    bernoulli_distribs = [tf.Variable(mask * 25 - 15) for mask in kernel_masks]
+
     for mask in kernel_masks:
         mask._trainable = True
-
-    def take_from_dataset(ds, num_samples):
-        return ds.take(num_samples), ds.skip(num_samples)
 
     def get_density(model):
         nonzero = 0
@@ -63,11 +59,17 @@ def truning(model,
             kmask.assign(tf.cast(binary_mask < clipped_mask, kmask.dtype))
 
         with tf.GradientTape() as tape:
+            tape.watch(kernel_masks)
             outs = model(x)
+            outs = tf.cast(outs, tf.float32)
+
             loss = loss_fn(y, outs)
             loss += tf.add_n([l() for l in regularization_losses]) * decay
+            scaled_loss = loss * 256
 
-        grads = tape.gradient(loss, kernel_masks)
+        scaled_grads = tape.gradient(scaled_loss, kernel_masks)
+        grads = [grad / 256 for grad in scaled_grads]
+
         optimizer.apply_gradients(zip(grads, bernoulli_distribs))
         acc_metric(y, outs)
         loss_metric(y, outs)
@@ -93,21 +95,12 @@ def truning(model,
         acc_metric.reset_states()
         loss_metric.reset_states()
         return acc, loss
-
-    def set_expected_masks():
-        for kmask, distrib in zip(kernel_masks, bernoulli_distribs):
-            clipped_mask = tf.sigmoid(distrib)
-            kmask.assign(tf.cast(0.5 < clipped_mask, kmask.dtype))
-
     decay = tf.Variable(weight_decay, trainable=False)
 
     steps_per_epoch = min(num_iterations, steps_per_epoch)
     for ep in range(int(num_iterations / steps_per_epoch)):
         train_epoch(steps_per_epoch, decay)
         tacc, tloss = reset_metrics()
-
-        # set_expected_masks()
-        # apply_pruning_for_model(model)
 
         valid_epoch()
         vacc, vloss = reset_metrics()

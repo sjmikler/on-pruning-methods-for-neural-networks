@@ -24,10 +24,10 @@ sns.set()
 
 dataset = datasets.cifar10()
 model = models.VGG((32, 32, 3), n_classes=10, version=19)
-# model.load_weights("logs/11.20_trune_gumbel_things/VGG19truneTRY4/63446/0.h5")
-model.load_weights('logs/LTR444_shuffling_variants/start/21723/0.h5')  # 8000 it
-# model.load_weights('logs/11.20_trune_gumbel_things/VGG19truneTRY4/86664/0.h5')  # FULL
-# model.load_weights('logs/11.20_trune_gumbel_things/VGG19truneTRY4/64921/0.h5')  # FULL it2
+# model.load_weights("temp/11.20_trune_gumbel_things/VGG19truneTRY4/63446/0.h5")
+# model.load_weights('temp/LTR444_shuffling_variants/start/21723/0.h5')  # 8000 it
+# model.load_weights('temp/11.20_trune_gumbel_things/VGG19truneTRY4/86664/0.h5')  # FULL
+model.load_weights('temp/11.20_trune_gumbel_things/VGG19truneTRY4/64921/0.h5')  # FULL it2
 
 ds = datasets.cifar10()
 ds['train'] = ds['train'].map(
@@ -134,7 +134,6 @@ def reset_metrics():
 
 
 decay = tf.Variable(1e-7, trainable=False)
-decay.assign(5e-7)
 
 valid_epoch()
 vacc, vloss = reset_metrics()
@@ -168,7 +167,7 @@ for ep in range(16):
         sep=" | ",
     )
 
-    model.save_weights("initializations/simple_pruning_smart_init17.h5")
+    model.save_weights("temp/simple_pruning_smart_init17.h5")
     plt.hist(bernoulli_distribs[2].numpy().flatten(), bins=40)
     plt.show()
 
