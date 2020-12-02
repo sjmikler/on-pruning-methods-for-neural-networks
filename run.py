@@ -1,9 +1,11 @@
 # %%
 
+import sys
 import datetime
 import time
 import tensorflow as tf
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
+import pprint
 
 from tools.utils import ddict, set_memory_growth
 from scripts import parser
@@ -19,6 +21,11 @@ default_config = ddict(default_config)
 if default_config.precision == 16:
     policy = mixed_precision.Policy("mixed_float16")
     mixed_precision.set_policy(policy)
+
+if '--dry' in sys.argv:
+    dry = True
+else:
+    dry = False
 
 
 # %%
@@ -57,7 +64,10 @@ ds = datasets.get_dataset(default_config.dataset, default_config.precision)
 # %%
 
 for exp in experiment_queue:
-    print('EXPERIMENT:', str(exp))
+    print("EXPERIMENT:")
+    pprint.pprint(exp)
+    if dry:
+        continue
 
     # PROCEDURES IN ORDER:
     # 1. Creating model

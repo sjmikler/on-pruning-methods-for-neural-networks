@@ -3,6 +3,7 @@ import yaml
 import sys
 import os
 import re
+from copy import deepcopy
 
 
 def cool_parse_exp(exp, past_experiments):
@@ -55,13 +56,14 @@ def load_from_yaml(yaml_path):
         exp.update(expcp)
         rnd_idx = random.randint(100000, 999999)
         for rep in range(exp['repeat']):
-            exp['idx'] = f"{rnd_idx}/{rep}"
-            path = f"{exp['directory']}/{exp['name']}/{exp['idx']}"
-            exp['full_path'] = f"{path}"
-            exp['checkpoint'] = f"{path}.h5"
+            parsed_exp = deepcopy(exp)
+            parsed_exp['idx'] = f"{rnd_idx}/{rep}"
+            path = f"{exp['directory']}/{exp['name']}/{parsed_exp['idx']}"
+            parsed_exp['full_path'] = f"{path}"
+            parsed_exp['checkpoint'] = f"{path}.h5"
 
-            exp = cool_parse_exp(exp, unpacked_experiments)
-            unpacked_experiments.append(exp.copy())
+            parsed_exp = cool_parse_exp(parsed_exp, unpacked_experiments)
+            unpacked_experiments.append(parsed_exp)
     return experiments[0], unpacked_experiments
 
 
