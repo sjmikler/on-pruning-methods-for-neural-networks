@@ -9,28 +9,15 @@ import yaml
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 import os
-from tools.utils import ddict, set_memory_growth, YamlExperimentQueue
+from tools.utils import ddict, set_memory_growth
+from scripts import parser
 
 set_memory_growth()
 
 from tools import datasets, layers, models, pruning
 
-experiments = list(yaml.safe_load_all(
-    open("experiment.yaml", "r")))
-
-# Create YamlExperimentQueue
-unpacked_experiments = []
-for exp in experiments[1:]:
-    expcp = exp.copy()
-    exp.update(experiments[0])
-    exp.update(expcp)
-    rnd_idx = np.random.randint(10000, 100000)
-    for rep in range(exp['repeat']):
-        exp['idx'] = f"{rnd_idx}/{rep}"
-        unpacked_experiments.append(exp.copy())
-
-experiment_queue = YamlExperimentQueue(unpacked_experiments, path='queue.yaml')
-default_config = ddict(experiments[0])
+default_config, experiment_queue = parser.load_from_yaml(yaml_path='experiment.yaml')
+default_config = ddict(default_config)
 
 if default_config.precision == 16:
     policy = mixed_precision.Policy("mixed_float16")

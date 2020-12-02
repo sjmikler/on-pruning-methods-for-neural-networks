@@ -1,7 +1,7 @@
 # FANCY PARSING: You can parse any value from previous experiments
 # DEFAULTS:
 directory: temp/reproducingLTR
-precision: 32 # 16 or anything else for default 32
+precision: 16 # 16 or anything else for default 32
 repeat: 1
 name: skip # with default name=skip, training will be skipped if no name is specified
 
