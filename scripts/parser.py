@@ -2,17 +2,48 @@ import random
 import yaml
 import sys
 import os
+import re
+
+
+def cool_parse_exp(exp, past_experiments):
+    for k, v in exp.items():
+        if isinstance(v, dict):
+            # recurrent parsing of inner dicts
+            past_subdicts = [exp[k] if k in exp else {} for exp in past_experiments]
+            exp[k] = cool_parse_exp(v, past_subdicts)
+            continue
+
+        cool_args = re.findall(r"([a-zA-Z0-9_]+)\[([-0-9]+)\]", str(v))
+        for cool_name, cool_idx in cool_args:
+            past_value = past_experiments[int(cool_idx)][cool_name]
+            v = v.replace(f'{cool_name}[{cool_idx}]', str(past_value))
+            print(
+                f"REPLACED IN {k}: {cool_name}[{cool_idx}] WITH {past_value}")
+        if isinstance(v, str) and v.startswith('exec'):
+            expr1 = v
+            v = v.replace('exec ', 'v = ')
+            exec_storage = {}
+            exec(v, exec_storage)
+            v = exec_storage['v']
+            print(f"RECOGNIZED IN {k}: {expr1} AND REPLACED WITH {v}")
+        if isinstance(v, str):
+            try:
+                v = float(v)
+            except (ValueError, TypeError):
+                pass
+        exp[k] = v
+    return exp
 
 
 def load_from_yaml(yaml_path):
     cmd_arguments = {}
     for arg in sys.argv:
-        if '--' in arg and ':' in arg:
-            key, value = arg.split(':')
+        if ':' in arg:
+            key, value = arg.split(':', 1)
 
             d = {}
             exec(f"temp = {value}", None, d)
-            cmd_arguments[key[2:]] = d['temp']
+            cmd_arguments[key] = d['temp']
 
     experiments = list(yaml.safe_load_all(open(yaml_path, "r")))
     experiments[0].update(cmd_arguments)
@@ -25,6 +56,11 @@ def load_from_yaml(yaml_path):
         rnd_idx = random.randint(100000, 999999)
         for rep in range(exp['repeat']):
             exp['idx'] = f"{rnd_idx}/{rep}"
+            path = f"{exp['directory']}/{exp['name']}/{exp['idx']}"
+            exp['full_path'] = f"{path}"
+            exp['checkpoint'] = f"{path}.h5"
+
+            exp = cool_parse_exp(exp, unpacked_experiments)
             unpacked_experiments.append(exp.copy())
     return experiments[0], unpacked_experiments
 
@@ -74,3 +110,5 @@ class YamlExperimentQueue:
 
     def close(self):
         os.remove(self.path)
+
+# %%

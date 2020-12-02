@@ -1,14 +1,10 @@
 # %%
 
 import datetime
-import re
 import time
-import numpy as np
 import tensorflow as tf
-import yaml
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
-import os
 from tools.utils import ddict, set_memory_growth
 from scripts import parser
 
@@ -17,6 +13,7 @@ set_memory_growth()
 from tools import datasets, layers, models, pruning
 
 default_config, experiment_queue = parser.load_from_yaml(yaml_path='experiment.yaml')
+experiment_queue = [ddict(exp) for exp in experiment_queue]
 default_config = ddict(default_config)
 
 if default_config.precision == 16:
@@ -59,46 +56,7 @@ ds = datasets.get_dataset(default_config.dataset, default_config.precision)
 
 # %%
 
-past_experiments = []
-
-
-def cool_parse_exp(exp, past_experiments):
-    for k, v in exp.items():
-        if isinstance(v, dict):
-            # recurrent parsing of inner dicts
-            past_subdicts = [exp[k] if k in exp else {} for exp in past_experiments]
-            exp[k] = cool_parse_exp(v, past_subdicts)
-            continue
-
-        cool_args = re.findall(r"([a-zA-Z0-9_]+)\[([-0-9]+)\]", str(v))
-        for cool_name, cool_idx in cool_args:
-            past_value = past_experiments[int(cool_idx)][cool_name]
-            v = v.replace(f'{cool_name}[{cool_idx}]', str(past_value))
-            print(
-                f"REPLACED IN {k}: {cool_name}[{cool_idx}] WITH {past_value}")
-        if isinstance(v, str) and v.startswith('exec'):
-            expr1 = v
-            v = v.replace('exec ', 'v = ')
-            exec_storage = {}
-            exec(v, exec_storage)
-            v = exec_storage['v']
-            print(f"RECOGNIZED IN {k}: {expr1} AND REPLACED WITH {v}")
-        if isinstance(v, str):
-            try:
-                v = float(v)
-            except (ValueError, TypeError):
-                pass
-        exp[k] = v
-    return exp
-
-
-# %%
-
 for exp in experiment_queue:
-    exp = ddict(cool_parse_exp(exp, past_experiments))
-    path = f"{exp.directory}/{exp.name}/{exp.idx}"
-    exp.full_path = f"{path}"
-    exp.checkpoint = f"{path}.h5"
     print('EXPERIMENT:', str(exp))
 
     # PROCEDURES IN ORDER:
@@ -168,7 +126,6 @@ for exp in experiment_queue:
         except KeyboardInterrupt:
             print("SKIPPING EXPERIMENT, WAITING 2 SECONDS TO RESUME...")
             time.sleep(2)
-    past_experiments.append(exp)
-experiment_queue.close()
+# experiment_queue.close()
 
 # %%

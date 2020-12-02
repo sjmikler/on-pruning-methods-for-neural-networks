@@ -1,16 +1,15 @@
-# FANCY PARSING: You can parse any value from previous experiments
 # DEFAULTS:
-directory: temp/reproducingLTR
-precision: 16 # 16 or anything else for default 32
 repeat: 1
 name: skip # with default name=skip, training will be skipped if no name is specified
+precision: 16 # 16 or anything else for default 32
+directory: temp/reproducingLTR
 
 pruning: none # none|random|l1|snip|grasp + shuffle weight|layer|mask
 pruning_config:
     structure: false # true for classic structural pruning | int N for enforcing N gorups
     sparsity: 0
 
-dataset: cifar10 # mnist|cifar10
+dataset: cifar10 # mnist|cifar10 available
 model: lenet
 model_config:
     input_shape: [28, 28, 1]
