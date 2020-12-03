@@ -1,0 +1,110 @@
+IDX: 679079/0
+REPEAT: 1
+checkpoint: temp/reproducingLTR/VGG19_magnitude95/679079/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointBP: temp/reproducingLTR/VGG19full/424796/0.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_magnitude95/679079/0
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+model: VGG
+model_config: {'input_shape': [32, 32, 3], 'l2_reg': 0.0001, 'n_classes': 10, 'version': 19}
+name: VGG19_magnitude95
+num_iterations: 400
+precision: 32
+pruning: magnitude
+pruning_config: {'sparsity': 0.95}
+queue: abc.yaml
+steps_per_epoch: 2000
+TIME: 2020.12.3 16:57
+ACC: 0.5536999702453613
+---
+IDX: 985600/0
+REPEAT: 1
+checkpoint: temp/reproducingLTR/VGG19_magnitude95/985600/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointBP: temp/reproducingLTR/VGG19full/424796/0.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_magnitude95/985600/0
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+model: VGG
+model_config: {'input_shape': [32, 32, 3], 'l2_reg': 0.0001, 'n_classes': 10, 'version': 19}
+name: VGG19_magnitude95
+num_iterations: 400
+precision: 32
+pruning: magnitude
+pruning_config: {'sparsity': 0.95}
+queue: abc.yaml
+steps_per_epoch: 2000
+TIME: 2020.12.3 16:57
+ACC: 0.5134000182151794
+---
+IDX: 639072/0
+REPEAT: 1
+checkpoint: temp/reproducingLTR/VGG19_magnitude95/639072/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointBP: temp/reproducingLTR/VGG19full/424796/0.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_magnitude95/639072/0
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+model: VGG
+model_config: {'input_shape': [32, 32, 3], 'l2_reg': 0.0001, 'n_classes': 10, 'version': 19}
+name: VGG19_magnitude95
+num_iterations: 80000
+precision: 32
+pruning: magnitude
+pruning_config: {'sparsity': 0.95}
+queue: abc.yaml
+steps_per_epoch: 2000
+TIME: 2020.12.3 18:27
+ACC: 0.9375
+---
+IDX: 115094/0
+REPEAT: 1
+checkpoint: temp/reproducingLTR/VGG19_magnitude95/115094/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointBP: temp/reproducingLTR/VGG19full/424796/0.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_magnitude95/115094/0
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+model: VGG
+model_config: {'input_shape': [32, 32, 3], 'l2_reg': 0.0001, 'n_classes': 10, 'version': 19}
+name: VGG19_magnitude95
+num_iterations: 80000
+precision: 32
+pruning: magnitude
+pruning_config: {'sparsity': 0.95}
+queue: abc.yaml
+steps_per_epoch: 2000
+TIME: 2020.12.3 18:28
+ACC: 0.9383999705314636
+---
+IDX: 595484/0
+REPEAT: 1
+checkpoint: temp/reproducingLTR/VGG19_magnitude95/595484/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointBP: temp/reproducingLTR/VGG19full/424796/0.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_magnitude95/595484/0
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+model: VGG
+model_config: {'input_shape': [32, 32, 3], 'l2_reg': 0.0001, 'n_classes': 10, 'version': 19}
+name: VGG19_magnitude95
+num_iterations: 80000
+precision: 32
+pruning: magnitude
+pruning_config: {'sparsity': 0.95}
+queue: abc.yaml
+steps_per_epoch: 2000
+TIME: 2020.12.3 18:29
+ACC: 0.9398999810218811
+---
