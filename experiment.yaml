@@ -45,7 +45,7 @@ pruning_config:
 
 lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
-num_iterations: 400
+num_iterations: 80000
 steps_per_epoch: 2000
 ---
 name: VGG19_magnitude99
@@ -66,5 +66,5 @@ pruning_config:
 
 lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
-num_iterations: 400
+num_iterations: 80000
 steps_per_epoch: 2000
