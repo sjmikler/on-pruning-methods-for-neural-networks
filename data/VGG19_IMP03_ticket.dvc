@@ -1,0 +1,5 @@
+outs:
+- md5: 6f97c48d830e8aa67b58fa8d661a5ce4.dir
+  size: 2566802742
+  nfiles: 33
+  path: VGG19_IMP03_ticket

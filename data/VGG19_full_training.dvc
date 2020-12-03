@@ -1,0 +1,5 @@
+outs:
+- md5: 29bcba4587e80446a023d1b2f078e722.dir
+  size: 481275634
+  nfiles: 7
+  path: VGG19_full_training
