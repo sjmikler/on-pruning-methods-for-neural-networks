@@ -59,4 +59,4 @@ list: [2, 3, 4]
 number: exec list[0]
 ```
 
-`number` will be `[1, 2, 3]`, not `1`.
+`number` will be `[1, 2, 3]`, not `2`.

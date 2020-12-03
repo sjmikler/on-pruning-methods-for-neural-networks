@@ -250,10 +250,13 @@ def prune_TRUNE(model, dataset, config):
     steps_per_epoch = config.steps_per_epoch or 2000
 
     from tools.trune import truning
-    model = truning(model, learning_rate, momentum, weight_decay, num_iterations, steps_per_epoch,
+    model = truning(model, learning_rate, momentum, weight_decay, num_iterations,
+                    steps_per_epoch,
                     dataset=dataset)
-    prune_using_name2mask(model, masks_dict={layer.kernel.name: layer.kernel_mask.numpy()
-                                             for layer in model.layers if hasattr(layer, 'kernel_mask')})
+    prune_using_name2mask(model,
+                          masks_dict={layer.kernel.name: layer.kernel_mask.numpy()
+                                      for layer in model.layers if
+                                      hasattr(layer, 'kernel_mask')})
     return model
 
 
@@ -345,7 +348,7 @@ def apply_pruning_for_model(model):
             layer.apply_pruning_mask()
 
 
-def report_density(model):
+def report_density(model, detailed=False):
     nonzero = 0
     max_nonzero = 0
     for layer in model.layers:
@@ -353,6 +356,10 @@ def report_density(model):
             km = layer.kernel_mask.numpy()
             max_nonzero += km.size
             nonzero += km.sum()
+
+            if detailed:
+                print(f"density of {layer.name}: {km.sum() / km.size}")
+
     return nonzero / max_nonzero
 
 

@@ -27,7 +27,7 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: VGG19_magnitude90
+name: VGG19_trune_test
 
 model: VGG
 model_config:
@@ -36,45 +36,7 @@ model_config:
     n_classes: 10
     l2_reg: 1e-4
 
-pruning: magnitude
-pruning_config:
-    sparsity: 0.9
-
-lr_boundaries: [32000, 48000, 64000]
-lr_values: [0.1, 0.02, 0.004, 0.0008]
-num_iterations: 80000
-steps_per_epoch: 2000
----
-name: VGG19_magnitude95
-
-model: VGG
-model_config:
-    version: 19
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l2_reg: 1e-4
-
-pruning: magnitude
-pruning_config:
-    sparsity: 0.95
-
-lr_boundaries: [32000, 48000, 64000]
-lr_values: [0.1, 0.02, 0.004, 0.0008]
-num_iterations: 80000
-steps_per_epoch: 2000
----
-name: VGG19_magnitude99
-
-model: VGG
-model_config:
-    version: 19
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l2_reg: 1e-4
-
-pruning: magnitude
-pruning_config:
-    sparsity: 0.99
+checkpointBP: data/simple_pruning_smart_init17.h5
 
 lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]

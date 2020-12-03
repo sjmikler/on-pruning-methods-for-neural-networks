@@ -1,5 +1,6 @@
 # %%
 
+from IPython import embed
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -33,7 +34,7 @@ ds = datasets.cifar10()
 ds['train'] = ds['train'].map(
     lambda x, y: (tfa.image.random_cutout(x, mask_size=6, constant_values=0), y))
 
-optimizer = tf.optimizers.SGD(learning_rate=10, momentum=0.999, nesterov=True)
+optimizer = tf.optimizers.SGD(learning_rate=100, momentum=0.9, nesterov=True)
 loss_fn = tf.losses.SparseCategoricalCrossentropy(from_logits=True)
 
 kernels = [layer.kernel for layer in model.layers if hasattr(layer, "kernel")]
@@ -85,13 +86,25 @@ def train_step(x, y, decay):
         loss = loss_fn(y, outs)
         loss += tf.add_n([l() for l in regularization_losses]) * decay
         scaled_loss = loss * 256
-
     scaled_grads = tape.gradient(scaled_loss, kernel_masks)
     grads = [grad / 256 for grad in scaled_grads]
-
-    optimizer.apply_gradients(zip(grads, bernoulli_distribs))
-    acc_metric(y, outs)
     loss_metric(y, outs)
+    acc_metric(y, outs)
+
+    updates = [grad for grad in grads]
+    for i, update in enumerate(updates):
+        mask = tf.greater(update, 0)
+        indices = tf.where(mask)
+        tf.debugging.assert_integer(indices)
+        updates[i] = tf.tensor_scatter_nd_update(
+            update, indices, tf.ones([tf.shape(indices)[0]], dtype=update.dtype) * 0.1)
+
+        mask = tf.less(update, 0)
+        indices = tf.where(mask)
+        updates[i] = tf.tensor_scatter_nd_update(
+            update, indices, tf.ones([tf.shape(indices)[0]], dtype=update.dtype) * -0.1)
+
+    optimizer.apply_gradients(zip(updates, bernoulli_distribs))
 
     for mask in bernoulli_distribs:
         mask.assign(tf.clip_by_value(mask, -15, 15))
@@ -103,13 +116,13 @@ def set_expected_masks():
         kmask.assign(tf.cast(0.5 < clipped_mask, kmask.dtype))
 
 
-@tf.function
+# @tf.function
 def train_epoch(ds, decay):
-    # progbar = tf.keras.utils.Progbar(2000)
+    progbar = tf.keras.utils.Progbar(None)
 
     for x, y in ds:
         train_step(x, y, decay)
-        # progbar.add(1)
+        progbar.add(1)
 
 
 @tf.function
@@ -133,7 +146,7 @@ def reset_metrics():
     return acc, loss
 
 
-decay = tf.Variable(1e-7, trainable=False)
+decay = tf.Variable(1e-6, trainable=False)
 
 valid_epoch()
 vacc, vloss = reset_metrics()
@@ -146,8 +159,8 @@ plt.show()
 
 # %%
 
-step_size = 2000
-for ep in range(16):
+step_size = 400
+for ep in range(8):
     t0 = time.time()
     train_epoch(ds['train'].take(step_size), decay)
     tacc, tloss = reset_metrics()
@@ -156,7 +169,7 @@ for ep in range(16):
 
     valid_epoch()
     vacc, vloss = reset_metrics()
-    density = report_density(model)
+    density = report_density(model, detailed=True)
 
     print(
         f"EP {ep + 1}",
