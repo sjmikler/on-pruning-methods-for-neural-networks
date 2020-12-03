@@ -4,7 +4,7 @@ import threading
 import time
 import signal
 
-hosts = open('hosts.txt', 'r').read().split('\n')
+hosts = open('ssh-hosts.txt', 'r').read().split('\n')
 
 
 def print_host_outputs(process, host_name):

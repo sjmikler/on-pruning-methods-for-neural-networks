@@ -28,6 +28,7 @@ You can use `exec` in the beginning of a parameter value to execute the statemen
 3. When `parameter[idx]` is used in nested dict:
 
 ```
+...
 pruning_config:
    sparsity: 0.5
 ---
@@ -39,6 +40,7 @@ pruning_config:
 4. Parsing order:
 
 ```
+...
 name: test
 ---
 model: VGG
@@ -50,6 +52,7 @@ You can do this, because `name[-1]` will be reduced to `test` before executing `
 following:
 
 ```
+...
 list: [1, 2, 3]
 ---
 list: [2, 3, 4]
