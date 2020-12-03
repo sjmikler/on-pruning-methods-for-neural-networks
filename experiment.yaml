@@ -37,6 +37,7 @@ model_config:
     l2_reg: 1e-4
 
 checkpointBP: data/simple_pruning_smart_init17.h5
+checkpointAP: random
 
 lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
