@@ -39,4 +39,3 @@ def disable_gpu():
 
 def contains_any(t, *opts):
     return any([x in t for x in opts])
-

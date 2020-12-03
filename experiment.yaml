@@ -5,7 +5,7 @@ precision: 16 # 16 or anything else for default 32
 directory: temp/reproducingLTR
 full_path: exec f"{directory}/{name}/{IDX}"
 checkpoint: exec f"{directory}/{name}/{IDX}.h5"
-queue: abc.yaml # specify path for queue file, if null keeps queue in memory
+queue: null # specify path for queue file, if null keeps queue in memory
 
 pruning: none # none|random|l1|snip|grasp + shuffle weight|layer|mask
 pruning_config:
@@ -27,7 +27,7 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: VGG19_magnitude95
+name: VGG19_magnitude90
 
 model: VGG
 model_config:
@@ -36,8 +36,23 @@ model_config:
     n_classes: 10
     l2_reg: 1e-4
 
-checkpointBP: temp/reproducingLTR/VGG19full/424796/0.h5
-checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+pruning: magnitude
+pruning_config:
+    sparsity: 0.9
+
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+---
+name: VGG19_magnitude95
+
+model: VGG
+model_config:
+    version: 19
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l2_reg: 1e-4
 
 pruning: magnitude
 pruning_config:
@@ -56,9 +71,6 @@ model_config:
     input_shape: [32, 32, 3]
     n_classes: 10
     l2_reg: 1e-4
-
-checkpointBP: temp/reproducingLTR/VGG19full/424796/0.h5
-checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
 
 pruning: magnitude
 pruning_config:

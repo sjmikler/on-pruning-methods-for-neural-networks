@@ -8,11 +8,10 @@ from tensorflow.keras.mixed_precision import experimental as mixed_precision
 import pprint
 
 from tools.utils import ddict, set_memory_growth
-from scripts import parser
 
 set_memory_growth()
 
-from tools import datasets, layers, models, pruning
+from tools import datasets, models, parser, pruning
 
 default_config, experiment_queue = parser.load_from_yaml(yaml_path='experiment.yaml')
 default_config = ddict(default_config)
@@ -41,10 +40,11 @@ def log_from_history(history, info):
         tf.summary.text("experiment", data=str(exp), step=0)
 
     maxi_acc = max(history["val_accuracy"])
-    with open(f"{info['directory']}/{info['name']}/log.yaml", "a") as f:
-        date = datetime.datetime.now()
-        info["TIME"] = f"{date.year}.{date.month}.{date.day} {date.hour}:{date.minute}"
-        info["ACC"] = maxi_acc
+    date = datetime.datetime.now()
+    info["TIME"] = f"{date.year}.{date.month}.{date.day} {date.hour}:{date.minute}"
+    info["ACC"] = maxi_acc
+
+    with open(f"{info['full_path']}.yaml", "a") as f:
         for k, v in info.items():
             print(f"{k}: {v}", file=f)
         print("---", file=f)
@@ -133,9 +133,10 @@ for exp in experiment_queue:
             )
             log_from_history(history.history, info=exp.copy())
             model.save_weights(exp.checkpoint, save_format="h5")
-        except KeyboardInterrupt:
-            print("SKIPPING EXPERIMENT, WAITING 2 SECONDS TO RESUME...")
-            time.sleep(2)
-# experiment_queue.close()
 
-# %%
+        except KeyboardInterrupt:
+            print("SKIPPING EXPERIMENT, WAITING 2 SECONDS BEFORE RESUMING...")
+            time.sleep(2)
+
+if isinstance(experiment_queue, parser.YamlExperimentQueue):
+    experiment_queue.close()
