@@ -9,11 +9,11 @@ sns.set()
 
 name2path = {
     'LTR with step size 30%': (
-    'temp/VGG19_looking_for_tickets/VGG19IMP03/log.yaml', 95871),
+        'temp/VGG19_looking_for_tickets/VGG19IMP03/log.yaml', 95871),
     'LTR with step size 50%': (
-    'temp/VGG19_looking_for_tickets/VGG19IMP05/log.yaml', 32631, 33072),
+        'temp/VGG19_looking_for_tickets/VGG19IMP05/log.yaml', 32631, 33072),
     'LTR with step size 90%': (
-    'temp/VGG19_looking_for_tickets/VGG19IMP05/log.yaml', 12061, 24517),
+        'temp/VGG19_looking_for_tickets/VGG19IMP05/log.yaml', 12061, 24517),
 }
 name2result = defaultdict(list)
 sparsities = []
@@ -22,7 +22,12 @@ plt.figure(figsize=(7, 5), dpi=200)
 
 for name, (path, *eid) in name2path.items():
     for x in yaml.safe_load_all(open(path, 'r')):
-        if not x or all(str(e) not in x['idx'] for e in eid):
+        if 'idx' in x:
+            idx = 'idx'
+        else:
+            idx = 'IDX'
+
+        if not x or all(str(e) not in x[idx] for e in eid):
             continue
         name2result[name].append((x['pruning_config']['sparsity'], x['acc']))
         sparsities.append(round(1 - x['pruning_config']['sparsity'], 4))

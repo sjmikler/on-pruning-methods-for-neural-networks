@@ -15,7 +15,6 @@ set_memory_growth()
 from tools import datasets, layers, models, pruning
 
 default_config, experiment_queue = parser.load_from_yaml(yaml_path='experiment.yaml')
-experiment_queue = [ddict(exp) for exp in experiment_queue]
 default_config = ddict(default_config)
 
 if default_config.precision == 16:
@@ -44,8 +43,8 @@ def log_from_history(history, info):
     maxi_acc = max(history["val_accuracy"])
     with open(f"{info['directory']}/{info['name']}/log.yaml", "a") as f:
         date = datetime.datetime.now()
-        info["time"] = f"{date.year}.{date.month}.{date.day} {date.hour}:{date.minute}"
-        info["acc"] = maxi_acc
+        info["TIME"] = f"{date.year}.{date.month}.{date.day} {date.hour}:{date.minute}"
+        info["ACC"] = maxi_acc
         for k, v in info.items():
             print(f"{k}: {v}", file=f)
         print("---", file=f)
@@ -68,6 +67,7 @@ for exp in experiment_queue:
     pprint.pprint(exp)
     if dry:
         continue
+    exp = ddict(exp)
 
     # PROCEDURES IN ORDER:
     # 1. Creating model

@@ -1,8 +1,11 @@
 # DEFAULTS:
-repeat: 1
+REPEAT: 1
 name: skip # with default name=skip, training will be skipped if no name is specified
 precision: 16 # 16 or anything else for default 32
 directory: temp/reproducingLTR
+full_path: exec f"{directory}/{name}/{IDX}"
+checkpoint: exec f"{directory}/{name}/{IDX}.h5"
+queue: abc.yaml # specify path for queue file, if null keeps queue in memory
 
 pruning: none # none|random|l1|snip|grasp + shuffle weight|layer|mask
 pruning_config:
@@ -72,4 +75,4 @@ lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
 num_iterations: 80000
 steps_per_epoch: 2000
-repeat: 9
+REPEAT: 9

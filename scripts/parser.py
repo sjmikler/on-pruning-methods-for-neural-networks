@@ -6,67 +6,6 @@ import re
 from copy import deepcopy
 
 
-def cool_parse_exp(exp, past_experiments):
-    for k, v in exp.items():
-        if isinstance(v, dict):
-            # recurrent parsing of inner dicts
-            past_subdicts = [exp[k] if k in exp else {} for exp in past_experiments]
-            exp[k] = cool_parse_exp(v, past_subdicts)
-            continue
-
-        cool_args = re.findall(r"([a-zA-Z0-9_]+)\[([-0-9]+)\]", str(v))
-        for cool_name, cool_idx in cool_args:
-            past_value = past_experiments[int(cool_idx)][cool_name]
-            v = v.replace(f'{cool_name}[{cool_idx}]', str(past_value))
-            print(
-                f"REPLACED IN {k}: {cool_name}[{cool_idx}] WITH {past_value}")
-        if isinstance(v, str) and v.startswith('exec'):
-            expr1 = v
-            v = v.replace('exec ', 'v = ')
-            exec_storage = {}
-            exec(v, exec_storage)
-            v = exec_storage['v']
-            print(f"RECOGNIZED IN {k}: {expr1} AND REPLACED WITH {v}")
-        if isinstance(v, str):
-            try:
-                v = float(v)
-            except (ValueError, TypeError):
-                pass
-        exp[k] = v
-    return exp
-
-
-def load_from_yaml(yaml_path):
-    cmd_arguments = {}
-    for arg in sys.argv:
-        if ':' in arg:
-            key, value = arg.split(':', 1)
-
-            d = {}
-            exec(f"temp = {value}", None, d)
-            cmd_arguments[key] = d['temp']
-
-    experiments = list(yaml.safe_load_all(open(yaml_path, "r")))
-    experiments[0].update(cmd_arguments)
-
-    unpacked_experiments = []
-    for exp in experiments[1:]:
-        expcp = exp.copy()
-        exp.update(experiments[0])
-        exp.update(expcp)
-        rnd_idx = random.randint(100000, 999999)
-        for rep in range(exp['repeat']):
-            parsed_exp = deepcopy(exp)
-            parsed_exp['idx'] = f"{rnd_idx}/{rep}"
-            path = f"{exp['directory']}/{exp['name']}/{parsed_exp['idx']}"
-            parsed_exp['full_path'] = f"{path}"
-            parsed_exp['checkpoint'] = f"{path}.h5"
-
-            parsed_exp = cool_parse_exp(parsed_exp, unpacked_experiments)
-            unpacked_experiments.append(parsed_exp)
-    return experiments[0], unpacked_experiments
-
-
 class YamlExperimentQueue:
     def __init__(self, experiments=None, path='.queue.yaml'):
         self.path = path
@@ -106,6 +45,7 @@ class YamlExperimentQueue:
         return exp
 
     def __iter__(self):
+        print(f"LOADING EXPERIMENT FROM {self.path}")
         while self:
             exp = self.pop()
             yield exp
@@ -113,4 +53,74 @@ class YamlExperimentQueue:
     def close(self):
         os.remove(self.path)
 
-# %%
+
+def cool_parse_exp(exp, past_experiments):
+    keys = list(exp.keys())
+    for k in keys:
+        v = exp[k]
+        if isinstance(v, dict):
+            # recurrent parsing of inner dicts
+            past_subdicts = [exp[k] if k in exp else {} for exp in past_experiments]
+            exp[k] = cool_parse_exp(v, past_subdicts)
+            continue
+
+        cool_args = re.findall(r"([a-zA-Z0-9_]+)\[([-0-9]+)\]", str(v))
+        for cool_name, cool_idx in cool_args:
+            past_value = past_experiments[int(cool_idx)][cool_name]
+            v = v.replace(f'{cool_name}[{cool_idx}]', str(past_value))
+            print(
+                f"REPLACED IN {k}: {cool_name}[{cool_idx}] WITH {past_value}")
+        if isinstance(v, str) and v.startswith('exec'):
+            expr1 = v
+            v = v.replace('exec ', 'temp = ')
+            exec_storage = exp
+            exec(v, None, exec_storage)
+            v = exec_storage.pop('temp')
+            print(f"RECOGNIZED IN {k}: {expr1} AND REPLACED WITH {v}")
+        if isinstance(v, str):
+            try:
+                v = float(v)
+            except (ValueError, TypeError):
+                pass
+        exp[k] = v
+    return exp
+
+
+def load_from_yaml(yaml_path):
+    cmd_arguments = {}
+    for arg in sys.argv:
+        print(f"COMMAND LINE ARGUMENT: {arg}")
+        if '--' in arg and '=' in arg:
+            key, value = arg.split('=', 1)
+            key = key.lstrip('-')
+
+            try:
+                exec_storage = {}
+                exec(f"temp = {value}", None, exec_storage)
+                cmd_arguments[key] = exec_storage['temp']
+            except (NameError, SyntaxError):  # for parsing strings
+                cmd_arguments[key] = value
+
+    experiments = list(yaml.safe_load_all(open(yaml_path, "r")))
+    default = experiments.pop(0)
+    default.update(cmd_arguments)
+
+    unpacked_experiments = []
+    for exp in experiments:
+        expcp = exp.copy()
+        exp.update(default)
+        exp.update(expcp)
+        rnd_idx = random.randint(100000, 999999)
+        for rep in range(exp['REPEAT']):
+            parsed_exp = deepcopy(exp)
+            parsed_exp['IDX'] = f"{rnd_idx}/{rep}"
+
+            parsed_exp = cool_parse_exp(parsed_exp, unpacked_experiments)
+            unpacked_experiments.append(parsed_exp)
+
+    if path := default.get('queue'):
+        queue = YamlExperimentQueue(unpacked_experiments, path=path)
+    else:
+        queue = iter(unpacked_experiments)
+    print(f'QUEUE TYPE: {type(queue)}')
+    return default, queue
