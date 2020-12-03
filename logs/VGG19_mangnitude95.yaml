@@ -1,8 +1,8 @@
 IDX: 639072/0
 REPEAT: 1
-checkpoint: temp/reproducingLTR/VGG19_magnitude95/639072/0.h5
-checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
-checkpointBP: temp/reproducingLTR/VGG19full/424796/0.h5
+checkpoint: temp/reproducingLTR/VGG19_magnitude95/639072/start_for_trune800.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/start_for_trune800.h5
+checkpointBP: temp/reproducingLTR/VGG19full/424796/start_for_trune800.h5
 dataset: cifar10
 directory: temp/reproducingLTR
 full_path: temp/reproducingLTR/VGG19_magnitude95/639072/0
@@ -22,9 +22,9 @@ ACC: 0.9375
 ---
 IDX: 115094/0
 REPEAT: 1
-checkpoint: temp/reproducingLTR/VGG19_magnitude95/115094/0.h5
-checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
-checkpointBP: temp/reproducingLTR/VGG19full/424796/0.h5
+checkpoint: temp/reproducingLTR/VGG19_magnitude95/115094/start_for_trune800.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/start_for_trune800.h5
+checkpointBP: temp/reproducingLTR/VGG19full/424796/start_for_trune800.h5
 dataset: cifar10
 directory: temp/reproducingLTR
 full_path: temp/reproducingLTR/VGG19_magnitude95/115094/0
@@ -44,9 +44,9 @@ ACC: 0.9383999705314636
 ---
 IDX: 595484/0
 REPEAT: 1
-checkpoint: temp/reproducingLTR/VGG19_magnitude95/595484/0.h5
-checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
-checkpointBP: temp/reproducingLTR/VGG19full/424796/0.h5
+checkpoint: temp/reproducingLTR/VGG19_magnitude95/595484/start_for_trune800.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/start_for_trune800.h5
+checkpointBP: temp/reproducingLTR/VGG19full/424796/start_for_trune800.h5
 dataset: cifar10
 directory: temp/reproducingLTR
 full_path: temp/reproducingLTR/VGG19_magnitude95/595484/0

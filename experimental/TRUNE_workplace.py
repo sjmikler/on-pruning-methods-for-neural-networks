@@ -25,11 +25,11 @@ sns.set()
 
 dataset = datasets.cifar10()
 model = models.VGG((32, 32, 3), n_classes=10, version=19)
-# "logs/LTR444_shuffling_variants/start/78125/0.h5" 800 it
-# model.load_weights("temp/11.20_trune_gumbel_things/VGG19truneTRY4/63446/0.h5")
-model.load_weights('temp/LTR444_shuffling_variants/start/21723/0.h5')  # 8000 it
-# model.load_weights('temp/11.20_trune_gumbel_things/VGG19truneTRY4/86664/0.h5')  # FULL
-# model.load_weights('temp/11.20_trune_gumbel_things/VGG19truneTRY4/64921/0.h5')  # FULL it2
+# "logs/LTR444_shuffling_variants/start/78125/start_for_trune800.h5" 800 it
+# model.load_weights("temp/11.20_trune_gumbel_things/VGG19truneTRY4/63446/start_for_trune800.h5")
+model.load_weights('temp/LTR444_shuffling_variants/start/21723/start_for_trune800.h5')  # 8000 it
+# model.load_weights('temp/11.20_trune_gumbel_things/VGG19truneTRY4/86664/start_for_trune800.h5')  # FULL
+# model.load_weights('temp/11.20_trune_gumbel_things/VGG19truneTRY4/64921/start_for_trune800.h5')  # FULL it2
 
 ds = datasets.cifar10()
 ds['train'] = ds['train'].map(

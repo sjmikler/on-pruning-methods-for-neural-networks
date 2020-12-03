@@ -36,7 +36,7 @@ model_config:
     n_classes: 10
     l2_reg: 1e-4
 
-checkpointBP: data/simple_pruning_smart_init17.h5
+checkpointBP: data/classical_truning_on_train.h5
 checkpointAP: random
 
 lr_boundaries: [32000, 48000, 64000]

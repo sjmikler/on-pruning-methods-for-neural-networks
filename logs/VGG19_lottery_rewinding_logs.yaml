@@ -1,5 +1,5 @@
-checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
-checkpointBP: temp/reproducingLTR/VGG19full/57657/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/start_for_trune800.h5
+checkpointBP: temp/reproducingLTR/VGG19full/57657/start_for_trune800.h5
 dataset: cifar10
 directory: temp/reproducingLTR
 idx: 22903/0
@@ -15,12 +15,12 @@ pruning_config: {'sparsity': 0.30000000000000004}
 repeat: 9
 steps_per_epoch: 2000
 full_path: temp/reproducingLTR/VGG19ltr30/22903/0
-checkpoint: temp/reproducingLTR/VGG19ltr30/22903/0.h5
+checkpoint: temp/reproducingLTR/VGG19ltr30/22903/start_for_trune800.h5
 time: 2020.12.1 18:21
 acc: 0.9394999742507935
 ---
-checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
-checkpointBP: temp/reproducingLTR/VGG19ltr30/22903/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/start_for_trune800.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/22903/start_for_trune800.h5
 dataset: cifar10
 directory: temp/reproducingLTR
 idx: 22903/1
@@ -40,7 +40,7 @@ checkpoint: temp/reproducingLTR/VGG19ltr30/22903/1.h5
 time: 2020.12.1 19:51
 acc: 0.9401000142097473
 ---
-checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/22903/1.h5
 dataset: cifar10
 directory: temp/reproducingLTR
@@ -61,7 +61,7 @@ checkpoint: temp/reproducingLTR/VGG19ltr30/22903/2.h5
 time: 2020.12.1 21:21
 acc: 0.9408000111579895
 ---
-checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/22903/2.h5
 dataset: cifar10
 directory: temp/reproducingLTR
@@ -82,7 +82,7 @@ checkpoint: temp/reproducingLTR/VGG19ltr30/22903/3.h5
 time: 2020.12.1 22:51
 acc: 0.9387999773025513
 ---
-checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/22903/3.h5
 dataset: cifar10
 directory: temp/reproducingLTR
@@ -103,7 +103,7 @@ checkpoint: temp/reproducingLTR/VGG19ltr30/22903/4.h5
 time: 2020.12.2 0:21
 acc: 0.9391999840736389
 ---
-checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/22903/4.h5
 dataset: cifar10
 directory: temp/reproducingLTR
@@ -124,7 +124,7 @@ checkpoint: temp/reproducingLTR/VGG19ltr30/22903/5.h5
 time: 2020.12.2 1:51
 acc: 0.9445000290870667
 ---
-checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/22903/5.h5
 dataset: cifar10
 directory: temp/reproducingLTR
@@ -145,7 +145,7 @@ checkpoint: temp/reproducingLTR/VGG19ltr30/22903/6.h5
 time: 2020.12.2 3:21
 acc: 0.9399999976158142
 ---
-checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/22903/6.h5
 dataset: cifar10
 directory: temp/reproducingLTR
@@ -166,7 +166,7 @@ checkpoint: temp/reproducingLTR/VGG19ltr30/22903/7.h5
 time: 2020.12.2 4:51
 acc: 0.939300000667572
 ---
-checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/22903/7.h5
 dataset: cifar10
 directory: temp/reproducingLTR
@@ -188,8 +188,8 @@ time: 2020.12.2 6:21
 acc: 0.9381999969482422
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
-checkpointBP: temp/reproducingLTR/VGG19full/424796/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/start_for_trune800.h5
+checkpointBP: temp/reproducingLTR/VGG19full/424796/start_for_trune800.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.30000000000000004}
 model: VGG
@@ -204,13 +204,13 @@ directory: temp/reproducingLTR
 dataset: cifar10
 idx: 637467/0
 full_path: temp/reproducingLTR/VGG19ltr30/637467/0
-checkpoint: temp/reproducingLTR/VGG19ltr30/637467/0.h5
+checkpoint: temp/reproducingLTR/VGG19ltr30/637467/start_for_trune800.h5
 time: 2020.12.3 3:20
 acc: 0.9408000111579895
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
-checkpointBP: temp/reproducingLTR/VGG19full/685292/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/start_for_trune800.h5
+checkpointBP: temp/reproducingLTR/VGG19full/685292/start_for_trune800.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.30000000000000004}
 model: VGG
@@ -225,13 +225,13 @@ directory: temp/reproducingLTR
 dataset: cifar10
 idx: 835349/0
 full_path: temp/reproducingLTR/VGG19ltr30/835349/0
-checkpoint: temp/reproducingLTR/VGG19ltr30/835349/0.h5
+checkpoint: temp/reproducingLTR/VGG19ltr30/835349/start_for_trune800.h5
 time: 2020.12.3 3:20
 acc: 0.9404000043869019
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
-checkpointBP: temp/reproducingLTR/VGG19full/548567/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/start_for_trune800.h5
+checkpointBP: temp/reproducingLTR/VGG19full/548567/start_for_trune800.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.30000000000000004}
 model: VGG
@@ -246,13 +246,13 @@ directory: temp/reproducingLTR
 dataset: cifar10
 idx: 285535/0
 full_path: temp/reproducingLTR/VGG19ltr30/285535/0
-checkpoint: temp/reproducingLTR/VGG19ltr30/285535/0.h5
+checkpoint: temp/reproducingLTR/VGG19ltr30/285535/start_for_trune800.h5
 time: 2020.12.3 3:23
 acc: 0.9391000270843506
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
-checkpointBP: temp/reproducingLTR/VGG19ltr30/637467/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/start_for_trune800.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/637467/start_for_trune800.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.51}
 model: VGG
@@ -272,8 +272,8 @@ time: 2020.12.3 4:49
 acc: 0.9416999816894531
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
-checkpointBP: temp/reproducingLTR/VGG19ltr30/835349/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/start_for_trune800.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/835349/start_for_trune800.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.51}
 model: VGG
@@ -293,8 +293,8 @@ time: 2020.12.3 4:49
 acc: 0.9397000074386597
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
-checkpointBP: temp/reproducingLTR/VGG19ltr30/285535/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/start_for_trune800.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/285535/start_for_trune800.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.51}
 model: VGG
@@ -314,7 +314,7 @@ time: 2020.12.3 4:54
 acc: 0.9399999976158142
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/637467/1.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.657}
@@ -335,7 +335,7 @@ time: 2020.12.3 6:17
 acc: 0.9406999945640564
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/835349/1.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.657}
@@ -356,7 +356,7 @@ time: 2020.12.3 6:17
 acc: 0.9395999908447266
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/285535/1.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.657}
@@ -377,7 +377,7 @@ time: 2020.12.3 6:25
 acc: 0.9408000111579895
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/637467/2.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.7599}
@@ -398,7 +398,7 @@ time: 2020.12.3 7:45
 acc: 0.9412000179290771
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/835349/2.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.7599}
@@ -419,7 +419,7 @@ time: 2020.12.3 7:46
 acc: 0.9383999705314636
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/285535/2.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.7599}
@@ -440,7 +440,7 @@ time: 2020.12.3 7:55
 acc: 0.9404000043869019
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/637467/3.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.8319300000000001}
@@ -461,7 +461,7 @@ time: 2020.12.3 9:14
 acc: 0.9399999976158142
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/835349/3.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.8319300000000001}
@@ -482,7 +482,7 @@ time: 2020.12.3 9:14
 acc: 0.9426000118255615
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/285535/3.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.8319300000000001}
@@ -503,7 +503,7 @@ time: 2020.12.3 9:26
 acc: 0.9395999908447266
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/637467/4.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.8823510000000001}
@@ -524,7 +524,7 @@ time: 2020.12.3 10:42
 acc: 0.940500020980835
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/835349/4.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.8823510000000001}
@@ -545,7 +545,7 @@ time: 2020.12.3 10:43
 acc: 0.9366000294685364
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/285535/4.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.8823510000000001}
@@ -566,7 +566,7 @@ time: 2020.12.3 10:56
 acc: 0.9416000247001648
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/637467/5.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.9176457000000001}
@@ -587,7 +587,7 @@ time: 2020.12.3 12:9
 acc: 0.9431999921798706
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/835349/5.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.9176457000000001}
@@ -608,7 +608,7 @@ time: 2020.12.3 12:11
 acc: 0.9387000203132629
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/285535/5.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.9176457000000001}
@@ -629,7 +629,7 @@ time: 2020.12.3 12:27
 acc: 0.940500020980835
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/637467/6.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.9423519900000001}
@@ -650,7 +650,7 @@ time: 2020.12.3 13:37
 acc: 0.9412000179290771
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/835349/6.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.9423519900000001}
@@ -671,7 +671,7 @@ time: 2020.12.3 13:39
 acc: 0.9377999901771545
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/285535/6.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.9423519900000001}
@@ -692,7 +692,7 @@ time: 2020.12.3 13:58
 acc: 0.9424999952316284
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/637467/7.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.9596463930000001}
@@ -713,7 +713,7 @@ time: 2020.12.3 15:5
 acc: 0.9394000172615051
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/835349/7.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.9596463930000001}
@@ -734,7 +734,7 @@ time: 2020.12.3 15:7
 acc: 0.9386000037193298
 ---
 name: VGG19ltr30
-checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/start_for_trune800.h5
 checkpointBP: temp/reproducingLTR/VGG19ltr30/285535/7.h5
 pruning: magnitude
 pruning_config: {'sparsity': 0.9596463930000001}
