@@ -1,0 +1,1260 @@
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
+checkpointBP: temp/reproducingLTR/VGG19full/57657/0.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+idx: 22903/0
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+model: VGG
+model_config: {'input_shape': [32, 32, 3], 'l2_reg': 0.0001, 'n_classes': 10, 'version': 19}
+name: VGG19ltr30
+num_iterations: 80000
+precision: 32
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+repeat: 9
+steps_per_epoch: 2000
+full_path: temp/reproducingLTR/VGG19ltr30/22903/0
+checkpoint: temp/reproducingLTR/VGG19ltr30/22903/0.h5
+time: 2020.12.1 18:21
+acc: 0.9394999742507935
+---
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/22903/0.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+idx: 22903/1
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+model: VGG
+model_config: {'input_shape': [32, 32, 3], 'l2_reg': 0.0001, 'n_classes': 10, 'version': 19}
+name: VGG19ltr30
+num_iterations: 80000
+precision: 32
+pruning: magnitude
+pruning_config: {'sparsity': 0.51}
+repeat: 9
+steps_per_epoch: 2000
+full_path: temp/reproducingLTR/VGG19ltr30/22903/1
+checkpoint: temp/reproducingLTR/VGG19ltr30/22903/1.h5
+time: 2020.12.1 19:51
+acc: 0.9401000142097473
+---
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/22903/1.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+idx: 22903/2
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+model: VGG
+model_config: {'input_shape': [32, 32, 3], 'l2_reg': 0.0001, 'n_classes': 10, 'version': 19}
+name: VGG19ltr30
+num_iterations: 80000
+precision: 32
+pruning: magnitude
+pruning_config: {'sparsity': 0.657}
+repeat: 9
+steps_per_epoch: 2000
+full_path: temp/reproducingLTR/VGG19ltr30/22903/2
+checkpoint: temp/reproducingLTR/VGG19ltr30/22903/2.h5
+time: 2020.12.1 21:21
+acc: 0.9408000111579895
+---
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/22903/2.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+idx: 22903/3
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+model: VGG
+model_config: {'input_shape': [32, 32, 3], 'l2_reg': 0.0001, 'n_classes': 10, 'version': 19}
+name: VGG19ltr30
+num_iterations: 80000
+precision: 32
+pruning: magnitude
+pruning_config: {'sparsity': 0.7599}
+repeat: 9
+steps_per_epoch: 2000
+full_path: temp/reproducingLTR/VGG19ltr30/22903/3
+checkpoint: temp/reproducingLTR/VGG19ltr30/22903/3.h5
+time: 2020.12.1 22:51
+acc: 0.9387999773025513
+---
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/22903/3.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+idx: 22903/4
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+model: VGG
+model_config: {'input_shape': [32, 32, 3], 'l2_reg': 0.0001, 'n_classes': 10, 'version': 19}
+name: VGG19ltr30
+num_iterations: 80000
+precision: 32
+pruning: magnitude
+pruning_config: {'sparsity': 0.8319300000000001}
+repeat: 9
+steps_per_epoch: 2000
+full_path: temp/reproducingLTR/VGG19ltr30/22903/4
+checkpoint: temp/reproducingLTR/VGG19ltr30/22903/4.h5
+time: 2020.12.2 0:21
+acc: 0.9391999840736389
+---
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/22903/4.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+idx: 22903/5
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+model: VGG
+model_config: {'input_shape': [32, 32, 3], 'l2_reg': 0.0001, 'n_classes': 10, 'version': 19}
+name: VGG19ltr30
+num_iterations: 80000
+precision: 32
+pruning: magnitude
+pruning_config: {'sparsity': 0.8823510000000001}
+repeat: 9
+steps_per_epoch: 2000
+full_path: temp/reproducingLTR/VGG19ltr30/22903/5
+checkpoint: temp/reproducingLTR/VGG19ltr30/22903/5.h5
+time: 2020.12.2 1:51
+acc: 0.9445000290870667
+---
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/22903/5.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+idx: 22903/6
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+model: VGG
+model_config: {'input_shape': [32, 32, 3], 'l2_reg': 0.0001, 'n_classes': 10, 'version': 19}
+name: VGG19ltr30
+num_iterations: 80000
+precision: 32
+pruning: magnitude
+pruning_config: {'sparsity': 0.9176457000000001}
+repeat: 9
+steps_per_epoch: 2000
+full_path: temp/reproducingLTR/VGG19ltr30/22903/6
+checkpoint: temp/reproducingLTR/VGG19ltr30/22903/6.h5
+time: 2020.12.2 3:21
+acc: 0.9399999976158142
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/238398/0.h5
+checkpointBP: temp/reproducingLTR/VGG19full/134738/0.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 897799/0
+full_path: temp/reproducingLTR/VGG19ltr30/897799/0
+checkpoint: temp/reproducingLTR/VGG19ltr30/897799/0.h5
+time: 2020.12.2 4:29
+acc: 0.9413999915122986
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/321842/0.h5
+checkpointBP: temp/reproducingLTR/VGG19full/249301/0.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 196225/0
+full_path: temp/reproducingLTR/VGG19ltr30/196225/0
+checkpoint: temp/reproducingLTR/VGG19ltr30/196225/0.h5
+time: 2020.12.2 4:29
+acc: 0.9383999705314636
+---
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/22903/6.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+idx: 22903/7
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+model: VGG
+model_config: {'input_shape': [32, 32, 3], 'l2_reg': 0.0001, 'n_classes': 10, 'version': 19}
+name: VGG19ltr30
+num_iterations: 80000
+precision: 32
+pruning: magnitude
+pruning_config: {'sparsity': 0.9423519900000001}
+repeat: 9
+steps_per_epoch: 2000
+full_path: temp/reproducingLTR/VGG19ltr30/22903/7
+checkpoint: temp/reproducingLTR/VGG19ltr30/22903/7.h5
+time: 2020.12.2 4:51
+acc: 0.939300000667572
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/238398/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/897799/0.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 897799/1
+full_path: temp/reproducingLTR/VGG19ltr30/897799/1
+checkpoint: temp/reproducingLTR/VGG19ltr30/897799/1.h5
+time: 2020.12.2 5:57
+acc: 0.9415000081062317
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/321842/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/196225/0.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 196225/1
+full_path: temp/reproducingLTR/VGG19ltr30/196225/1
+checkpoint: temp/reproducingLTR/VGG19ltr30/196225/1.h5
+time: 2020.12.2 5:58
+acc: 0.9399999976158142
+---
+checkpointAP: temp/reproducingLTR/VGG19start400/62199/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/22903/7.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+idx: 22903/8
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+model: VGG
+model_config: {'input_shape': [32, 32, 3], 'l2_reg': 0.0001, 'n_classes': 10, 'version': 19}
+name: VGG19ltr30
+num_iterations: 80000
+precision: 32
+pruning: magnitude
+pruning_config: {'sparsity': 0.9596463930000001}
+repeat: 9
+steps_per_epoch: 2000
+full_path: temp/reproducingLTR/VGG19ltr30/22903/8
+checkpoint: temp/reproducingLTR/VGG19ltr30/22903/8.h5
+time: 2020.12.2 6:21
+acc: 0.9381999969482422
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/238398/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/897799/1.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 897799/2
+full_path: temp/reproducingLTR/VGG19ltr30/897799/2
+checkpoint: temp/reproducingLTR/VGG19ltr30/897799/2.h5
+time: 2020.12.2 7:26
+acc: 0.9395999908447266
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/321842/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/196225/1.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 196225/2
+full_path: temp/reproducingLTR/VGG19ltr30/196225/2
+checkpoint: temp/reproducingLTR/VGG19ltr30/196225/2.h5
+time: 2020.12.2 7:27
+acc: 0.9380999803543091
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/238398/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/897799/2.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 897799/3
+full_path: temp/reproducingLTR/VGG19ltr30/897799/3
+checkpoint: temp/reproducingLTR/VGG19ltr30/897799/3.h5
+time: 2020.12.2 8:54
+acc: 0.9398000240325928
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/321842/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/196225/2.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 196225/3
+full_path: temp/reproducingLTR/VGG19ltr30/196225/3
+checkpoint: temp/reproducingLTR/VGG19ltr30/196225/3.h5
+time: 2020.12.2 8:56
+acc: 0.9398000240325928
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/238398/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/897799/3.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 897799/4
+full_path: temp/reproducingLTR/VGG19ltr30/897799/4
+checkpoint: temp/reproducingLTR/VGG19ltr30/897799/4.h5
+time: 2020.12.2 10:23
+acc: 0.9376000165939331
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/321842/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/196225/3.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 196225/4
+full_path: temp/reproducingLTR/VGG19ltr30/196225/4
+checkpoint: temp/reproducingLTR/VGG19ltr30/196225/4.h5
+time: 2020.12.2 10:25
+acc: 0.939300000667572
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/238398/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/897799/4.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 897799/5
+full_path: temp/reproducingLTR/VGG19ltr30/897799/5
+checkpoint: temp/reproducingLTR/VGG19ltr30/897799/5.h5
+time: 2020.12.2 11:52
+acc: 0.9413999915122986
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/321842/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/196225/4.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 196225/5
+full_path: temp/reproducingLTR/VGG19ltr30/196225/5
+checkpoint: temp/reproducingLTR/VGG19ltr30/196225/5.h5
+time: 2020.12.2 11:54
+acc: 0.9408000111579895
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/238398/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/897799/5.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 897799/6
+full_path: temp/reproducingLTR/VGG19ltr30/897799/6
+checkpoint: temp/reproducingLTR/VGG19ltr30/897799/6.h5
+time: 2020.12.2 13:21
+acc: 0.9398000240325928
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/321842/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/196225/5.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 196225/6
+full_path: temp/reproducingLTR/VGG19ltr30/196225/6
+checkpoint: temp/reproducingLTR/VGG19ltr30/196225/6.h5
+time: 2020.12.2 13:23
+acc: 0.9387000203132629
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/238398/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/897799/6.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 897799/7
+full_path: temp/reproducingLTR/VGG19ltr30/897799/7
+checkpoint: temp/reproducingLTR/VGG19ltr30/897799/7.h5
+time: 2020.12.2 14:50
+acc: 0.939300000667572
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/321842/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/196225/6.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 196225/7
+full_path: temp/reproducingLTR/VGG19ltr30/196225/7
+checkpoint: temp/reproducingLTR/VGG19ltr30/196225/7.h5
+time: 2020.12.2 14:52
+acc: 0.9383999705314636
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/238398/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/897799/7.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 897799/8
+full_path: temp/reproducingLTR/VGG19ltr30/897799/8
+checkpoint: temp/reproducingLTR/VGG19ltr30/897799/8.h5
+time: 2020.12.2 16:18
+acc: 0.9415000081062317
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/321842/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/196225/7.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 32
+dataset: cifar10
+idx: 196225/8
+full_path: temp/reproducingLTR/VGG19ltr30/196225/8
+checkpoint: temp/reproducingLTR/VGG19ltr30/196225/8.h5
+time: 2020.12.2 16:21
+acc: 0.9383000135421753
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/674938/0.h5
+checkpointBP: temp/reproducingLTR/VGG19full/997889/0.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 16
+dataset: cifar10
+idx: 584988/0
+full_path: temp/reproducingLTR/VGG19ltr30/584988/0
+checkpoint: temp/reproducingLTR/VGG19ltr30/584988/0.h5
+time: 2020.12.2 17:15
+acc: 0.9398999810218811
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/674938/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/584988/0.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 16
+dataset: cifar10
+idx: 584988/1
+full_path: temp/reproducingLTR/VGG19ltr30/584988/1
+checkpoint: temp/reproducingLTR/VGG19ltr30/584988/1.h5
+time: 2020.12.2 18:39
+acc: 0.9395999908447266
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/674938/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/584988/1.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 16
+dataset: cifar10
+idx: 584988/2
+full_path: temp/reproducingLTR/VGG19ltr30/584988/2
+checkpoint: temp/reproducingLTR/VGG19ltr30/584988/2.h5
+time: 2020.12.2 20:3
+acc: 0.9394000172615051
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/674938/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/584988/2.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 16
+dataset: cifar10
+idx: 584988/3
+full_path: temp/reproducingLTR/VGG19ltr30/584988/3
+checkpoint: temp/reproducingLTR/VGG19ltr30/584988/3.h5
+time: 2020.12.2 21:28
+acc: 0.9373000264167786
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/674938/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/584988/3.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 16
+dataset: cifar10
+idx: 584988/4
+full_path: temp/reproducingLTR/VGG19ltr30/584988/4
+checkpoint: temp/reproducingLTR/VGG19ltr30/584988/4.h5
+time: 2020.12.2 22:51
+acc: 0.9398000240325928
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/674938/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/584988/4.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+directory: temp/reproducingLTR
+precision: 16
+dataset: cifar10
+idx: 584988/5
+full_path: temp/reproducingLTR/VGG19ltr30/584988/5
+checkpoint: temp/reproducingLTR/VGG19ltr30/584988/5.h5
+time: 2020.12.3 0:16
+acc: 0.940500020980835
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointBP: temp/reproducingLTR/VGG19full/424796/0.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 637467/0
+full_path: temp/reproducingLTR/VGG19ltr30/637467/0
+checkpoint: temp/reproducingLTR/VGG19ltr30/637467/0.h5
+time: 2020.12.3 3:20
+acc: 0.9408000111579895
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
+checkpointBP: temp/reproducingLTR/VGG19full/685292/0.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 835349/0
+full_path: temp/reproducingLTR/VGG19ltr30/835349/0
+checkpoint: temp/reproducingLTR/VGG19ltr30/835349/0.h5
+time: 2020.12.3 3:20
+acc: 0.9404000043869019
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
+checkpointBP: temp/reproducingLTR/VGG19full/548567/0.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.30000000000000004}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 285535/0
+full_path: temp/reproducingLTR/VGG19ltr30/285535/0
+checkpoint: temp/reproducingLTR/VGG19ltr30/285535/0.h5
+time: 2020.12.3 3:23
+acc: 0.9391000270843506
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/637467/0.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.51}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 637467/1
+full_path: temp/reproducingLTR/VGG19ltr30/637467/1
+checkpoint: temp/reproducingLTR/VGG19ltr30/637467/1.h5
+time: 2020.12.3 4:49
+acc: 0.9416999816894531
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/835349/0.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.51}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 835349/1
+full_path: temp/reproducingLTR/VGG19ltr30/835349/1
+checkpoint: temp/reproducingLTR/VGG19ltr30/835349/1.h5
+time: 2020.12.3 4:49
+acc: 0.9397000074386597
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/285535/0.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.51}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 285535/1
+full_path: temp/reproducingLTR/VGG19ltr30/285535/1
+checkpoint: temp/reproducingLTR/VGG19ltr30/285535/1.h5
+time: 2020.12.3 4:54
+acc: 0.9399999976158142
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/637467/1.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.657}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 637467/2
+full_path: temp/reproducingLTR/VGG19ltr30/637467/2
+checkpoint: temp/reproducingLTR/VGG19ltr30/637467/2.h5
+time: 2020.12.3 6:17
+acc: 0.9406999945640564
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/835349/1.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.657}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 835349/2
+full_path: temp/reproducingLTR/VGG19ltr30/835349/2
+checkpoint: temp/reproducingLTR/VGG19ltr30/835349/2.h5
+time: 2020.12.3 6:17
+acc: 0.9395999908447266
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/285535/1.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.657}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 285535/2
+full_path: temp/reproducingLTR/VGG19ltr30/285535/2
+checkpoint: temp/reproducingLTR/VGG19ltr30/285535/2.h5
+time: 2020.12.3 6:25
+acc: 0.9408000111579895
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/637467/2.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.7599}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 637467/3
+full_path: temp/reproducingLTR/VGG19ltr30/637467/3
+checkpoint: temp/reproducingLTR/VGG19ltr30/637467/3.h5
+time: 2020.12.3 7:45
+acc: 0.9412000179290771
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/835349/2.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.7599}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 835349/3
+full_path: temp/reproducingLTR/VGG19ltr30/835349/3
+checkpoint: temp/reproducingLTR/VGG19ltr30/835349/3.h5
+time: 2020.12.3 7:46
+acc: 0.9383999705314636
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/285535/2.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.7599}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 285535/3
+full_path: temp/reproducingLTR/VGG19ltr30/285535/3
+checkpoint: temp/reproducingLTR/VGG19ltr30/285535/3.h5
+time: 2020.12.3 7:55
+acc: 0.9404000043869019
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/637467/3.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.8319300000000001}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 637467/4
+full_path: temp/reproducingLTR/VGG19ltr30/637467/4
+checkpoint: temp/reproducingLTR/VGG19ltr30/637467/4.h5
+time: 2020.12.3 9:14
+acc: 0.9399999976158142
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/835349/3.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.8319300000000001}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 835349/4
+full_path: temp/reproducingLTR/VGG19ltr30/835349/4
+checkpoint: temp/reproducingLTR/VGG19ltr30/835349/4.h5
+time: 2020.12.3 9:14
+acc: 0.9426000118255615
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/285535/3.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.8319300000000001}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 285535/4
+full_path: temp/reproducingLTR/VGG19ltr30/285535/4
+checkpoint: temp/reproducingLTR/VGG19ltr30/285535/4.h5
+time: 2020.12.3 9:26
+acc: 0.9395999908447266
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/637467/4.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.8823510000000001}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 637467/5
+full_path: temp/reproducingLTR/VGG19ltr30/637467/5
+checkpoint: temp/reproducingLTR/VGG19ltr30/637467/5.h5
+time: 2020.12.3 10:42
+acc: 0.940500020980835
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/835349/4.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.8823510000000001}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 835349/5
+full_path: temp/reproducingLTR/VGG19ltr30/835349/5
+checkpoint: temp/reproducingLTR/VGG19ltr30/835349/5.h5
+time: 2020.12.3 10:43
+acc: 0.9366000294685364
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/285535/4.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.8823510000000001}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 285535/5
+full_path: temp/reproducingLTR/VGG19ltr30/285535/5
+checkpoint: temp/reproducingLTR/VGG19ltr30/285535/5.h5
+time: 2020.12.3 10:56
+acc: 0.9416000247001648
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/637467/5.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.9176457000000001}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 637467/6
+full_path: temp/reproducingLTR/VGG19ltr30/637467/6
+checkpoint: temp/reproducingLTR/VGG19ltr30/637467/6.h5
+time: 2020.12.3 12:9
+acc: 0.9431999921798706
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/835349/5.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.9176457000000001}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 835349/6
+full_path: temp/reproducingLTR/VGG19ltr30/835349/6
+checkpoint: temp/reproducingLTR/VGG19ltr30/835349/6.h5
+time: 2020.12.3 12:11
+acc: 0.9387000203132629
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/285535/5.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.9176457000000001}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 285535/6
+full_path: temp/reproducingLTR/VGG19ltr30/285535/6
+checkpoint: temp/reproducingLTR/VGG19ltr30/285535/6.h5
+time: 2020.12.3 12:27
+acc: 0.940500020980835
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/637467/6.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.9423519900000001}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 637467/7
+full_path: temp/reproducingLTR/VGG19ltr30/637467/7
+checkpoint: temp/reproducingLTR/VGG19ltr30/637467/7.h5
+time: 2020.12.3 13:37
+acc: 0.9412000179290771
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/835349/6.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.9423519900000001}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 835349/7
+full_path: temp/reproducingLTR/VGG19ltr30/835349/7
+checkpoint: temp/reproducingLTR/VGG19ltr30/835349/7.h5
+time: 2020.12.3 13:39
+acc: 0.9377999901771545
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/285535/6.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.9423519900000001}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 285535/7
+full_path: temp/reproducingLTR/VGG19ltr30/285535/7
+checkpoint: temp/reproducingLTR/VGG19ltr30/285535/7.h5
+time: 2020.12.3 13:58
+acc: 0.9424999952316284
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/749355/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/637467/7.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.9596463930000001}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 637467/8
+full_path: temp/reproducingLTR/VGG19ltr30/637467/8
+checkpoint: temp/reproducingLTR/VGG19ltr30/637467/8.h5
+time: 2020.12.3 15:5
+acc: 0.9394000172615051
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/992531/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/835349/7.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.9596463930000001}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 835349/8
+full_path: temp/reproducingLTR/VGG19ltr30/835349/8
+checkpoint: temp/reproducingLTR/VGG19ltr30/835349/8.h5
+time: 2020.12.3 15:7
+acc: 0.9386000037193298
+---
+name: VGG19ltr30
+checkpointAP: temp/reproducingLTR/VGG19start400/120423/0.h5
+checkpointBP: temp/reproducingLTR/VGG19ltr30/285535/7.h5
+pruning: magnitude
+pruning_config: {'sparsity': 0.9596463930000001}
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+repeat: 9
+precision: 32
+directory: temp/reproducingLTR
+dataset: cifar10
+idx: 285535/8
+full_path: temp/reproducingLTR/VGG19ltr30/285535/8
+checkpoint: temp/reproducingLTR/VGG19ltr30/285535/8.h5
+time: 2020.12.3 15:29
+acc: 0.9416000247001648
+---
