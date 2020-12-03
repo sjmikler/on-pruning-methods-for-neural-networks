@@ -10,6 +10,8 @@ sns.set()
 name2path = {
     'LTR with step size 30%': (
         'temp/VGG19_looking_for_tickets/VGG19IMP03/log.yaml', 95871),
+    'new LTR with step size 30%': (
+        'data/log.yaml', 22903, 637467, 835349, 285535),
     'LTR with step size 50%': (
         'temp/VGG19_looking_for_tickets/VGG19IMP05/log.yaml', 32631, 33072),
     'LTR with step size 90%': (
@@ -22,6 +24,9 @@ plt.figure(figsize=(7, 5), dpi=200)
 
 for name, (path, *eid) in name2path.items():
     for x in yaml.safe_load_all(open(path, 'r')):
+        if not x:
+            continue
+
         if 'idx' in x:
             idx = 'idx'
         else:
