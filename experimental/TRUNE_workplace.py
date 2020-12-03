@@ -25,6 +25,7 @@ sns.set()
 
 dataset = datasets.cifar10()
 model = models.VGG((32, 32, 3), n_classes=10, version=19)
+# "logs/LTR444_shuffling_variants/start/78125/0.h5" 800 it
 # model.load_weights("temp/11.20_trune_gumbel_things/VGG19truneTRY4/63446/0.h5")
 model.load_weights('temp/LTR444_shuffling_variants/start/21723/0.h5')  # 8000 it
 # model.load_weights('temp/11.20_trune_gumbel_things/VGG19truneTRY4/86664/0.h5')  # FULL
@@ -34,7 +35,7 @@ ds = datasets.cifar10()
 ds['train'] = ds['train'].map(
     lambda x, y: (tfa.image.random_cutout(x, mask_size=6, constant_values=0), y))
 
-optimizer = tf.optimizers.SGD(learning_rate=100, momentum=0.9, nesterov=True)
+optimizer = tf.optimizers.SGD(learning_rate=10, momentum=0.999, nesterov=True)
 loss_fn = tf.losses.SparseCategoricalCrossentropy(from_logits=True)
 
 kernels = [layer.kernel for layer in model.layers if hasattr(layer, "kernel")]
@@ -91,18 +92,18 @@ def train_step(x, y, decay):
     loss_metric(y, outs)
     acc_metric(y, outs)
 
-    updates = [grad for grad in grads]
-    for i, update in enumerate(updates):
-        mask = tf.greater(update, 0)
-        indices = tf.where(mask)
-        tf.debugging.assert_integer(indices)
-        updates[i] = tf.tensor_scatter_nd_update(
-            update, indices, tf.ones([tf.shape(indices)[0]], dtype=update.dtype) * 0.1)
-
-        mask = tf.less(update, 0)
-        indices = tf.where(mask)
-        updates[i] = tf.tensor_scatter_nd_update(
-            update, indices, tf.ones([tf.shape(indices)[0]], dtype=update.dtype) * -0.1)
+    updates = grads
+    # for i, update in enumerate(updates):
+    #     mask = tf.greater(update, 0)
+    #     indices = tf.where(mask)
+    #     tf.debugging.assert_integer(indices)
+    #     updates[i] = tf.tensor_scatter_nd_update(
+    #         update, indices, tf.ones([tf.shape(indices)[0]], dtype=update.dtype) * 0.1)
+    #
+    #     mask = tf.less(update, 0)
+    #     indices = tf.where(mask)
+    #     updates[i] = tf.tensor_scatter_nd_update(
+    #         update, indices, tf.ones([tf.shape(indices)[0]], dtype=update.dtype) * -0.1)
 
     optimizer.apply_gradients(zip(updates, bernoulli_distribs))
 
@@ -146,7 +147,7 @@ def reset_metrics():
     return acc, loss
 
 
-decay = tf.Variable(1e-6, trainable=False)
+decay = tf.Variable(1e-7, trainable=False)
 
 valid_epoch()
 vacc, vloss = reset_metrics()
@@ -160,7 +161,7 @@ plt.show()
 # %%
 
 step_size = 400
-for ep in range(8):
+for ep in range(16):
     t0 = time.time()
     train_epoch(ds['train'].take(step_size), decay)
     tacc, tloss = reset_metrics()
@@ -180,7 +181,7 @@ for ep in range(8):
         sep=" | ",
     )
 
-    model.save_weights("temp/simple_pruning_smart_init17.h5")
+    model.save_weights("temp/classical_truning_on_train.h5")
     plt.hist(bernoulli_distribs[2].numpy().flatten(), bins=40)
     plt.show()
 
