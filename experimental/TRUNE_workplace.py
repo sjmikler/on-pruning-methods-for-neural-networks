@@ -27,7 +27,8 @@ dataset = datasets.cifar10()
 model = models.VGG((32, 32, 3), n_classes=10, version=19)
 # "logs/LTR444_shuffling_variants/start/78125/start_for_trune800.h5" 800 it
 # model.load_weights("temp/11.20_trune_gumbel_things/VGG19truneTRY4/63446/start_for_trune800.h5")
-model.load_weights('temp/LTR444_shuffling_variants/start/21723/start_for_trune800.h5')  # 8000 it
+model.load_weights(
+    'data/start_for_trune800.h5')  # 8000 it
 # model.load_weights('temp/11.20_trune_gumbel_things/VGG19truneTRY4/86664/start_for_trune800.h5')  # FULL
 # model.load_weights('temp/11.20_trune_gumbel_things/VGG19truneTRY4/64921/start_for_trune800.h5')  # FULL it2
 
@@ -76,8 +77,10 @@ loss_metric = tf.metrics.SparseCategoricalCrossentropy(True)
 def train_step(x, y, decay):
     for kmask, distrib in zip(kernel_masks, bernoulli_distribs):
         clipped_mask = tf.sigmoid(distrib)
-        binary_mask = tf.random.uniform(shape=clipped_mask.shape)
-        kmask.assign(tf.cast(binary_mask < clipped_mask, kmask.dtype))
+        # binary_mask = tf.random.uniform(shape=clipped_mask.shape)
+        # binary_mask = tf.random.uniform(shape=clipped_mask.shape)
+        # kmask.assign(tf.cast(binary_mask < clipped_mask, kmask.dtype))
+        kmask.assign(clipped_mask)
 
     with tf.GradientTape() as tape:
         tape.watch(kernel_masks)
@@ -118,10 +121,10 @@ def set_expected_masks():
 
 
 # @tf.function
-def train_epoch(ds, decay):
-    progbar = tf.keras.utils.Progbar(None)
+def train_epoch(ds, decay, num_iter):
+    progbar = tf.keras.utils.Progbar(num_iter)
 
-    for x, y in ds:
+    for x, y in ds.take(num_iter):
         train_step(x, y, decay)
         progbar.add(1)
 
@@ -160,10 +163,10 @@ plt.show()
 
 # %%
 
-step_size = 400
-for ep in range(16):
+num_iter = 400
+for ep in range(32):
     t0 = time.time()
-    train_epoch(ds['train'].take(step_size), decay)
+    train_epoch(ds['train'], decay, num_iter)
     tacc, tloss = reset_metrics()
 
     # set_expected_masks()
