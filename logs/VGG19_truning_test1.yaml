@@ -1,0 +1,645 @@
+ACC: 0.9401000142097473
+IDX: 643839/0
+REPEAT: 1
+TIME: 2020.12.4 0:30
+checkpoint: temp/reproducingLTR/VGG19_trune_test/643839/0.h5
+checkpointAP: random
+checkpointBP: data/simple_pruning_smart_init17.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_trune_test/643839/0
+lr_boundaries:
+- 32000
+- 48000
+- 64000
+lr_values:
+- 0.1
+- 0.02
+- 0.004
+- 0.0008
+model: VGG
+model_config:
+  input_shape:
+  - 32
+  - 32
+  - 3
+  l2_reg: 0.0001
+  n_classes: 10
+  version: 19
+name: VGG19_trune_test
+num_iterations: 80000
+precision: 32
+pruning: none
+pruning_config:
+  sparsity: 0
+  structure: false
+queue: None
+steps_per_epoch: 2000
+---
+ACC: 0.9387000203132629
+IDX: 366275/0
+REPEAT: 1
+TIME: 2020.12.4 1:13
+checkpoint: temp/reproducingLTR/VGG19_trune_test/366275/0.h5
+checkpointAP: data/start_for_trune800.h5
+checkpointBP: data/classical_truning_on_train.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_trune_test/366275/0
+lr_boundaries:
+- 32000
+- 48000
+- 64000
+lr_values:
+- 0.1
+- 0.02
+- 0.004
+- 0.0008
+model: VGG
+model_config:
+  input_shape:
+  - 32
+  - 32
+  - 3
+  l2_reg: 0.0001
+  n_classes: 10
+  version: 19
+name: VGG19_trune_test
+num_iterations: 80000
+precision: 32
+pruning: none
+pruning_config:
+  sparsity: 0
+  structure: false
+queue: None
+steps_per_epoch: 2000
+---
+ACC: 0.9395999908447266
+IDX: 269275/0
+REPEAT: 1
+TIME: 2020.12.4 1:16
+checkpoint: temp/reproducingLTR/VGG19_trune_test/269275/0.h5
+checkpointAP: data/start_for_trune800.h5
+checkpointBP: data/classical_truning_on_train.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_trune_test/269275/0
+lr_boundaries:
+- 32000
+- 48000
+- 64000
+lr_values:
+- 0.1
+- 0.02
+- 0.004
+- 0.0008
+model: VGG
+model_config:
+  input_shape:
+  - 32
+  - 32
+  - 3
+  l2_reg: 0.0001
+  n_classes: 10
+  version: 19
+name: VGG19_trune_test
+num_iterations: 80000
+precision: 32
+pruning: none
+pruning_config:
+  sparsity: 0
+  structure: false
+queue: None
+steps_per_epoch: 2000
+---
+ACC: 0.9394000172615051
+IDX: 767221/0
+REPEAT: 1
+TIME: 2020.12.4 2:42
+checkpoint: temp/reproducingLTR/VGG19_trune_test/767221/0.h5
+checkpointAP: data/start_for_trune800.h5
+checkpointBP: data/classical_truning_on_train.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_trune_test/767221/0
+lr_boundaries:
+- 32000
+- 48000
+- 64000
+lr_values:
+- 0.1
+- 0.02
+- 0.004
+- 0.0008
+model: VGG
+model_config:
+  input_shape:
+  - 32
+  - 32
+  - 3
+  l2_reg: 0.0001
+  n_classes: 10
+  version: 19
+name: VGG19_trune_test
+num_iterations: 80000
+precision: 32
+pruning: none
+pruning_config:
+  sparsity: 0
+  structure: false
+queue: None
+steps_per_epoch: 2000
+---
+ACC: 0.9404000043869019
+IDX: 287403/0
+REPEAT: 1
+TIME: 2020.12.4 2:49
+checkpoint: temp/reproducingLTR/VGG19_trune_test/287403/0.h5
+checkpointAP: data/start_for_trune800.h5
+checkpointBP: data/classical_truning_on_train.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_trune_test/287403/0
+lr_boundaries:
+- 32000
+- 48000
+- 64000
+lr_values:
+- 0.1
+- 0.02
+- 0.004
+- 0.0008
+model: VGG
+model_config:
+  input_shape:
+  - 32
+  - 32
+  - 3
+  l2_reg: 0.0001
+  n_classes: 10
+  version: 19
+name: VGG19_trune_test
+num_iterations: 80000
+precision: 32
+pruning: none
+pruning_config:
+  sparsity: 0
+  structure: false
+queue: None
+steps_per_epoch: 2000
+---
+ACC: 0.9370999932289124
+IDX: 326760/0
+REPEAT: 10
+TIME: 2020.12.4 3:17
+checkpoint: temp/reproducingLTR/VGG19_trune_test/326760/0.h5
+checkpointAP: data/start_for_trune800.h5
+checkpointBP: data/classical_truning_on_train.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_trune_test/326760/0
+lr_boundaries:
+- 32000
+- 48000
+- 64000
+lr_values:
+- 0.1
+- 0.02
+- 0.004
+- 0.0008
+model: VGG
+model_config:
+  input_shape:
+  - 32
+  - 32
+  - 3
+  l2_reg: 0.0001
+  n_classes: 10
+  version: 19
+name: VGG19_trune_test
+num_iterations: 80000
+precision: 32
+pruning: none
+pruning_config:
+  sparsity: 0
+  structure: false
+queue: None
+steps_per_epoch: 2000
+---
+ACC: 0.9398999810218811
+IDX: 326760/1
+REPEAT: 10
+TIME: 2020.12.4 4:47
+checkpoint: temp/reproducingLTR/VGG19_trune_test/326760/1.h5
+checkpointAP: data/start_for_trune800.h5
+checkpointBP: data/classical_truning_on_train.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_trune_test/326760/1
+lr_boundaries:
+- 32000
+- 48000
+- 64000
+lr_values:
+- 0.1
+- 0.02
+- 0.004
+- 0.0008
+model: VGG
+model_config:
+  input_shape:
+  - 32
+  - 32
+  - 3
+  l2_reg: 0.0001
+  n_classes: 10
+  version: 19
+name: VGG19_trune_test
+num_iterations: 80000
+precision: 32
+pruning: none
+pruning_config:
+  sparsity: 0
+  structure: false
+queue: None
+steps_per_epoch: 2000
+---
+ACC: 0.9376000165939331
+IDX: 326760/2
+REPEAT: 10
+TIME: 2020.12.4 6:17
+checkpoint: temp/reproducingLTR/VGG19_trune_test/326760/2.h5
+checkpointAP: data/start_for_trune800.h5
+checkpointBP: data/classical_truning_on_train.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_trune_test/326760/2
+lr_boundaries:
+- 32000
+- 48000
+- 64000
+lr_values:
+- 0.1
+- 0.02
+- 0.004
+- 0.0008
+model: VGG
+model_config:
+  input_shape:
+  - 32
+  - 32
+  - 3
+  l2_reg: 0.0001
+  n_classes: 10
+  version: 19
+name: VGG19_trune_test
+num_iterations: 80000
+precision: 32
+pruning: none
+pruning_config:
+  sparsity: 0
+  structure: false
+queue: None
+steps_per_epoch: 2000
+---
+ACC: 0.9399999976158142
+IDX: 326760/3
+REPEAT: 10
+TIME: 2020.12.4 7:47
+checkpoint: temp/reproducingLTR/VGG19_trune_test/326760/3.h5
+checkpointAP: data/start_for_trune800.h5
+checkpointBP: data/classical_truning_on_train.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_trune_test/326760/3
+lr_boundaries:
+- 32000
+- 48000
+- 64000
+lr_values:
+- 0.1
+- 0.02
+- 0.004
+- 0.0008
+model: VGG
+model_config:
+  input_shape:
+  - 32
+  - 32
+  - 3
+  l2_reg: 0.0001
+  n_classes: 10
+  version: 19
+name: VGG19_trune_test
+num_iterations: 80000
+precision: 32
+pruning: none
+pruning_config:
+  sparsity: 0
+  structure: false
+queue: None
+steps_per_epoch: 2000
+---
+ACC: 0.9354000091552734
+IDX: 326760/4
+REPEAT: 10
+TIME: 2020.12.4 9:17
+checkpoint: temp/reproducingLTR/VGG19_trune_test/326760/4.h5
+checkpointAP: data/start_for_trune800.h5
+checkpointBP: data/classical_truning_on_train.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_trune_test/326760/4
+lr_boundaries:
+- 32000
+- 48000
+- 64000
+lr_values:
+- 0.1
+- 0.02
+- 0.004
+- 0.0008
+model: VGG
+model_config:
+  input_shape:
+  - 32
+  - 32
+  - 3
+  l2_reg: 0.0001
+  n_classes: 10
+  version: 19
+name: VGG19_trune_test
+num_iterations: 80000
+precision: 32
+pruning: none
+pruning_config:
+  sparsity: 0
+  structure: false
+queue: None
+steps_per_epoch: 2000
+---
+ACC: 0.9386000037193298
+IDX: 326760/5
+REPEAT: 10
+TIME: 2020.12.4 10:47
+checkpoint: temp/reproducingLTR/VGG19_trune_test/326760/5.h5
+checkpointAP: data/start_for_trune800.h5
+checkpointBP: data/classical_truning_on_train.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_trune_test/326760/5
+lr_boundaries:
+- 32000
+- 48000
+- 64000
+lr_values:
+- 0.1
+- 0.02
+- 0.004
+- 0.0008
+model: VGG
+model_config:
+  input_shape:
+  - 32
+  - 32
+  - 3
+  l2_reg: 0.0001
+  n_classes: 10
+  version: 19
+name: VGG19_trune_test
+num_iterations: 80000
+precision: 32
+pruning: none
+pruning_config:
+  sparsity: 0
+  structure: false
+queue: None
+steps_per_epoch: 2000
+---
+ACC: 0.9370999932289124
+IDX: 326760/6
+REPEAT: 10
+TIME: 2020.12.4 12:17
+checkpoint: temp/reproducingLTR/VGG19_trune_test/326760/6.h5
+checkpointAP: data/start_for_trune800.h5
+checkpointBP: data/classical_truning_on_train.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_trune_test/326760/6
+lr_boundaries:
+- 32000
+- 48000
+- 64000
+lr_values:
+- 0.1
+- 0.02
+- 0.004
+- 0.0008
+model: VGG
+model_config:
+  input_shape:
+  - 32
+  - 32
+  - 3
+  l2_reg: 0.0001
+  n_classes: 10
+  version: 19
+name: VGG19_trune_test
+num_iterations: 80000
+precision: 32
+pruning: none
+pruning_config:
+  sparsity: 0
+  structure: false
+queue: None
+steps_per_epoch: 2000
+---
+ACC: 0.9388999938964844
+IDX: 326760/7
+REPEAT: 10
+TIME: 2020.12.4 13:47
+checkpoint: temp/reproducingLTR/VGG19_trune_test/326760/7.h5
+checkpointAP: data/start_for_trune800.h5
+checkpointBP: data/classical_truning_on_train.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_trune_test/326760/7
+lr_boundaries:
+- 32000
+- 48000
+- 64000
+lr_values:
+- 0.1
+- 0.02
+- 0.004
+- 0.0008
+model: VGG
+model_config:
+  input_shape:
+  - 32
+  - 32
+  - 3
+  l2_reg: 0.0001
+  n_classes: 10
+  version: 19
+name: VGG19_trune_test
+num_iterations: 80000
+precision: 32
+pruning: none
+pruning_config:
+  sparsity: 0
+  structure: false
+queue: None
+steps_per_epoch: 2000
+---
+ACC: 0.9391000270843506
+IDX: 326760/8
+REPEAT: 10
+TIME: 2020.12.4 15:17
+checkpoint: temp/reproducingLTR/VGG19_trune_test/326760/8.h5
+checkpointAP: data/start_for_trune800.h5
+checkpointBP: data/classical_truning_on_train.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_trune_test/326760/8
+lr_boundaries:
+- 32000
+- 48000
+- 64000
+lr_values:
+- 0.1
+- 0.02
+- 0.004
+- 0.0008
+model: VGG
+model_config:
+  input_shape:
+  - 32
+  - 32
+  - 3
+  l2_reg: 0.0001
+  n_classes: 10
+  version: 19
+name: VGG19_trune_test
+num_iterations: 80000
+precision: 32
+pruning: none
+pruning_config:
+  sparsity: 0
+  structure: false
+queue: None
+steps_per_epoch: 2000
+---
+ACC: 0.9381999969482422
+IDX: 326760/9
+REPEAT: 10
+TIME: 2020.12.4 16:47
+checkpoint: temp/reproducingLTR/VGG19_trune_test/326760/9.h5
+checkpointAP: data/start_for_trune800.h5
+checkpointBP: data/classical_truning_on_train.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_trune_test/326760/9
+lr_boundaries:
+- 32000
+- 48000
+- 64000
+lr_values:
+- 0.1
+- 0.02
+- 0.004
+- 0.0008
+model: VGG
+model_config:
+  input_shape:
+  - 32
+  - 32
+  - 3
+  l2_reg: 0.0001
+  n_classes: 10
+  version: 19
+name: VGG19_trune_test
+num_iterations: 80000
+precision: 32
+pruning: none
+pruning_config:
+  sparsity: 0
+  structure: false
+queue: None
+steps_per_epoch: 2000
+---
+ACC: 0.9369000196456909
+IDX: 417638/0
+REPEAT: 1
+TIME: 2020.12.4 4:12
+checkpoint: temp/reproducingLTR/VGG19_trune_test/417638/0.h5
+checkpointAP: data/start_for_trune800.h5
+checkpointBP: data/classical_truning_on_train.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_trune_test/417638/0
+lr_boundaries:
+- 32000
+- 48000
+- 64000
+lr_values:
+- 0.1
+- 0.02
+- 0.004
+- 0.0008
+model: VGG
+model_config:
+  input_shape:
+  - 32
+  - 32
+  - 3
+  l2_reg: 0.0001
+  n_classes: 10
+  version: 19
+name: VGG19_trune_test
+num_iterations: 80000
+precision: 32
+pruning: none
+pruning_config:
+  sparsity: 0
+  structure: false
+queue: None
+steps_per_epoch: 2000
+---
+ACC: 0.9365000128746033
+IDX: 844501/0
+REPEAT: 1
+TIME: 2020.12.4 4:19
+checkpoint: temp/reproducingLTR/VGG19_trune_test/844501/0.h5
+checkpointAP: data/start_for_trune800.h5
+checkpointBP: data/classical_truning_on_train.h5
+dataset: cifar10
+directory: temp/reproducingLTR
+full_path: temp/reproducingLTR/VGG19_trune_test/844501/0
+lr_boundaries:
+- 32000
+- 48000
+- 64000
+lr_values:
+- 0.1
+- 0.02
+- 0.004
+- 0.0008
+model: VGG
+model_config:
+  input_shape:
+  - 32
+  - 32
+  - 3
+  l2_reg: 0.0001
+  n_classes: 10
+  version: 19
+name: VGG19_trune_test
+num_iterations: 80000
+precision: 32
+pruning: none
+pruning_config:
+  sparsity: 0
+  structure: false
+queue: None
+steps_per_epoch: 2000
