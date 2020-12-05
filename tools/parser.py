@@ -105,22 +105,25 @@ def load_from_yaml(yaml_path):
     default = experiments.pop(0)
     default.update(cmd_arguments)
 
-    unpacked_experiments = []
-    for exp in experiments:
-        expcp = exp.copy()
-        exp.update(default)
-        exp.update(expcp)
-        rnd_idx = random.randint(100000, 999999)
-        for rep in range(exp['REPEAT']):
-            parsed_exp = deepcopy(exp)
-            parsed_exp['IDX'] = f"{rnd_idx}/{rep}"
+    all_unpacked_experiments = []
+    for global_rep in range(default.get('GLOBAL_REPEAT') or 1):
+        unpacked_experiments = []
+        for exp in experiments:
+            expcp = exp.copy()
+            exp.update(default)
+            exp.update(expcp)
+            rnd_idx = random.randint(100000, 999999)
+            for rep in range(exp.get('REPEAT') or 1):
+                parsed_exp = deepcopy(exp)
+                parsed_exp['IDX'] = f"{rnd_idx}/{rep}"
 
-            parsed_exp = cool_parse_exp(parsed_exp, unpacked_experiments)
-            unpacked_experiments.append(parsed_exp)
+                parsed_exp = cool_parse_exp(parsed_exp, unpacked_experiments)
+                unpacked_experiments.append(parsed_exp)
+        all_unpacked_experiments.extend(unpacked_experiments)
 
     if path := default.get('queue'):
-        queue = YamlExperimentQueue(unpacked_experiments, path=path)
+        queue = YamlExperimentQueue(all_unpacked_experiments, path=path)
     else:
-        queue = iter(unpacked_experiments)
+        queue = iter(all_unpacked_experiments)
     print(f'QUEUE TYPE: {type(queue)}')
     return default, queue

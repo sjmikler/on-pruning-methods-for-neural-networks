@@ -1,5 +1,6 @@
 # DEFAULTS:
 REPEAT: 1
+GLOBAL_REPEAT: 1
 name: skip # with default name=skip, training will be skipped if no name is specified
 precision: 16 # 16 or anything else for default 32
 directory: temp/reproducingLTR
@@ -43,4 +44,20 @@ lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
 num_iterations: 80000
 steps_per_epoch: 2000
-repeat: 3
+---
+name: VGG19_trune_test_random_init
+
+model: VGG
+model_config:
+    version: 19
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l2_reg: 1e-4
+
+checkpointBP: checkpoint[0]
+checkpointAP: random
+
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000

@@ -7,8 +7,9 @@ experiments will be updated with it, but values specified later, in experiments 
 
 **Special names**
 
-1. `REPEAT`: copies experiments many times (before fancy parsing)
-2. `IDX`: is added in `run.py` and is constructed like this: `{RANDOM_INDEX} / {REPETITION}`
+1. `REPEAT`: copies an experiment many times before fancy parsing, can be used for iterative trainings
+2. `GLOBAL_REPEAT`: performs all listed experiments many times (can be used to repeat iterative trainings)
+3. `IDX`: is added in `run.py` and is constructed like this: `{RANDOM_INDEX} / {REPETITION}`
 
 * Script `run.py`
 
