@@ -355,10 +355,10 @@ def report_density(model, detailed=False):
         if hasattr(layer, 'kernel_mask'):
             km = layer.kernel_mask.numpy()
             max_nonzero += km.size
-            nonzero += km.sum()
+            nonzero += (km != 0).sum()
 
             if detailed:
-                print(f"density of {layer.name}: {km.sum() / km.size}")
+                print(f"density of {layer.name:>16}: {km.sum() / km.size:6.4f}")
 
     return nonzero / max_nonzero
 

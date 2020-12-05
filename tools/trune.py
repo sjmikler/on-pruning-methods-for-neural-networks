@@ -24,9 +24,6 @@ def truning(model,
     kernel_masks = [w for w in model.weights if "kernel_mask" in w.name]
     bernoulli_distribs = [tf.Variable(mask * 25 - 15) for mask in kernel_masks]
 
-    for mask in kernel_masks:
-        mask._trainable = True
-
     def get_density(model):
         nonzero = 0
         max_nonzero = 0
@@ -95,6 +92,7 @@ def truning(model,
         acc_metric.reset_states()
         loss_metric.reset_states()
         return acc, loss
+
     decay = tf.Variable(weight_decay, trainable=False)
 
     steps_per_epoch = min(num_iterations, steps_per_epoch)

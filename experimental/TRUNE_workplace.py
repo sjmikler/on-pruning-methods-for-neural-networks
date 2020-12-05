@@ -18,8 +18,8 @@ from tools.pruning import apply_pruning_for_model, get_pruning_mask, report_dens
 import tensorflow_addons as tfa
 
 set_memory_growth()
-policy = mixed_precision.Policy("mixed_float16")
-mixed_precision.set_policy(policy)
+# policy = mixed_precision.Policy("mixed_float16")
+# mixed_precision.set_policy(policy)
 
 sns.set()
 
@@ -150,7 +150,7 @@ def reset_metrics():
     return acc, loss
 
 
-decay = tf.Variable(1e-7, trainable=False)
+decay = tf.Variable(1e-6, trainable=False)
 
 valid_epoch()
 vacc, vloss = reset_metrics()
