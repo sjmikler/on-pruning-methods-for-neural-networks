@@ -13,28 +13,27 @@ from sklearn.utils import shuffle
 from itertools import islice
 from tools.utils import set_memory_growth
 
-from tools import datasets, layers, models
+from tools import datasets, layers, models, trune
 from tools.pruning import apply_pruning_for_model, get_pruning_mask, report_density
 import tensorflow_addons as tfa
 
 set_memory_growth()
-# policy = mixed_precision.Policy("mixed_float16")
-# mixed_precision.set_policy(policy)
+policy = mixed_precision.Policy("mixed_float16")
+mixed_precision.set_policy(policy)
 
 sns.set()
 
 dataset = datasets.cifar10()
 model = models.VGG((32, 32, 3), n_classes=10, version=19)
-# "logs/LTR444_shuffling_variants/start/78125/start_for_trune800.h5" 800 it
-# model.load_weights("temp/11.20_trune_gumbel_things/VGG19truneTRY4/63446/start_for_trune800.h5")
-model.load_weights(
-    'data/start_for_trune800.h5')  # 8000 it
-# model.load_weights('temp/11.20_trune_gumbel_things/VGG19truneTRY4/86664/start_for_trune800.h5')  # FULL
-# model.load_weights('temp/11.20_trune_gumbel_things/VGG19truneTRY4/64921/start_for_trune800.h5')  # FULL it2
+model.load_weights('temp/VGG19_looking_for_tickets/VGG19normal2/38212/0.h5')  # 8000 it
 
 ds = datasets.cifar10()
-ds['train'] = ds['train'].map(
-    lambda x, y: (tfa.image.random_cutout(x, mask_size=6, constant_values=0), y))
+# ds['train'] = ds['train'].map(
+#     lambda x, y: (tfa.image.random_cutout(x, mask_size=6, constant_values=0), y))
+
+trune.truning(model, learning_rate=10, momentum=0.999, weight_decay=1e-7,
+              num_iterations=8000,
+              steps_per_epoch=2000, dataset=ds)
 
 optimizer = tf.optimizers.SGD(learning_rate=10, momentum=0.999, nesterov=True)
 loss_fn = tf.losses.SparseCategoricalCrossentropy(from_logits=True)
@@ -42,9 +41,6 @@ loss_fn = tf.losses.SparseCategoricalCrossentropy(from_logits=True)
 kernels = [layer.kernel for layer in model.layers if hasattr(layer, "kernel")]
 kernel_masks = [w for w in model.weights if "kernel_mask" in w.name]
 bernoulli_distribs = [tf.Variable(mask * 25 - 15) for mask in kernel_masks]
-
-
-# bernoulli_distribs = [tf.Variable(tf.ones_like(mask) * 2) for mask in kernel_masks]
 
 
 def compare_mask_sets(masks1, masks2):
@@ -77,10 +73,8 @@ loss_metric = tf.metrics.SparseCategoricalCrossentropy(True)
 def train_step(x, y, decay):
     for kmask, distrib in zip(kernel_masks, bernoulli_distribs):
         clipped_mask = tf.sigmoid(distrib)
-        # binary_mask = tf.random.uniform(shape=clipped_mask.shape)
-        # binary_mask = tf.random.uniform(shape=clipped_mask.shape)
-        # kmask.assign(tf.cast(binary_mask < clipped_mask, kmask.dtype))
-        kmask.assign(clipped_mask)
+        binary_mask = tf.random.uniform(shape=clipped_mask.shape)
+        kmask.assign(tf.cast(binary_mask < clipped_mask, kmask.dtype))
 
     with tf.GradientTape() as tape:
         tape.watch(kernel_masks)
@@ -132,11 +126,6 @@ def train_epoch(ds, decay, num_iter):
 @tf.function
 def valid_epoch(ds=ds['valid']):
     for x, y in ds:
-        # for kmask, distrib in zip(kernel_masks, bernoulli_distribs):
-        #     clipped_mask = tf.sigmoid(distrib)
-        #     binary_mask = tf.random.uniform(shape=clipped_mask.shape)
-        #     kmask.assign(tf.cast(binary_mask < clipped_mask, kmask.dtype))
-
         outs = model(x, training=False)
         acc_metric(y, outs)
         loss_metric(y, outs)
@@ -150,7 +139,7 @@ def reset_metrics():
     return acc, loss
 
 
-decay = tf.Variable(1e-6, trainable=False)
+decay = tf.Variable(1e-7, trainable=False)
 
 valid_epoch()
 vacc, vloss = reset_metrics()
@@ -163,8 +152,8 @@ plt.show()
 
 # %%
 
-num_iter = 400
-for ep in range(32):
+num_iter = 2000
+for ep in range(8):
     t0 = time.time()
     train_epoch(ds['train'], decay, num_iter)
     tacc, tloss = reset_metrics()

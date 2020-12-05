@@ -243,11 +243,12 @@ def prune_GraSP(model, dataset, config):
 
 
 def prune_TRUNE(model, dataset, config):
-    learning_rate = config.learning_rate or 100
-    momentum = config.momenetum or 0.9
-    weight_decay = float(config.weight_decay or 1e-6)
-    num_iterations = config.num_iterations or 8000
-    steps_per_epoch = config.steps_per_epoch or 2000
+    print(config)
+    learning_rate = config.learning_rate
+    momentum = config.momentum
+    weight_decay = float(config.weight_decay)
+    num_iterations = config.num_iterations
+    steps_per_epoch = config.steps_per_epoch
 
     from tools.trune import truning
     model = truning(model, learning_rate, momentum, weight_decay, num_iterations,
