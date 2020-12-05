@@ -27,7 +27,7 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: VGG19_trune_test
+name: VGG19_trune_test_random_init
 
 model: VGG
 model_config:
@@ -37,9 +37,10 @@ model_config:
     l2_reg: 1e-4
 
 checkpointBP: data/classical_truning_on_train.h5
-checkpointAP: data/start_for_trune800.h5
+checkpointAP: random
 
 lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
 num_iterations: 80000
 steps_per_epoch: 2000
+repeat: 3
