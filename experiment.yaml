@@ -37,7 +37,7 @@ model_config:
     n_classes: 10
     l2_reg: 1e-4
 
-checkpointBP: data/VGG19_IMP03_ticket/95871/10.h5
+checkpointBP: data/VGG19_IMP03_ticket/95871/9.h5
 checkpointAP: random
 
 pruning: magnitude
