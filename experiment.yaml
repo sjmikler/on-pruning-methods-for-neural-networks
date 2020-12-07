@@ -58,7 +58,7 @@ steps_per_epoch: 2000
 #num_iterations: 6000
 #steps_per_epoch: 2000
 ---
-name: VGG19_trune_test3
+name: VGG19_trune_test4
 
 model: VGG
 model_config:
@@ -67,7 +67,7 @@ model_config:
     n_classes: 10
     l2_reg: 1e-4
 
-checkpointBP: data/new_trune_workspace_ckp3.h5
+checkpointBP: data/new_trune_workspace_ckp4.h5
 checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
 
 lr_boundaries: [32000, 48000, 64000]
