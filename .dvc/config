@@ -2,3 +2,5 @@
     remote = gdrive
 ['remote "gdrive"']
     url = gdrive://1whLTuX_eaFWSAsauxR5ikoLULYtRRksw
+['remote "test"']
+    url = gdrive://1JWpubJ6BKGoyOVTwk_OIwzeG_CvWGkX-
