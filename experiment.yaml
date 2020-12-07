@@ -3,7 +3,7 @@ REPEAT: 1
 GLOBAL_REPEAT: 1
 name: skip # with default name=skip, training will be skipped if no name is specified
 precision: 16 # 16 or anything else for default 32
-directory: temp/1205_tests
+directory: temp/1207_tests
 full_path: exec f"{directory}/{name}/{IDX}"
 checkpoint: exec f"{directory}/{name}/{IDX}.h5"
 queue: null # specify path for queue file, if null keeps queue in memory
@@ -28,29 +28,37 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 #---
-#name: VGG19_lottery_random
+#name: VGG19_init_2000
 #
 #model: VGG
 #model_config:
-#    version: 19
-#    input_shape: [32, 32, 3]
-#    n_classes: 10
-#    l2_reg: 1e-4
+#  version: 19
+#  input_shape: [ 32, 32, 3 ]
+#  n_classes: 10
+#  l2_reg: 1e-4
 #
-#checkpointBP: data/VGG19_IMP03_ticket/95871/10.h5
-#checkpointAP: random
-#
-#pruning: magnitude
-#pruning_config:
-#    sparsity: 0.986158712799
-#
-#lr_boundaries: [32000, 48000, 64000]
-#lr_values: [0.1, 0.02, 0.004, 0.0008]
-#num_iterations: 80000
+#lr_boundaries: [ 32000, 48000, 64000 ]
+#lr_values: [ 0.1, 0.02, 0.004, 0.0008 ]
+#num_iterations: 2000
 #steps_per_epoch: 2000
-
+#---
+#name: VGG19_init_8000
+#
+#model: VGG
+#model_config:
+#  version: 19
+#  input_shape: [ 32, 32, 3 ]
+#  n_classes: 10
+#  l2_reg: 1e-4
+#
+#checkpointBP: checkpoint[-1]
+#
+#lr_boundaries: [ 32000, 48000, 64000 ]
+#lr_values: [ 0.1, 0.02, 0.004, 0.0008 ]
+#num_iterations: 6000
+#steps_per_epoch: 2000
 ---
-name: VGG19_iterative_truning
+name: VGG19_trune_test2
 
 model: VGG
 model_config:
@@ -59,49 +67,11 @@ model_config:
     n_classes: 10
     l2_reg: 1e-4
 
-lr_boundaries: [32000, 48000, 64000]
-lr_values: [0.1, 0.02, 0.004, 0.0008]
-num_iterations: 2000
-steps_per_epoch: 2000
----
-name: VGG19_iterative_truning
-
-model: VGG
-model_config:
-    version: 19
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l2_reg: 1e-4
-
-checkpointBP: checkpoint[-1]
-
-lr_boundaries: [32000, 48000, 64000]
-lr_values: [0.1, 0.02, 0.004, 0.0008]
-num_iterations: 8000
-steps_per_epoch: 2000
----
-name: VGG19_iterative_truning
-
-model: VGG
-model_config:
-    version: 19
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l2_reg: 1e-4
-
-checkpointBP: checkpoint[-1]
-checkpointAP: checkpoint[0]
-
-pruning: trune
-pruning_config:
-    learning_rate: 10
-    momentum: 0.999
-    weight_decay: 1e-7
-    num_iterations: 20000
-    steps_per_epoch: 2000
+checkpointBP: data/new_trune_workspace_ckp2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_init_2000.h5
 
 lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
 num_iterations: 80000
 steps_per_epoch: 2000
-REPEAT: 10
+

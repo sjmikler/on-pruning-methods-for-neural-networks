@@ -107,7 +107,8 @@ loss_fn = tf.losses.SparseCategoricalCrossentropy(True)
 
 model = models.VGG((32, 32, 3), n_classes=10, version=19,
                    CONV_LAYER=MaskedConv, DENSE_LAYER=MaskedDense)
-model.load_weights('temp/refactored_11.30/VGG19iterative_truning_init8000/43949/0.h5')
+# model.load_weights('temp/refactored_11.30/VGG19iterative_truning_init8000/43949/0.h5')
+model.load_weights('data/partial_training_checkpoints/VGG19_init_8000.h5')
 
 full_loss_metric = tf.metrics.Mean()
 loss_metric = tf.metrics.SparseCategoricalCrossentropy()
@@ -226,12 +227,12 @@ for step, (x, y) in enumerate(ds['train']):
             f"TIME: {time.time() - t0:6.0f}",
             sep=' | ')
 
-        report_density(model, detailed=True)
+        report_density(model, detailed=True, sigmoid=True)
         plt.hist(kernel_masks[2].numpy().flatten(), bins=40)
         plt.xlim(-10, 10)
         plt.show()
 
-        model.save_weoghts('temp/new_trune_workspace_ckp.h5', save_format="h5")
+        model.save_weights('temp/new_trune_workspace_ckp.h5', save_format="h5")
 
     if (step + 1) % NUM_ITER == 0:
         break
