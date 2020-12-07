@@ -352,14 +352,13 @@ def apply_pruning_for_model(model):
 def report_density(model, detailed=False):
     nonzero = 0
     max_nonzero = 0
-    for layer in model.layers:
-        if hasattr(layer, 'kernel_mask'):
-            km = layer.kernel_mask.numpy()
+    for w in model.weights:
+        if 'kernel_mask' in w.name:
+            km = w.numpy()
             max_nonzero += km.size
             nonzero += (km != 0).sum()
-
             if detailed:
-                print(f"density of {layer.name:>16}: {km.sum() / km.size:6.4f}")
+                print(f"density of {w.name:>16}: {km.sum() / km.size:6.4f}")
 
     return nonzero / max_nonzero
 

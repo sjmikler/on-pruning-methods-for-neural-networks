@@ -68,7 +68,7 @@ model_config:
     l2_reg: 1e-4
 
 checkpointBP: data/new_trune_workspace_ckp2.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
 
 lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]

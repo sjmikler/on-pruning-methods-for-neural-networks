@@ -10,7 +10,7 @@ import pprint
 from tools import utils
 from tools.utils import ddict
 
-utils.set_memory_growth()
+# utils.set_memory_growth()
 
 from tools import datasets, models, parser, pruning
 
@@ -26,7 +26,7 @@ else:
 
 # %%
 
-def log_from_history(history, info):
+def log_from_history(history, model, info):
     full_path = info['full_path']
     writer = tf.summary.create_file_writer(f"{full_path}")
     print(f"FULL PATH: {full_path}")
@@ -39,6 +39,7 @@ def log_from_history(history, info):
 
     maxi_acc = max(history["val_accuracy"])
     date = datetime.datetime.now()
+    info["DENSITY"] = pruning.report_density(model)
     info["TIME"] = f"{date.year}.{date.month}.{date.day} {date.hour}:{date.minute}"
     info["ACC"] = maxi_acc
 
@@ -129,7 +130,7 @@ for exp in experiment_queue:
                 steps_per_epoch=steps_per_epoch,
                 epochs=int(exp.num_iterations / steps_per_epoch),
             )
-            log_from_history(history.history, info=exp.copy())
+            log_from_history(history.history, model, info=exp.copy())
             model.save_weights(exp.checkpoint, save_format="h5")
 
         except KeyboardInterrupt:

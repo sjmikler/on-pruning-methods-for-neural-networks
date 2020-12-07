@@ -107,8 +107,7 @@ loss_fn = tf.losses.SparseCategoricalCrossentropy(True)
 
 model = models.VGG((32, 32, 3), n_classes=10, version=19,
                    CONV_LAYER=MaskedConv, DENSE_LAYER=MaskedDense)
-# model.load_weights('temp/refactored_11.30/VGG19iterative_truning_init8000/43949/0.h5')
-model.load_weights('data/partial_training_checkpoints/VGG19_init_8000.h5')
+model.load_weights('data/partial_training_checkpoints/VGG19_init_8000_v2.h5')
 
 full_loss_metric = tf.metrics.Mean()
 loss_metric = tf.metrics.SparseCategoricalCrossentropy()
@@ -195,9 +194,9 @@ print(f"V LOSS: {get_and_reset(loss_metric):6.3f}",
 
 # %%
 
-decay.assign(1e-5)
+decay.assign(5e-6)
 
-NUM_ITER = 16000
+NUM_ITER = 8000
 REP_ITER = 200
 VAL_ITER = 2000
 
@@ -212,7 +211,7 @@ for step, (x, y) in enumerate(ds['train']):
             f"T FULL: {get_and_reset(full_loss_metric):8.3f}",
             f"T LOSS: {get_and_reset(loss_metric):6.3f}",
             f"T ACCU: {get_and_reset(accu_metric):6.4f}",
-            f"DENSITY: {report_density(model):8.6f}",
+            f"DENSITY: {report_density(model, sigmoid=True):8.6f}",
             f"TIME: {time.time() - t0:6.0f}",
             sep=' | ')
 
@@ -223,7 +222,7 @@ for step, (x, y) in enumerate(ds['train']):
             f"{'VALIDATION':^14}",
             f"V LOSS: {get_and_reset(loss_metric):6.3f}",
             f"V ACCU: {get_and_reset(accu_metric):6.4f}",
-            f"DENSITY: {report_density(model):8.6f}",
+            f"DENSITY: {report_density(model, sigmoid=True):8.6f}",
             f"TIME: {time.time() - t0:6.0f}",
             sep=' | ')
 
@@ -252,6 +251,6 @@ for m in km:
     m.assign(mn)
 
 print(report_density(model2))
-model2.save_weights('temp/new_trune_workspace_ckp2.h5')
+model2.save_weights('temp/new_trune_workspace_ckp3.h5')
 
 # %%

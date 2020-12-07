@@ -1,0 +1,4 @@
+outs:
+- md5: 664be0dccb0f705acd9770e60bf8303d
+  size: 160413568
+  path: new_trune_workspace_ckp3.h5
