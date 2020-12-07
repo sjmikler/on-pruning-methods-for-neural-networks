@@ -7,18 +7,16 @@ import tensorflow as tf
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 import pprint
 
-from tools.utils import ddict, set_memory_growth
+from tools import utils
+from tools.utils import ddict
 
-set_memory_growth()
+utils.set_memory_growth()
 
 from tools import datasets, models, parser, pruning
 
 default_config, experiment_queue = parser.load_from_yaml(yaml_path='experiment.yaml')
 default_config = ddict(default_config)
-
-if default_config.precision == 16:
-    policy = mixed_precision.Policy("mixed_float16")
-    mixed_precision.set_policy(policy)
+utils.set_precision(default_config.precision)
 
 if '--dry' in sys.argv:
     dry = True

@@ -5,8 +5,10 @@ import numpy as np
 import tensorflow as tf
 
 from tools import datasets, models, pruning, utils
+import tensorflow.keras.mixed_precision.experimental as mixed_precision
 
 utils.set_memory_growth()
+utils.set_precision(16)
 
 
 class MaskedDense(tf.keras.layers.Dense):
@@ -100,6 +102,7 @@ class MaskedConv(tf.keras.layers.Conv2D):
 
 ds = datasets.cifar10(128, 128, shuffle=20000)
 optimizer = tf.optimizers.SGD(learning_rate=100, momentum=0.99, nesterov=True)
+optimizer = mixed_precision.LossScaleOptimizer(optimizer, "dynamic")
 loss_fn = tf.losses.SparseCategoricalCrossentropy(True)
 
 model = models.VGG((32, 32, 3), n_classes=10, version=19,
@@ -115,7 +118,7 @@ kernel_masks = [w for w in model.weights if "kernel_mask" in w.name]
 for kernel in kernel_masks:
     kernel.assign(np.ones_like(kernel.numpy()) * 3)
 
-decay = 1e-6
+decay = tf.Variable(1e-6)
 
 
 def get_and_reset(metric):
@@ -136,22 +139,26 @@ def train_step(x, y):
     with tf.GradientTape() as tape:
         tape.watch(kernel_masks)
         outs = model(x, training=True)
+        outs = tf.cast(outs, tf.float32)
         loss = loss_fn(y, outs)
         loss += reg_fn() * decay
+        scaled_loss = optimizer.get_scaled_loss(loss)
 
     loss_metric(y, outs)
     accu_metric(y, outs)
     full_loss_metric(loss)
-    grads = tape.gradient(loss, kernel_masks)
+    grads = tape.gradient(scaled_loss, kernel_masks)
+    grads = optimizer.get_unscaled_gradients(grads)
     optimizer.apply_gradients(zip(grads, kernel_masks))
 
     for mask in kernel_masks:
-        mask.assign(tf.clip_by_value(mask, -6, 6))
+        mask.assign(tf.clip_by_value(mask, -15, 15))
 
 
 @tf.function
 def valid_step(x, y):
     outs = model(x, training=False)
+    outs = tf.cast(outs, tf.float32)
     loss_metric(y, outs)
     accu_metric(y, outs)
 
@@ -162,13 +169,14 @@ def valid_epoch(ds):
         valid_step(x, y)
 
 
-def report_density(model, detailed=False):
+def report_density(model, detailed=False, sigmoid=False):
     nonzero = 0
     max_nonzero = 0
     for layer in model.layers:
         if hasattr(layer, 'kernel_mask'):
-            km = layer.kernel_mask
-            km = tf.sigmoid(km).numpy()
+            km = layer.kernel_mask.numpy()
+            if sigmoid:
+                km = tf.sigmoid(km).numpy()
             max_nonzero += km.size
             nonzero_here = km.sum()
 
@@ -181,10 +189,12 @@ def report_density(model, detailed=False):
 
 valid_epoch(ds['valid'])
 print(f"V LOSS: {get_and_reset(loss_metric):6.3f}",
-      f"V ACCU: {get_and_reset(accu_metric):6.3f}",
+      f"V ACCU: {get_and_reset(accu_metric):6.4f}",
       sep=' | ')
 
 # %%
+
+decay.assign(1e-5)
 
 NUM_ITER = 16000
 REP_ITER = 200
@@ -198,10 +208,10 @@ for step, (x, y) in enumerate(ds['train']):
     if (step + 1) % REP_ITER == 0:
         print(
             f"STEP: {step + 1:^8}",
-            f"T FULL: {get_and_reset(full_loss_metric):6.3f}",
+            f"T FULL: {get_and_reset(full_loss_metric):8.3f}",
             f"T LOSS: {get_and_reset(loss_metric):6.3f}",
-            f"T ACCU: {get_and_reset(accu_metric):6.3f}",
-            f"DENSITY: {report_density(model):6.3f}",
+            f"T ACCU: {get_and_reset(accu_metric):6.4f}",
+            f"DENSITY: {report_density(model):8.6f}",
             f"TIME: {time.time() - t0:6.0f}",
             sep=' | ')
 
@@ -211,8 +221,8 @@ for step, (x, y) in enumerate(ds['train']):
         print(
             f"{'VALIDATION':^14}",
             f"V LOSS: {get_and_reset(loss_metric):6.3f}",
-            f"V ACCU: {get_and_reset(accu_metric):6.3f}",
-            f"DENSITY: {report_density(model):6.3f}",
+            f"V ACCU: {get_and_reset(accu_metric):6.4f}",
+            f"DENSITY: {report_density(model):8.6f}",
             f"TIME: {time.time() - t0:6.0f}",
             sep=' | ')
 
@@ -221,27 +231,26 @@ for step, (x, y) in enumerate(ds['train']):
         plt.xlim(-10, 10)
         plt.show()
 
+        model.save_weoghts('temp/new_trune_workspace_ckp.h5', save_format="h5")
+
     if (step + 1) % NUM_ITER == 0:
         break
 
 # %%
 
-for km in kernel_masks:
-    k = km.numpy()
-    k[k < 0] = 0
-    k[k > 0] = 1
-    km.assign(k)
+model2 = models.VGG((32, 32, 3), n_classes=10, version=19,
+                    CONV_LAYER=MaskedConv, DENSE_LAYER=MaskedDense)
+model2.load_weights('temp/new_trune_workspace_ckp.h5')
+km = [w for w in model2.weights if 'kernel_mask' in w.name]
 
-# %%
+print(report_density(model2, sigmoid=True))
+for m in km:
+    mn = m.numpy()
+    mn[mn < 0] = 0
+    mn[mn > 0] = 1
+    m.assign(mn)
 
-pruning.apply_pruning_for_model(model)
-
-# %%
-
-pruning.report_density(model, detailed=True)
-
-# %%
-
-model.save_weights("temp/new_truning1.h5")
+print(report_density(model2))
+model2.save_weights('temp/new_trune_workspace_ckp2.h5')
 
 # %%

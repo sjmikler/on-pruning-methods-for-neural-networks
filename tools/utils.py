@@ -32,6 +32,14 @@ def set_memory_growth():
     tf.config.experimental.set_memory_growth(gpu, True)
 
 
+def set_precision(precision):
+    import tensorflow.keras.mixed_precision.experimental as mixed_precision
+
+    if precision == 16:
+        policy = mixed_precision.Policy("mixed_float16")
+        mixed_precision.set_policy(policy)
+
+
 def disable_gpu():
     import tensorflow as tf
     tf.config.set_visible_devices([], 'GPU')
