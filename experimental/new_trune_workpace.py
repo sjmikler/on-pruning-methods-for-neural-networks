@@ -6,6 +6,7 @@ import tensorflow as tf
 
 from tools import datasets, models, pruning, utils
 import tensorflow.keras.mixed_precision.experimental as mixed_precision
+import tensorflow_addons as tfa
 
 utils.set_memory_growth()
 utils.set_precision(16)
@@ -101,6 +102,9 @@ class MaskedConv(tf.keras.layers.Conv2D):
 # %%
 
 ds = datasets.cifar10(128, 128, shuffle=20000)
+ds['train'] = ds['train'].map(
+    lambda x, y: (tfa.image.random_cutout(x, mask_size=6, constant_values=0), y))
+
 optimizer = tf.optimizers.SGD(learning_rate=100, momentum=0.99, nesterov=True)
 optimizer = mixed_precision.LossScaleOptimizer(optimizer, "dynamic")
 loss_fn = tf.losses.SparseCategoricalCrossentropy(True)
@@ -192,17 +196,21 @@ print(f"V LOSS: {get_and_reset(loss_metric):6.3f}",
       f"V ACCU: {get_and_reset(accu_metric):6.4f}",
       sep=' | ')
 
+plt.hist(np.concatenate([km.numpy().flatten() for km in kernel_masks]), bins=40)
+plt.show()
+
 # %%
 
 decay.assign(1e-6)
 
-NUM_ITER = 8000
+NUM_ITER = 16000
 REP_ITER = 200
 VAL_ITER = 2000
 
 t0 = time.time()
 
 for step, (x, y) in enumerate(ds['train']):
+
     train_step(x, y)
 
     if (step + 1) % REP_ITER == 0:
@@ -227,7 +235,7 @@ for step, (x, y) in enumerate(ds['train']):
             sep=' | ')
 
         report_density(model, detailed=True, sigmoid=True)
-        plt.hist(kernel_masks[2].numpy().flatten(), bins=40)
+        plt.hist(np.concatenate([km.numpy().flatten() for km in kernel_masks]), bins=40)
         plt.show()
 
         model.save_weights('temp/new_trune_workspace_ckp.h5', save_format="h5")
@@ -250,6 +258,6 @@ for m in km:
     m.assign(mn)
 
 print(report_density(model2))
-model2.save_weights('temp/new_trune_workspace_ckp3.h5')
+model2.save_weights('temp/new_trune_workspace_ckp4.h5')
 
 # %%
