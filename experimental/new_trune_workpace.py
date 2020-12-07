@@ -194,7 +194,7 @@ print(f"V LOSS: {get_and_reset(loss_metric):6.3f}",
 
 # %%
 
-decay.assign(5e-6)
+decay.assign(1e-6)
 
 NUM_ITER = 8000
 REP_ITER = 200
@@ -228,7 +228,6 @@ for step, (x, y) in enumerate(ds['train']):
 
         report_density(model, detailed=True, sigmoid=True)
         plt.hist(kernel_masks[2].numpy().flatten(), bins=40)
-        plt.xlim(-10, 10)
         plt.show()
 
         model.save_weights('temp/new_trune_workspace_ckp.h5', save_format="h5")
