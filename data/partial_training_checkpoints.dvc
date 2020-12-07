@@ -1,0 +1,5 @@
+outs:
+- md5: 0cf3c3b6ee1b9e4a541f16d78ce25f02.dir
+  size: 320827024
+  nfiles: 2
+  path: partial_training_checkpoints
