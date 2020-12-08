@@ -105,6 +105,7 @@ ds = datasets.cifar10(128, 128, shuffle=20000)
 ds['train'] = ds['train'].map(
     lambda x, y: (tfa.image.random_cutout(x, mask_size=6, constant_values=0), y))
 
+# schedule = tf.optimizers.schedules.PiecewiseConstantDecay([8000, 12000], [100, 10, 1])
 optimizer = tf.optimizers.SGD(learning_rate=100, momentum=0.99, nesterov=True)
 optimizer = mixed_precision.LossScaleOptimizer(optimizer, "dynamic")
 loss_fn = tf.losses.SparseCategoricalCrossentropy(True)
@@ -114,7 +115,7 @@ model = models.VGG((32, 32, 3), n_classes=10, version=19,
 model.load_weights('data/partial_training_checkpoints/VGG19_init_8000_v2.h5')
 
 full_loss_metric = tf.metrics.Mean()
-loss_metric = tf.metrics.SparseCategoricalCrossentropy()
+loss_metric = tf.metrics.SparseCategoricalCrossentropy(True)
 accu_metric = tf.metrics.SparseCategoricalAccuracy(True)
 
 kernels = [layer.kernel for layer in model.layers if hasattr(layer, "kernel")]
@@ -196,7 +197,7 @@ print(f"V LOSS: {get_and_reset(loss_metric):6.3f}",
       f"V ACCU: {get_and_reset(accu_metric):6.4f}",
       sep=' | ')
 
-plt.hist(np.concatenate([km.numpy().flatten() for km in kernel_masks]), bins=40)
+plt.hist(np.concatenate([km.numpy().flatten() for km in kernel_masks[:3]]), bins=40)
 plt.show()
 
 # %%
@@ -235,7 +236,7 @@ for step, (x, y) in enumerate(ds['train']):
             sep=' | ')
 
         report_density(model, detailed=True, sigmoid=True)
-        plt.hist(np.concatenate([km.numpy().flatten() for km in kernel_masks]), bins=40)
+        plt.hist(np.concatenate([km.numpy().flatten() for km in kernel_masks[:3]]), bins=40)
         plt.show()
 
         model.save_weights('temp/new_trune_workspace_ckp.h5', save_format="h5")
@@ -258,6 +259,6 @@ for m in km:
     m.assign(mn)
 
 print(report_density(model2))
-model2.save_weights('temp/new_trune_workspace_ckp4.h5')
+# model2.save_weights('temp/new_trune_workspace_ckp4.h5')
 
 # %%
