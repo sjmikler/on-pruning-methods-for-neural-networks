@@ -3,7 +3,7 @@ REPEAT: 1
 GLOBAL_REPEAT: 1
 name: skip # with default name=skip, training will be skipped if no name is specified
 precision: 16 # 16 or anything else for default 32
-directory: temp/1207_tests
+directory: data
 full_path: exec f"{directory}/{name}/{IDX}"
 checkpoint: exec f"{directory}/{name}/{IDX}.h5"
 queue: null # specify path for queue file, if null keeps queue in memory
@@ -27,38 +27,10 @@ num_iterations: 18000
 steps_per_epoch: 2000
 
 # EXPERIMENTS:
-#---
-#name: VGG19_init_2000
-#
-#model: VGG
-#model_config:
-#  version: 19
-#  input_shape: [ 32, 32, 3 ]
-#  n_classes: 10
-#  l2_reg: 1e-4
-#
-#lr_boundaries: [ 32000, 48000, 64000 ]
-#lr_values: [ 0.1, 0.02, 0.004, 0.0008 ]
-#num_iterations: 2000
-#steps_per_epoch: 2000
-#---
-#name: VGG19_init_8000
-#
-#model: VGG
-#model_config:
-#  version: 19
-#  input_shape: [ 32, 32, 3 ]
-#  n_classes: 10
-#  l2_reg: 1e-4
-#
-#checkpointBP: checkpoint[-1]
-#
-#lr_boundaries: [ 32000, 48000, 64000 ]
-#lr_values: [ 0.1, 0.02, 0.004, 0.0008 ]
-#num_iterations: 6000
-#steps_per_epoch: 2000
 ---
-name: VGG19_trune_test4
+name: VGG19_IMP03_ticket
+
+checkpointAP: data/partial_trainig_checkpoints/VGG19_init_2000_v2.h5
 
 model: VGG
 model_config:
@@ -67,11 +39,46 @@ model_config:
     n_classes: 10
     l2_reg: 1e-4
 
-checkpointBP: data/new_trune_workspace_ckp4.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+---
+name: VGG19_IMP03_ticket
+
+checkpointAP: data/partial_trainig_checkpoints/VGG19_init_2000_v2.h5
+checkpointBP: checkpoint[-1]
+
+model: VGG
+model_config:
+    version: 19
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l2_reg: 1e-4
+
+pruning: magnitude
+pruning_config:
+    sparsity: exec 1 - (1 - sparsity[-1]) * 0.7
 
 lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
 num_iterations: 80000
 steps_per_epoch: 2000
-
+REPEAT: 20
+#---
+#name: VGG19_trune_test4
+#
+#model: VGG
+#model_config:
+#    version: 19
+#    input_shape: [32, 32, 3]
+#    n_classes: 10
+#    l2_reg: 1e-4
+#
+#checkpointBP: data/new_trune_workspace_ckp4.h5
+#checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+#
+#lr_boundaries: [32000, 48000, 64000]
+#lr_values: [0.1, 0.02, 0.004, 0.0008]
+#num_iterations: 80000
+#steps_per_epoch: 2000

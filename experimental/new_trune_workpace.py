@@ -177,11 +177,16 @@ def valid_epoch(ds):
 def report_density(model, detailed=False, sigmoid=False):
     nonzero = 0
     max_nonzero = 0
+
+    more_than_half = 0
     for layer in model.layers:
         if hasattr(layer, 'kernel_mask'):
             km = layer.kernel_mask.numpy()
+            more_than_half += np.sum(km > 0)
+
             if sigmoid:
                 km = tf.sigmoid(km).numpy()
+
             max_nonzero += km.size
             nonzero_here = km.sum()
 
@@ -189,6 +194,7 @@ def report_density(model, detailed=False, sigmoid=False):
                 print(f"density of {layer.name:>16}: {np.mean(km):6.4f}")
             nonzero += nonzero_here
 
+    print("Real density:", more_than_half / max_nonzero)
     return nonzero / max_nonzero
 
 
@@ -204,9 +210,9 @@ plt.show()
 
 decay.assign(1e-6)
 
-NUM_ITER = 16000
+NUM_ITER = 4000
 REP_ITER = 200
-VAL_ITER = 2000
+VAL_ITER = 1000
 
 t0 = time.time()
 
