@@ -1,0 +1,24 @@
+name: VGG19_IMP03_ticket
+checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointBP: data/VGG19_IMP03_ticket/770423/13.h5
+model: VGG
+model_config: {'version': 19, 'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 0.0001}
+pruning: magnitude
+pruning_config: {'sparsity': 0.9952524384900571}
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+REPEAT: 20
+GLOBAL_REPEAT: 1
+precision: 16
+directory: data
+full_path: data/VGG19_IMP03_ticket/770423/14
+checkpoint: data/VGG19_IMP03_ticket/770423/14.h5
+queue: None
+dataset: cifar10
+IDX: 770423/14
+DENSITY: 0.004747602876548142
+TIME: 2020.12.10 12:19
+ACC: 0.9257000088691711
+---
