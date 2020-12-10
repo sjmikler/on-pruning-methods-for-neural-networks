@@ -8,12 +8,14 @@ import yaml
 sns.set()
 
 name2path = {
+    # 'LTR with step size 30%': (
+    #     'data/VGG19_IMP03_ticket/95871/log.yaml', 95871),
     'LTR with step size 30%': (
-        'data/VGG19_IMP03_ticket/log.yaml', 95871),
+        'logs/VGG19_LTR30_20steps.yaml', 770423),
     # '2 LTR with step size 30%': (
     #     'logs/VGG19_lottery_rewinding.yaml', 22903, 637467, 835349, 285535),
-    'LTR with step size 50%': (
-        'temp/VGG19_looking_for_tickets/VGG19IMP05/log.yaml', 32631, 33072),
+    # 'LTR with step size 50%': (
+    #     'temp/VGG19_looking_for_tickets/VGG19IMP05/log.yaml', 32631, 33072),
     # 'LTR with step size 90%': (
     #     'temp/VGG19_looking_for_tickets/VGG19IMP05/log.yaml', 12061, 24517),
 }
@@ -49,7 +51,11 @@ for name, (path, *eid) in name2path.items():
 
         if not x or all(str(e) not in x[idx] for e in eid):
             continue
-        name2result[name].append((x['pruning_config']['sparsity'], x['acc']))
+
+        if 'acc' in x:
+            name2result[name].append((x['pruning_config']['sparsity'], x['acc']))
+        else:
+            name2result[name].append((x['pruning_config']['sparsity'], x['ACC']))
 
 for name in name2result:
     r = name2result[name]
@@ -81,10 +87,10 @@ plt.xlabel('sparsity')
 plt.ylabel('accuracy')
 plt.ylim(0.85, 0.95)
 plt.xscale('logit')
-plt.xticks([0.5, 0.8, 0.9, 0.95, 0.98, 0.99, 0.995, 0.997],
-           [0.5, 0.8, 0.9, 0.95, 0.98, 0.99, 0.995, 0.997])
-plt.xlim(0.4, 0.997)
-plt.yticks([0.84, 0.86, 0.88, 0.9 , 0.92, 0.93, 0.94, 0.96])
+plt.xticks([0.5, 0.8, 0.9, 0.95, 0.98, 0.99, 0.995, 0.997, 0.998, 0.999],
+           [0.5, 0.8, 0.9, 0.95, 0.98, 0.99, 0.995, 0.997, 0.998, 0.999])
+plt.xlim(0.4, 0.999)
+plt.yticks([0.84, 0.86, 0.88, 0.9, 0.92, 0.93, 0.94, 0.96])
 
 plt.tight_layout()
 # plt.savefig('oneshot_pruning/plotting/plots/iterative_pruning_accuracy.png')

@@ -102,8 +102,8 @@ class MaskedConv(tf.keras.layers.Conv2D):
 # %%
 
 ds = datasets.cifar10(128, 128, shuffle=20000)
-ds['train'] = ds['train'].map(
-    lambda x, y: (tfa.image.random_cutout(x, mask_size=6, constant_values=0), y))
+# ds['train'] = ds['train'].map(
+#     lambda x, y: (tfa.image.random_cutout(x, mask_size=6, constant_values=0), y))
 
 # schedule = tf.optimizers.schedules.PiecewiseConstantDecay([8000, 12000], [100, 10, 1])
 optimizer = tf.optimizers.SGD(learning_rate=100, momentum=0.99, nesterov=True)
@@ -117,9 +117,24 @@ model.load_weights('data/partial_training_checkpoints/VGG19_init_8000_v2.h5')
 full_loss_metric = tf.metrics.Mean()
 loss_metric = tf.metrics.SparseCategoricalCrossentropy(True)
 accu_metric = tf.metrics.SparseCategoricalAccuracy(True)
-
-kernels = [layer.kernel for layer in model.layers if hasattr(layer, "kernel")]
 kernel_masks = [w for w in model.weights if "kernel_mask" in w.name]
+
+all_models = [model]
+paths = [
+    'data/partial_training_checkpoints/VGG19_init_8000v2_2/535079/0.h5'
+]
+for path in paths:
+    m = models.VGG((32, 32, 3), n_classes=10, version=19,
+                   CONV_LAYER=MaskedConv, DENSE_LAYER=MaskedDense)
+    m.load_weights(path)
+
+    idx = 0
+    for layer in m.layers:
+        if hasattr(layer, 'kernel_mask'):
+            layer.kernel_mask = kernel_masks[idx]
+            idx += 1
+    all_models.append(m)
+
 for kernel in kernel_masks:
     kernel.assign(np.ones_like(kernel.numpy()) * 3)
 
@@ -140,7 +155,7 @@ def reg_fn():
 
 
 @tf.function
-def train_step(x, y):
+def train_step(model, x, y):
     with tf.GradientTape() as tape:
         tape.watch(kernel_masks)
         outs = model(x, training=True)
@@ -161,7 +176,7 @@ def train_step(x, y):
 
 
 @tf.function
-def valid_step(x, y):
+def valid_step(model, x, y):
     outs = model(x, training=False)
     outs = tf.cast(outs, tf.float32)
     loss_metric(y, outs)
@@ -169,9 +184,9 @@ def valid_step(x, y):
 
 
 @tf.function
-def valid_epoch(ds):
+def valid_epoch(model, ds):
     for x, y in ds:
-        valid_step(x, y)
+        valid_step(model, x, y)
 
 
 def report_density(model, detailed=False, sigmoid=False):
@@ -194,31 +209,32 @@ def report_density(model, detailed=False, sigmoid=False):
                 print(f"density of {layer.name:>16}: {np.mean(km):6.4f}")
             nonzero += nonzero_here
 
-    print("Real density:", more_than_half / max_nonzero)
+    print(f"Real density: {more_than_half / max_nonzero:6.4f}")
     return nonzero / max_nonzero
 
 
-valid_epoch(ds['valid'])
-print(f"V LOSS: {get_and_reset(loss_metric):6.3f}",
-      f"V ACCU: {get_and_reset(accu_metric):6.4f}",
-      sep=' | ')
+for m in all_models:
+    valid_epoch(m, ds['valid'])
+    print(f"V LOSS: {get_and_reset(loss_metric):6.3f}",
+          f"V ACCU: {get_and_reset(accu_metric):6.4f}",
+          sep=' | ')
 
 plt.hist(np.concatenate([km.numpy().flatten() for km in kernel_masks[:3]]), bins=40)
 plt.show()
 
 # %%
 
-decay.assign(1e-6)
+decay.assign(5e-7)
 
-NUM_ITER = 4000
+NUM_ITER = 8000
 REP_ITER = 200
-VAL_ITER = 1000
+VAL_ITER = 2000
 
 t0 = time.time()
 
 for step, (x, y) in enumerate(ds['train']):
-
-    train_step(x, y)
+    for m in all_models:
+        train_step(m, x, y)
 
     if (step + 1) % REP_ITER == 0:
         print(
@@ -226,26 +242,27 @@ for step, (x, y) in enumerate(ds['train']):
             f"T FULL: {get_and_reset(full_loss_metric):8.3f}",
             f"T LOSS: {get_and_reset(loss_metric):6.3f}",
             f"T ACCU: {get_and_reset(accu_metric):6.4f}",
-            f"DENSITY: {report_density(model, sigmoid=True):8.6f}",
+            f"DENSITY: {report_density(m, sigmoid=True):8.6f}",
             f"TIME: {time.time() - t0:6.0f}",
             sep=' | ')
 
     if (step + 1) % VAL_ITER == 0:
-        valid_epoch(ds['valid'])
+        for m in all_models:
+            valid_epoch(m, ds['valid'])
 
         print(
             f"{'VALIDATION':^14}",
             f"V LOSS: {get_and_reset(loss_metric):6.3f}",
             f"V ACCU: {get_and_reset(accu_metric):6.4f}",
-            f"DENSITY: {report_density(model, sigmoid=True):8.6f}",
+            f"DENSITY: {report_density(m, sigmoid=True):8.6f}",
             f"TIME: {time.time() - t0:6.0f}",
             sep=' | ')
 
-        report_density(model, detailed=True, sigmoid=True)
+        report_density(m, detailed=True, sigmoid=True)
         plt.hist(np.concatenate([km.numpy().flatten() for km in kernel_masks[:3]]), bins=40)
         plt.show()
 
-        model.save_weights('temp/new_trune_workspace_ckp.h5', save_format="h5")
+        m.save_weights(f'temp/new_trune_workspace_ckp.h5', save_format="h5")
 
     if (step + 1) % NUM_ITER == 0:
         break
