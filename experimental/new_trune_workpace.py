@@ -354,9 +354,7 @@ model_to_save.save_weights('temp/new_trune_workspace_ckp5.h5')
 # %%
 
 m1 = tf.keras.models.clone_model(model)
-m2 = tf.keras.models.clone_model(model)
-m1.load_weights('data/VGG19_IMP03_ticket/775908/8.h5')
-m2.load_weights('data/VGG19_IMP03_ticket/770423/8.h5')
-compare_masks(get_kernel_masks(m1), get_kernel_masks(m2))
+m1.load_weights('data/VGG19_IMP03_ticket/775908/9.h5')
+compare_masks(perf_kernel_masks, get_kernel_masks(m1), mask_activation=None)
 
 # %%

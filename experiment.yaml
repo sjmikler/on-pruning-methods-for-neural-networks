@@ -28,9 +28,9 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: VGG19_truning_from2ckp
+name: VGG19_truning_with_tanh
 
-checkpointBP: temp/new_trune_workspace_ckp5.h5
+checkpointBP: data/new_trune_workspace_ckp5.h5
 checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
 
 model: VGG
@@ -44,58 +44,4 @@ lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
 num_iterations: 80000
 steps_per_epoch: 2000
-REPEAT: 3
-#---
-#name: VGG19_IMP03_ticket
-#
-#checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
-#
-#model: VGG
-#model_config:
-#    version: 19
-#    input_shape: [32, 32, 3]
-#    n_classes: 10
-#    l2_reg: 1e-4
-#
-#lr_boundaries: [32000, 48000, 64000]
-#lr_values: [0.1, 0.02, 0.004, 0.0008]
-#num_iterations: 80000
-#steps_per_epoch: 2000
-#---
-#name: VGG19_IMP03_ticket
-#
-#checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
-#checkpointBP: checkpoint[-1]
-#
-#model: VGG
-#model_config:
-#    version: 19
-#    input_shape: [32, 32, 3]
-#    n_classes: 10
-#    l2_reg: 1e-4
-#
-#pruning: magnitude
-#pruning_config:
-#    sparsity: exec 1 - (1 - sparsity[-1]) * 0.7
-#
-#lr_boundaries: [32000, 48000, 64000]
-#lr_values: [0.1, 0.02, 0.004, 0.0008]
-#num_iterations: 80000
-#steps_per_epoch: 2000
-#REPEAT: 20
-#---
-#name: partial_training_checkpoints/VGG19_init_8000v2_2.h5
-#
-#model: VGG
-#model_config:
-#    version: 19
-#    input_shape: [32, 32, 3]
-#    n_classes: 10
-#    l2_reg: 1e-4
-#
-#checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
-#
-#lr_boundaries: [32000, 48000, 64000]
-#lr_values: [0.1, 0.02, 0.004, 0.0008]
-#num_iterations: 8000
-#steps_per_epoch: 2000
+REPEAT: 1
