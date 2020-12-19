@@ -8,10 +8,12 @@ import yaml
 sns.set()
 
 name2path = {
-    # 'LTR with step size 30%': (
-    #     'data/VGG19_IMP03_ticket/95871/log.yaml', 95871),
-    'LTR with step size 30%': (
-        'logs/VGG19_LTR30_20steps.yaml', 770423),
+    'LTR with step size 30%_v1': (
+        'data/VGG19_IMP03_ticket/log.yaml', 95871),
+    'LTR with step size 30%_v2': (
+        'data/VGG19_IMP03_ticket/775908/gathered_logs.yaml', 775908),
+    'LTR with step size 30%_v3': (
+        'data/VGG19_IMP03_ticket/770423/gathered_logs.yaml', 770423),
     # '2 LTR with step size 30%': (
     #     'logs/VGG19_lottery_rewinding.yaml', 22903, 637467, 835349, 285535),
     # 'LTR with step size 50%': (
