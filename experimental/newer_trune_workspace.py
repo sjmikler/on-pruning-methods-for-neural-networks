@@ -9,7 +9,7 @@ import tensorflow.keras.mixed_precision.experimental as mixed_precision
 import matplotlib.pyplot as plt
 
 utils.set_memory_growth()
-utils.set_precision(16)
+# utils.set_precision(16)
 
 
 # %%
@@ -163,7 +163,6 @@ for i, ckp in enumerate(config.checkpoints):
     set_kernel_masks_object(nets[i], kernel_masks)
 
 set_kernel_masks_value(net, 4.)
-
 ds = datasets.cifar10(128, 128)
 
 
