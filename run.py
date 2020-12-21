@@ -10,15 +10,15 @@ import pprint
 from tools import utils
 from tools.utils import ddict
 
-# utils.set_memory_growth()
+utils.set_memory_growth()
 
 from tools import datasets, models, parser, pruning
 
-default_config, experiment_queue = parser.load_from_yaml(yaml_path='experiment.yaml')
+default_config, experiment_queue = parser.load_from_yaml(yaml_path="experiment.yaml")
 default_config = ddict(default_config)
 utils.set_precision(default_config.precision)
 
-if '--dry' in sys.argv:
+if "--dry" in sys.argv:
     dry = True
 else:
     dry = False
@@ -26,8 +26,9 @@ else:
 
 # %%
 
+
 def log_from_history(history, model, info):
-    full_path = info['full_path']
+    full_path = info["full_path"]
     writer = tf.summary.create_file_writer(f"{full_path}")
     print(f"FULL PATH: {full_path}")
 
@@ -51,8 +52,7 @@ def log_from_history(history, model, info):
 
 
 def get_optimizer(boundaries, values):
-    schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
-        boundaries, values)
+    schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(boundaries, values)
     return tf.keras.optimizers.SGD(learning_rate=schedule, momentum=0.9, nesterov=True)
 
 
@@ -78,6 +78,7 @@ for exp in experiment_queue:
     optimizer = get_optimizer(exp.lr_boundaries, exp.lr_values)
     model_func = models.get_model(exp.model)
     model_config = exp.model_config
+    model_config.l1_reg = float(model_config.l1_reg)
     model_config.l2_reg = float(model_config.l2_reg)
     model = model_func(**model_config)
 
@@ -91,7 +92,7 @@ for exp in experiment_queue:
         model=model,
         pruning_method=exp.pruning,
         pruning_config=exp.pruning_config,
-        dataset=ds
+        dataset=ds,
     )
     assert isinstance(model, tf.keras.Model)
 
@@ -111,7 +112,8 @@ for exp in experiment_queue:
             if hasattr(layer, "apply_pruning_mask"):
                 layer.apply_pruning_mask()
         print(
-            f"LOADED AFTER PRUNING {exp.checkpointAP}, but keeping {num_masks} masks!")
+            f"LOADED AFTER PRUNING {exp.checkpointAP}, but keeping {num_masks} masks!"
+        )
 
     # apply pruning from previously calculated masks
     pruning.apply_pruning_masks(model, pruning_method=exp.pruning)
@@ -120,8 +122,9 @@ for exp in experiment_queue:
     if exp.name == "skip":  # just skip the training
         print("SKIPPING TRAINING", end="\n\n")
     else:
-        steps_per_epoch = min(exp.num_iterations,
-                              exp.steps_per_epoch)  # for short trainings
+        steps_per_epoch = min(
+            exp.num_iterations, exp.steps_per_epoch
+        )  # for short trainings
 
         try:
             history = model.fit(
@@ -139,3 +142,5 @@ for exp in experiment_queue:
 
 if isinstance(experiment_queue, parser.YamlExperimentQueue):
     experiment_queue.close()
+
+# %%

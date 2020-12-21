@@ -76,7 +76,8 @@ def classifier(flow,
 def VGG(input_shape,
         n_classes,
         version=None,
-        l2_reg=0.0,
+        l1_reg=0,
+        l2_reg=0,
         group_sizes=(1, 1, 2, 2, 2),
         features=(64, 128, 256, 512, 512),
         pools=(2, 2, 2, 2, 2),
@@ -98,7 +99,7 @@ def VGG(input_shape,
         else:
             raise KeyError(f"Unkown version={version}!")
 
-    regularizer = tf.keras.regularizers.l2(l2_reg) if l2_reg else None
+    regularizer = tf.keras.regularizers.l1_l2(l1_reg, l2_reg) if l2_reg or l1_reg else None
     bias_regularizer = regularizer if regularize_bias else None
 
     def conv3x3(*args, **kwargs):
@@ -146,6 +147,7 @@ def ResNet(
         input_shape,
         n_classes,
         version=None,
+        l1_reg=0,
         l2_reg=0,
         bootleneck=False,
         strides=(1, 2, 2),
@@ -170,7 +172,7 @@ def ResNet(
     exec(f'var = {activation}', None, exec_outs)
     activation = exec_outs.pop('var')
 
-    regularizer = tf.keras.regularizers.l2(l2_reg) if l2_reg else None
+    regularizer = tf.keras.regularizers.l1_l2(l1_reg, l2_reg) if l2_reg or l1_reg else None
     bias_regularizer = regularizer if regularize_bias else None
 
     def conv(filters, kernel_size, use_bias=False, **kwargs):
@@ -318,13 +320,14 @@ def WRN(N, K, *args, **kwargs):
 
 def LeNet(input_shape,
           n_classes,
+          l1_reg=0,
           l2_reg=0,
           layer_sizes=(300, 100),
           initializer='glorot_uniform',
           **kwargs):
     if kwargs:
         print(f"LeNet: unknown parameters: {kwargs.keys()}")
-    regularizer = tf.keras.regularizers.l2(l2_reg) if l2_reg else None
+    regularizer = tf.keras.regularizers.l1_l2(l1_reg, l2_reg) if l2_reg or l1_reg else None
     initializer = initializer
 
     def dense(*args, **kwargs):
@@ -346,12 +349,13 @@ def LeNet(input_shape,
 
 def LeNetConv(input_shape,
               n_classes,
+              l1_reg=0,
               l2_reg=0,
               initializer='glorot_uniform',
               **kwargs):
     if kwargs:
         print(f"Unknown parameters: {kwargs}")
-    regularizer = tf.keras.regularizers.l2(l2_reg) if l2_reg else None
+    regularizer = tf.keras.regularizers.l1_l2(l1_reg, l2_reg) if l2_reg or l1_reg else None
     initializer = initializer
 
     def dense(*args, **kwargs):

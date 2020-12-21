@@ -14,7 +14,8 @@ import tensorflow_addons as tfa
 utils.set_memory_growth()
 utils.set_precision(16)
 
-MASK_ACTIVATION = 'tanh'
+MASK_ACTIVATION = tf.tanh
+REG_ACTIVATION = tf.abs
 
 
 class MaskedDense(tf.keras.layers.Dense):
@@ -34,13 +35,7 @@ class MaskedDense(tf.keras.layers.Dense):
         self.sparsity = 1 - np.mean(self.kernel_mask.numpy())
 
     def call(self, x):
-        if MASK_ACTIVATION == 'tanh':
-            mask = tf.tanh(self.kernel_mask)
-        elif MASK_ACTIVATION == 'sigmoid':
-            mask = tf.sigmoid(self.kernel_mask)
-        else:
-            mask = self.kernel_mask
-
+        mask = MASK_ACTIVATION(self.kernel_mask)
         masked_w = tf.multiply(self.kernel, mask)
         result = tf.matmul(x, masked_w)
 
@@ -80,13 +75,7 @@ class MaskedConv(tf.keras.layers.Conv2D):
         self.sparsity = 1 - np.mean(self.kernel_mask.numpy())
 
     def call(self, x):
-        if MASK_ACTIVATION == 'tanh':
-            mask = tf.tanh(self.kernel_mask)
-        elif MASK_ACTIVATION == 'sigmoid':
-            mask = tf.sigmoid(self.kernel_mask)
-        else:
-            mask = self.kernel_mask
-
+        mask = MASK_ACTIVATION(self.kernel_mask)
         masked_w = tf.multiply(self.kernel, mask)
         result = tf.nn.conv2d(x, masked_w, strides=self.strides, padding=self.padding.upper())
 
@@ -110,8 +99,8 @@ class MaskedConv(tf.keras.layers.Conv2D):
 
 
 full_loss_metric = tf.metrics.Mean()
-loss_metric = tf.metrics.SparseCategoricalCrossentropy(True)
-accu_metric = tf.metrics.SparseCategoricalAccuracy(True)
+loss_metric = tf.metrics.SparseCategoricalCrossentropy(from_logits=True)
+accu_metric = tf.metrics.SparseCategoricalAccuracy()
 
 
 def get_and_reset(metric):
@@ -123,12 +112,7 @@ def get_and_reset(metric):
 def reg_fn(kernel_masks):
     loss = 0
     for mask in kernel_masks:
-        if MASK_ACTIVATION == 'sigmoid':
-            loss += tf.reduce_sum(tf.sigmoid(mask))
-        elif MASK_ACTIVATION == 'tanh':
-            loss += tf.reduce_sum(tf.abs(tf.tanh(mask)))
-        else:
-            loss += tf.reduce_sum(tf.abs(mask))
+        loss += tf.reduce_sum(REG_ACTIVATION(mask))
     return loss
 
 
@@ -139,14 +123,20 @@ def train_step(model, kernel_masks, x, y):
         outs = model(x, training=True)
         outs = tf.cast(outs, tf.float32)
         loss = model.loss(y, outs)
+
         loss += reg_fn(kernel_masks) * decay
         scaled_loss = model.optimizer.get_scaled_loss(loss)
 
     loss_metric(y, outs)
     accu_metric(y, outs)
     full_loss_metric(loss)
+
     grads = tape.gradient(scaled_loss, kernel_masks)
     grads = optimizer.get_unscaled_gradients(grads)
+
+    # grads = [tf.clip_by_value(grad,
+    #                           -0.01 / float(optimizer.learning_rate),
+    #                           0.01 / float(optimizer.learning_rate)) for grad in grads]
     optimizer.apply_gradients(zip(grads, kernel_masks))
 
     for mask in kernel_masks:
@@ -167,16 +157,12 @@ def valid_epoch(model, ds):
         valid_step(model, x, y)
 
 
-def report_density(model, detailed=False, mask_activation=MASK_ACTIVATION):
+def report_average_mask(model, detailed=False, mask_activation=MASK_ACTIVATION):
     nonzero = 0
     max_nonzero = 0
     for layer in filter(lambda x: hasattr(x, 'kernel_mask'), model.layers):
         km = layer.kernel_mask.numpy()
-
-        if mask_activation == 'sigmoid':
-            km = tf.sigmoid(km).numpy()
-        elif mask_activation == 'tanh':
-            km = np.abs(tf.tanh(km).numpy())
+        km = mask_activation(km).numpy()
 
         max_nonzero += km.size
         nonzero_here = km.sum()
@@ -187,21 +173,24 @@ def report_density(model, detailed=False, mask_activation=MASK_ACTIVATION):
     return nonzero / max_nonzero
 
 
-def compare_masks(perf_m, m, mask_activation=MASK_ACTIVATION):
+def compare_masks(perf_m, m, mask_activation=MASK_ACTIVATION, force_sparsity=None):
     m = np.concatenate([x.numpy().flatten() for x in m])
-    if mask_activation == 'tanh':
-        m = tf.abs(tf.tanh(m)).numpy()
-    elif mask_activation == 'sigmoid':
-        m = tf.sigmoid(m).numpy()
-    elif mask_activation == 'abs':
-        m = tf.abs(m).numpy()
+    m = mask_activation(m).numpy()
 
     perf_m = np.concatenate([x.numpy().flatten() for x in perf_m])
 
     prc, rec, thr = precision_recall_curve(perf_m, m)
     f1_scores = [2 * p * r / (p + r) for p, r in zip(prc, rec)]
-    best_idx = np.argmax(f1_scores)
-    return f1_scores[best_idx], prc[best_idx], rec[best_idx], thr[best_idx]
+    idx = np.argmax(f1_scores)
+
+    if force_sparsity:  # modify `idx` so sparsity is as required
+        threshold = np.sort(m)[int(len(m) * force_sparsity)]
+        for idx, t in enumerate(thr):
+            if t > threshold:
+                break
+
+    f1_density = np.mean(m >= thr[idx])
+    return f1_scores[idx], prc[idx], rec[idx], thr[idx], f1_density
 
 
 def get_kernel_masks(model):
@@ -219,7 +208,8 @@ ds = datasets.cifar10(128, 128, shuffle=20000)
 
 optimizer = tf.optimizers.SGD(learning_rate=100, momentum=0.99, nesterov=True)
 optimizer = mixed_precision.LossScaleOptimizer(optimizer, "dynamic")
-loss_fn = tf.losses.SparseCategoricalCrossentropy(True)
+loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+learning_rate = float(optimizer.learning_rate)
 
 model = models.VGG((32, 32, 3), n_classes=10, version=19,
                    CONV_LAYER=MaskedConv, DENSE_LAYER=MaskedDense)
@@ -274,43 +264,52 @@ print(compare_masks(perf_kernel_masks, kernel_masks))
 
 # %%
 
-decay.assign(1e-6)
+decays = []
+decay.assign(1e-7)
 
-NUM_ITER = 8000
+NUM_ITER = 4000
 VAL_ITER = 2000
 REP_ITER = 500
+force_sparsity = None
 
 t0 = time.time()
 
+absactiv = lambda x: tf.abs(MASK_ACTIVATION(x))
+
 for step, (x, y) in enumerate(ds['train']):
     for m in all_models:
-        try:
-            train_step(m, kernel_masks, x, y)
-        except KeyboardInterrupt:
-            break
+        train_step(m, kernel_masks, x, y)
 
     if (step + 1) % REP_ITER == 0:
-        mean_density, real_density = report_density(m)
-        f1, prc, rec, thr = compare_masks(perf_kernel_masks, kernel_masks)
-
+        mean_density = report_average_mask(model, mask_activation=absactiv)
+        f1, prc, rec, thr, f1d = compare_masks(perf_kernel_masks, kernel_masks,
+                                               mask_activation=absactiv,
+                                               force_sparsity=force_sparsity
+                                               )
         print(
             f"IT{step + 1:^6}",
             f"F LOS {get_and_reset(full_loss_metric):6.3f}",
             f"LOS {get_and_reset(loss_metric):6.3f}",
             f"ACC {get_and_reset(accu_metric):6.4f}",
-            f"DENS {mean_density:8.6f}",
-            f"R DENS {real_density:8.6f}",
-            f"PERF {f1:6.4f}",
+            f"AVGMASK {mean_density:8.6f}",
+            f"F1 {f1:6.4f}",
             f"PRC {prc:6.4f}",
             f"REC {rec:6.4f}",
             f"THR {thr:6.3f}",
+            f"DENS {f1d:6.3f}",
             f"T {time.time() - t0:6.0f}",
             sep=' | ')
+
+        plt.figure(figsize=(5, 7), dpi=100)
+        plt.subplot(2, 1, 1)
+        plt.hist(np.concatenate([MASK_ACTIVATION(km).numpy().flatten() for km in kernel_masks[:4]]), bins=40)
+        plt.subplot(2, 1, 2)
+        plt.hist(np.concatenate([km.numpy().flatten() for km in kernel_masks[:4]]), bins=40)
+        plt.show()
 
     if (step + 1) % VAL_ITER == 0:
         for m in all_models:
             valid_epoch(m, ds['valid'])
-
         print(
             f"{'VALIDATION':^14}",
             f"V LOSS: {get_and_reset(loss_metric):6.3f}",
@@ -318,43 +317,41 @@ for step, (x, y) in enumerate(ds['train']):
             f"TIME: {time.time() - t0:6.0f}",
             sep=' | ')
 
-        report_density(m, detailed=True)
-        plt.hist(np.concatenate([km.numpy().flatten() for km in kernel_masks[:3]]), bins=40)
-        plt.show()
+        report_average_mask(model, detailed=True, mask_activation=absactiv)
+        model.save_weights(f'temp/new_trune_workspace_ckp.h5', save_format="h5")
 
-        m.save_weights(f'temp/new_trune_workspace_ckp.h5', save_format="h5")
+        if decays:
+            decay.assign(decays.pop(0))
+            print("decay", decay.value())
+
     if (step + 1) % NUM_ITER == 0:
         break
+
+# %%
+
+other_perf = tf.keras.models.clone_model(model)
+other_perf.load_weights('data/VGG19_IMP03_ticket/775908/10.h5')
+print(compare_masks(perf_kernel_masks, get_kernel_masks(other_perf), mask_activation=tf.identity))
 
 # %%
 
 model_to_save = tf.keras.models.clone_model(model)
 model_to_save.load_weights('temp/new_trune_workspace_ckp.h5')
 km = [w for w in model_to_save.weights if 'kernel_mask' in w.name]
+print(compare_masks(perf_kernel_masks, get_kernel_masks(model_to_save), mask_activation=absactiv))
+print(report_average_mask(model_to_save))
 
-print(report_density(model_to_save))
-
-THRESHOLD = 0.9840285
+THRESHOLD = 0.9489863
 for m in km:
-    mn = m.numpy()
-    if MASK_ACTIVATION == 'tanh':
-        mn = tf.tanh(mn).numpy()
-    elif MASK_ACTIVATION == 'sigmoid':
-        mn = tf.sigmoid(mn).numpy()
+    mn = MASK_ACTIVATION(m).numpy()
 
     mn[np.abs(mn) < THRESHOLD] = 0.
     mn[mn >= THRESHOLD] = 1.
     mn[mn <= -THRESHOLD] = -1.
     m.assign(mn)
 
-print(report_density(model_to_save, mask_activation=None, detailed=True))
-print(compare_masks(perf_kernel_masks, get_kernel_masks(model_to_save), mask_activation='abs'))
-model_to_save.save_weights('temp/new_trune_workspace_ckp5.h5')
-
-# %%
-
-m1 = tf.keras.models.clone_model(model)
-m1.load_weights('data/VGG19_IMP03_ticket/775908/9.h5')
-compare_masks(perf_kernel_masks, get_kernel_masks(m1), mask_activation=None)
+print(report_average_mask(model_to_save, mask_activation=tf.abs, detailed=True))
+print(compare_masks(perf_kernel_masks, get_kernel_masks(model_to_save), mask_activation=tf.abs))
+model_to_save.save_weights('temp/new_trune_workspace_ckp7.h5')
 
 # %%
