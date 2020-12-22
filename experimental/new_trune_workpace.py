@@ -101,6 +101,7 @@ class MaskedConv(tf.keras.layers.Conv2D):
 full_loss_metric = tf.metrics.Mean()
 loss_metric = tf.metrics.SparseCategoricalCrossentropy(from_logits=True)
 accu_metric = tf.metrics.SparseCategoricalAccuracy()
+gradient_keeper = tf.metrics.Mean()
 
 
 def get_and_reset(metric):
@@ -133,14 +134,16 @@ def train_step(model, kernel_masks, x, y):
 
     grads = tape.gradient(scaled_loss, kernel_masks)
     grads = optimizer.get_unscaled_gradients(grads)
+    max_gradient = tf.reduce_max([tf.reduce_max(tf.abs(grad)) for grad in grads])
+    gradient_keeper(max_gradient)
 
-    # grads = [tf.clip_by_value(grad,
-    #                           -0.01 / float(optimizer.learning_rate),
-    #                           0.01 / float(optimizer.learning_rate)) for grad in grads]
+    grads = [tf.clip_by_value(grad,
+                              -0.1 / float(optimizer.learning_rate),
+                              0.1 / float(optimizer.learning_rate)) for grad in grads]
     optimizer.apply_gradients(zip(grads, kernel_masks))
 
     for mask in kernel_masks:
-        mask.assign(tf.clip_by_value(mask, -15, 15))
+        mask.assign(tf.clip_by_value(mask, -10, 10))
 
 
 @tf.function
@@ -173,24 +176,25 @@ def report_average_mask(model, detailed=False, mask_activation=MASK_ACTIVATION):
     return nonzero / max_nonzero
 
 
-def compare_masks(perf_m, m, mask_activation=MASK_ACTIVATION, force_sparsity=None):
-    m = np.concatenate([x.numpy().flatten() for x in m])
-    m = mask_activation(m).numpy()
-
-    perf_m = np.concatenate([x.numpy().flatten() for x in perf_m])
-
-    prc, rec, thr = precision_recall_curve(perf_m, m)
-    f1_scores = [2 * p * r / (p + r) for p, r in zip(prc, rec)]
-    idx = np.argmax(f1_scores)
-
-    if force_sparsity:  # modify `idx` so sparsity is as required
-        threshold = np.sort(m)[int(len(m) * force_sparsity)]
-        for idx, t in enumerate(thr):
-            if t > threshold:
-                break
-
-    f1_density = np.mean(m >= thr[idx])
-    return f1_scores[idx], prc[idx], rec[idx], thr[idx], f1_density
+# def compare_masks(perf_m, m, mask_activation=MASK_ACTIVATION, force_sparsity=None):
+#     m = np.concatenate([x.numpy().flatten() for x in m])
+#     m = mask_activation(m).numpy()
+#
+#     perf_m = np.concatenate([x.numpy().flatten() for x in perf_m])
+#
+#     prc, rec, thr = precision_recall_curve(perf_m, m)
+#     f1_scores = [2 * p * r / (p + r) for p, r in zip(prc, rec)]
+#     idx = np.argmax(f1_scores)
+#
+#     if force_sparsity:  # modify `idx` so sparsity is as required
+#         threshold = np.sort(m)[int(len(m) * force_sparsity)]
+#         for idx, t in enumerate(thr):
+#             if t > threshold:
+#                 break
+#
+#     f1_density = np.mean(m >= thr[idx])
+#     return f1_scores[idx], prc[idx], rec[idx], thr[idx], f1_density
+from experimental.toolkit import compare_masks
 
 
 def get_kernel_masks(model):
@@ -203,9 +207,7 @@ model_perf = models.VGG((32, 32, 3), n_classes=10, version=19)
 model_perf.load_weights('data/VGG19_IMP03_ticket/770423/10.h5')
 perf_kernel_masks = get_kernel_masks(model_perf)
 
-ds = datasets.cifar10(128, 128, shuffle=20000)
-# ds['train'] = ds['train'].map( lambda x, y: (tfa.image.random_cutout(x, mask_size=6, constant_values=0), y))
-
+ds = datasets.cifar10(128, 128, shuffle=10000)
 optimizer = tf.optimizers.SGD(learning_rate=100, momentum=0.99, nesterov=True)
 optimizer = mixed_precision.LossScaleOptimizer(optimizer, "dynamic")
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
@@ -215,39 +217,25 @@ model = models.VGG((32, 32, 3), n_classes=10, version=19,
                    CONV_LAYER=MaskedConv, DENSE_LAYER=MaskedDense)
 
 checkpoint_lookup = {
-    '2000_v2': 'data/partial_training_checkpoints/VGG19_init_2000_v2.h5',
-    '8000_v2': 'data/partial_training_checkpoints/VGG19_init_8000_v2.h5',
-    'full_from_2000_v2': 'data/VGG19_IMP03_ticket/130735/0.h5'
+    '2k': 'data/partial_training_checkpoints/VGG19_2000it/0.h5',
+    '8k': 'data/partial_training_checkpoints/VGG19_8000it/0.h5',
+    '16k': 'data/partial_training_checkpoints/VGG19_16000it/0.h5',
+    '2k2': 'data/partial_training_checkpoints/VGG19_2000it/1.h5',
+    '8k2': 'data/partial_training_checkpoints/VGG19_8000it/1.h5',
+    'full_from_2k': 'data/VGG19_IMP03_ticket/130735/0.h5',
+    'unrl_full1': 'data/VGG19_full_training/70754/0.h5',
+    'unrl_full2': 'data/VGG19_full_training/70754/1.h5',
 }
-model.load_weights(checkpoint_lookup['8000_v2'])
+
+model.load_weights(checkpoint_lookup['8k'])
 model.compile(optimizer, loss_fn)
 kernel_masks = get_kernel_masks(model)
 
 all_models = [model]
-paths = [
-    # '8000_v2'
-]
-for path in paths:
-    optimizer = tf.optimizers.SGD(learning_rate=100, momentum=0.99, nesterov=True)
-    optimizer = mixed_precision.LossScaleOptimizer(optimizer, "dynamic")
-    loss_fn = tf.losses.SparseCategoricalCrossentropy(True)
-
-    if path in checkpoint_lookup:
-        path = checkpoint_lookup[path]
-    m = tf.keras.models.clone_model(model)
-    m.load_weights(path)
-    m.compile(optimizer, loss_fn)
-
-    idx = 0
-    for layer in m.layers:
-        if hasattr(layer, 'kernel_mask'):
-            layer.kernel_mask = kernel_masks[idx]
-            idx += 1
-    all_models.append(m)
 
 # initialize kernel_masks
 for kernel in kernel_masks:
-    kernel.assign(np.ones_like(kernel.numpy()) * 3)
+    kernel.assign(np.ones_like(kernel.numpy()) * 4.)
 
 decay = tf.Variable(1e-6)
 
@@ -260,16 +248,16 @@ for m in all_models:
 plt.hist(np.concatenate([km.numpy().flatten() for km in kernel_masks[:3]]), bins=40)
 plt.show()
 
-print(compare_masks(perf_kernel_masks, kernel_masks))
+print(compare_masks(perf_kernel_masks, kernel_masks, mask_activation=tf.identity))
 
 # %%
 
 decays = []
 decay.assign(1e-7)
 
-NUM_ITER = 4000
-VAL_ITER = 2000
-REP_ITER = 500
+NUM_ITER = 4800
+VAL_ITER = 600
+REP_ITER = 600
 force_sparsity = None
 
 t0 = time.time()
@@ -281,6 +269,7 @@ for step, (x, y) in enumerate(ds['train']):
         train_step(m, kernel_masks, x, y)
 
     if (step + 1) % REP_ITER == 0:
+        # print(get_and_reset(mymean))
         mean_density = report_average_mask(model, mask_activation=absactiv)
         f1, prc, rec, thr, f1d = compare_masks(perf_kernel_masks, kernel_masks,
                                                mask_activation=absactiv,
@@ -293,9 +282,10 @@ for step, (x, y) in enumerate(ds['train']):
             f"ACC {get_and_reset(accu_metric):6.4f}",
             f"AVGMASK {mean_density:8.6f}",
             f"F1 {f1:6.4f}",
-            f"PRC {prc:6.4f}",
+            # f"PRC {prc:6.4f}",
             f"REC {rec:6.4f}",
             f"THR {thr:6.3f}",
+            f"GRAD {get_and_reset(gradient_keeper):6.4f}",
             f"DENS {f1d:6.3f}",
             f"T {time.time() - t0:6.0f}",
             sep=' | ')
@@ -317,7 +307,7 @@ for step, (x, y) in enumerate(ds['train']):
             f"TIME: {time.time() - t0:6.0f}",
             sep=' | ')
 
-        report_average_mask(model, detailed=True, mask_activation=absactiv)
+        # report_average_mask(model, detailed=True, mask_activation=absactiv)
         model.save_weights(f'temp/new_trune_workspace_ckp.h5', save_format="h5")
 
         if decays:
@@ -326,32 +316,5 @@ for step, (x, y) in enumerate(ds['train']):
 
     if (step + 1) % NUM_ITER == 0:
         break
-
-# %%
-
-other_perf = tf.keras.models.clone_model(model)
-other_perf.load_weights('data/VGG19_IMP03_ticket/775908/10.h5')
-print(compare_masks(perf_kernel_masks, get_kernel_masks(other_perf), mask_activation=tf.identity))
-
-# %%
-
-model_to_save = tf.keras.models.clone_model(model)
-model_to_save.load_weights('temp/new_trune_workspace_ckp.h5')
-km = [w for w in model_to_save.weights if 'kernel_mask' in w.name]
-print(compare_masks(perf_kernel_masks, get_kernel_masks(model_to_save), mask_activation=absactiv))
-print(report_average_mask(model_to_save))
-
-THRESHOLD = 0.9489863
-for m in km:
-    mn = MASK_ACTIVATION(m).numpy()
-
-    mn[np.abs(mn) < THRESHOLD] = 0.
-    mn[mn >= THRESHOLD] = 1.
-    mn[mn <= -THRESHOLD] = -1.
-    m.assign(mn)
-
-print(report_average_mask(model_to_save, mask_activation=tf.abs, detailed=True))
-print(compare_masks(perf_kernel_masks, get_kernel_masks(model_to_save), mask_activation=tf.abs))
-model_to_save.save_weights('temp/new_trune_workspace_ckp7.h5')
 
 # %%
