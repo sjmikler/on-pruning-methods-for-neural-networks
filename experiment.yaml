@@ -30,7 +30,7 @@ steps_per_epoch: 2000
 ---
 name: VGG19_from_sigmoid
 checkpointBP: data/new_trune_workspace_ckp.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_8000it/1.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/1.h5
 
 model: VGG
 model_config:
