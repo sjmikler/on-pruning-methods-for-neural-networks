@@ -35,14 +35,17 @@ def set_kernel_masks_object(model, masks):
         l.kernel_mask = km
 
 
-def clip_many(values, clip_at, inplace=False):
+def clip_many(values, clip_at, clip_from=None, inplace=False):
+    if clip_from is None:
+        clip_from = -clip_at
+
     if inplace:
         for v in values:
-            v.assign(tf.clip_by_value(v, -clip_at, clip_at))
+            v.assign(tf.clip_by_value(v, clip_from, clip_at))
     else:
         r = []
         for v in values:
-            r.append(tf.clip_by_value(v, -clip_at, clip_at))
+            r.append(tf.clip_by_value(v, clip_from, clip_at))
         return r
 
 
@@ -198,3 +201,21 @@ def create_layers(mask_activation):
             self.kernel.assign(tf.multiply(self.kernel, self.kernel_mask))
 
     return MaskedConv, MaskedDense
+
+
+def prune_and_save_model(net, mask_activation, threshold, path):
+    nonzero = 0
+    num_weights = 0
+    model = tf.keras.models.clone_model(net)
+    model.set_weights(net.get_weights())
+
+    for l in model.layers:
+        if not hasattr(l, 'kernel_mask'):
+            continue
+        mask = tf.cast(mask_activation(l.kernel_mask) > threshold, tf.float32)
+        nonzero += np.sum(np.abs(mask.numpy()) == 1)
+        num_weights += mask.numpy().size
+        l.kernel_mask.assign(mask)
+    print(f"Saving model with density {nonzero / num_weights:6.4f} as {path}")
+    model.save_weights(path)
+    return model

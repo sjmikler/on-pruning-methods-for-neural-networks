@@ -49,10 +49,6 @@ def set_kernel_masks_from_distributions(kernel_masks,
         km.assign(tf.cast(rnd <= tf.abs(probs), km.dtype) * sign)
 
 
-config = utils.ddict(
-    checkpoints=['8k']
-)
-
 schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
     boundaries=[4000, 12000],
     values=[1000.0, 100.0, 10.0])
@@ -76,6 +72,8 @@ checkpoint_lookup = {
     'perf': 'data/VGG19_IMP03_ticket/770423/10.h5',
     'perf2': 'data/VGG19_IMP03_ticket/775908/10.h5',
 }
+
+choosen_checkpoints = ['8k2']
 
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
@@ -106,7 +104,7 @@ if mask_sampling:
 
 nets = [net]
 
-for i, ckp in enumerate(config.checkpoints):
+for i, ckp in enumerate(choosen_checkpoints):
     if len(nets) == i:
         nets.append(tf.keras.models.clone_model(net))
     nets[i].load_weights(checkpoint_lookup[ckp])
@@ -209,7 +207,7 @@ show_logger_results(logger, colwidth=9)
 
 # %%
 
-EPOCHS = 8
+EPOCHS = 6
 STEPS = 2000
 
 regularizer_schedule = {
@@ -256,6 +254,8 @@ for epoch in range(EPOCHS):
     print('\r', end='')
     logs = show_logger_results(logger, colwidth=9)
     visualize_masks(mask_distributions, mask_activation)
-net.save_weights('temp/new_trune_workspace_ckp.h5')
+
+# prune_and_save_model(net, mask_activation, threshold=0.01,
+#                      path='temp/new_trune_workspace_ckp.h5')
 
 # %%

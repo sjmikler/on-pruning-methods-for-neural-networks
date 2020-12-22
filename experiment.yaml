@@ -3,7 +3,7 @@ REPEAT: 1
 GLOBAL_REPEAT: 1
 name: skip # with default name=skip, training will be skipped if no name is specified
 precision: 16 # 16 or anything else for default 32
-directory: temp/1221_tests
+directory: temp/1222_tests
 full_path: exec f"{directory}/{name}/{IDX}"
 checkpoint: exec f"{directory}/{name}/{IDX}.h5"
 queue: null # specify path for queue file, if null keeps queue in memory
@@ -28,8 +28,9 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: VGG19_from8000_2versions
-checkpointBP: data/partial_training_checkpoints/VGG19_8000it/0.h5
+name: VGG19_from_sigmoid
+checkpointBP: data/new_trune_workspace_ckp.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_8000it/1.h5
 
 model: VGG
 model_config:
@@ -39,27 +40,8 @@ model_config:
     l1_reg: 0
     l2_reg: 1e-4
 
-#lr_boundaries: [32000, 48000, 64000]
-lr_boundaries: [24000, 40000, 56000]
+lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
-num_iterations: 72000
-steps_per_epoch: 2000
-REPEAT: 1
----
-name: VGG19_from8000_2versions
-checkpointBP: data/partial_training_checkpoints/VGG19_8000it/1.h5
-
-model: VGG
-model_config:
-    version: 19
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l1_reg: 0
-    l2_reg: 1e-4
-
-#lr_boundaries: [32000, 48000, 64000]
-lr_boundaries: [24000, 40000, 56000]
-lr_values: [0.1, 0.02, 0.004, 0.0008]
-num_iterations: 72000
+num_iterations: 80000
 steps_per_epoch: 2000
 REPEAT: 1
