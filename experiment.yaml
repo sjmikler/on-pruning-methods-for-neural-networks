@@ -28,7 +28,7 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: VGG19_LT_with_some_skipping8
+name: VGG19_LT_with_some_skipping
 checkpointBP: data/VGG19_IMP03_ticket/775908/8.h5
 checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 
@@ -50,7 +50,7 @@ num_iterations: 80000
 steps_per_epoch: 2000
 REPEAT: 1
 ---
-name: VGG19_LT_with_some_skipping9
+name: VGG19_LT_with_some_skipping
 checkpointBP: data/VGG19_IMP03_ticket/775908/9.h5
 checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 
@@ -72,7 +72,7 @@ num_iterations: 80000
 steps_per_epoch: 2000
 REPEAT: 1
 ---
-name: VGG19_LT_with_some_skipping10
+name: VGG19_LT_with_some_skipping
 checkpointBP: data/VGG19_IMP03_ticket/775908/10.h5
 checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 
