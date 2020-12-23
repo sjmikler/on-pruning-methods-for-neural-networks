@@ -306,3 +306,103 @@ def prune_and_save_model(net, mask_activation, threshold, path):
     print(f"Saving model with density {nonzero / num_weights:6.4f} as {path}")
     model.save_weights(path)
     return model
+
+
+# %%
+
+
+class Logger:
+    def __init__(self, column_width):
+        self.last_header = None
+        self.cw = column_width
+        self.data = {}
+        self.skip = []
+
+    def __getitem__(self, item):
+        if not item in self.data:
+            self.data[item] = tf.keras.metrics.Mean()
+        return self.data[item]
+
+    def __setitem__(self, key, value):
+        self.data[key] = value
+
+    def get(self, key):
+        v = self.data[key]
+        if hasattr(v, 'result'):
+            return v.result().numpy()
+        else:
+            return v
+
+    def show_header(self, column_width=None):
+        if column_width is not None:
+            self.cw = column_width
+
+        p = []
+        for key, value in self.data.items():
+            if key in self.skip:
+                continue
+
+            if len(key) > self.cw:
+                p.append(f"{key[:((self.cw - 1) // 2 + (self.cw - 1) % 2)].upper()}-"
+                         f"{key[-((self.cw - 1) // 2):].upper()}")
+            else:
+                p.append(f"{key.upper().ljust(self.cw)}")
+        print(*p, sep=' | ')
+        self.last_header = (self.cw, list(self.data))
+
+    def show(self, reset=True):
+        results = {}
+        for key, value in self.data.items():
+            if key in self.skip:
+                continue
+
+            if hasattr(value, 'result'):
+                results[key] = value.result().numpy()
+                if reset:
+                    value.reset_states()
+            else:
+                results[key] = value
+        p = []
+        for key, value in results.items():
+            p.append(f"{str(value)[:self.cw].ljust(self.cw)}")
+        if self.last_header != (self.cw, list(self.data)):
+            self.show_header()
+        print(*p, sep=' | ')
+
+    def omit_showing(self, *keys):
+        if not keys:
+            return
+
+        for key in keys:
+            self.skip.append(key)
+
+    def reset_omitting(self):
+        self.skip = []
+
+    def reset(self, *keys):
+        if not keys:
+            keys = self.data.keys()
+
+        for key in keys:
+            value = self.data[key]
+            if hasattr('reset_states'):
+                value.reset_states()
+
+    def peek(self, *keys):
+        if not keys:
+            keys = self.data.keys()
+
+        results = {}
+        for key in keys:
+            value = self.data[key]
+            if hasattr(value, 'result'):
+                results[key] = value.result().numpy()
+            else:
+                results[key] = value
+        return results
+
+    def clear(self):
+        self.data = {}
+
+
+logger = Logger(10)

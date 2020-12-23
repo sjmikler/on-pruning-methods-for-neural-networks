@@ -23,9 +23,6 @@ def mask_activation(mask):
     return tf.sigmoid(mask)
 
 
-MaskedConv, MaskedDense = create_layers(tf.identity)
-
-
 def regularize(values):
     loss = 0
     for value in values:
@@ -34,8 +31,9 @@ def regularize(values):
     return loss
 
 
-mask_initial_value = 4.
-mask_sampling = True
+mask_initial_value = 5.
+mask_sampling = False
+MaskedConv, MaskedDense = create_layers(tf.identity if mask_sampling else mask_activation)
 
 
 def set_kernel_masks_from_distributions(kernel_masks,
@@ -55,10 +53,11 @@ schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
     values=[1000.0, 100.0, 10.0])
 
 optimizer = mixed_precision.LossScaleOptimizer(
-    tf.keras.optimizers.SGD(learning_rate=10000.0, momentum=0., nesterov=True),
+    tf.keras.optimizers.SGD(learning_rate=100.0, momentum=0.99, nesterov=True),
     loss_scale=4096)
 
 ############## CONFIG ENDS HERE
+logger = Logger(column_width=10)
 
 checkpoint_lookup = {
     '2k': 'data/partial_training_checkpoints/VGG19_2000it/0.h5',
@@ -97,6 +96,15 @@ else:
     all_updatable = kernel_masks
 
 net.load_weights(checkpoint_lookup[choosen_checkpoints[0]])
+
+# for w1, w2 in zip(get_kernels(perf_net), get_kernels(net)):
+#     w2 = w2.numpy()
+#     w2[w2 >= 0] = 1
+#     w2[w2 < 0] = -1
+#     w = w1.numpy()
+#     w = np.abs(w)
+#     w1.assign(w * w2)
+
 net.compile(deepcopy(optimizer), deepcopy(loss_fn))
 set_kernel_masks_values(mask_distributions, mask_initial_value)
 if mask_sampling:
@@ -111,15 +119,6 @@ for i, ckp in enumerate(choosen_checkpoints[1:]):
     set_kernel_masks_object(nets[i], kernel_masks)
 
 ds = datasets.cifar10(128, 128, shuffle=10000)
-
-logger = create_logger(
-    'full_loss',
-    'train_loss',
-    'valid_loss',
-    'train_acc',
-    'valid_acc',
-    'max_gradient',
-)
 
 train_steps = []
 for i in range(len(nets)):
@@ -152,7 +151,7 @@ for i in range(len(nets)):
         else:
             grads = clip_many(grads, clip_at=0.1 / model.optimizer.lr)
         model.optimizer.apply_gradients(zip(grads, all_updatable))
-        clip_many(mask_distributions, clip_at=10, inplace=True)
+        clip_many(mask_distributions, clip_at=15, inplace=True)
 
 
     train_steps.append(train_step)
@@ -186,10 +185,8 @@ def valid_epoch(model):
 
 def update_pbar():
     pbar.update(1)
-    pbar.set_postfix(peek_logger_results(logger,
-                                         'full_loss', 'train_loss',
-                                         'train_acc', 'max_gradient'),
-                     refresh=False)
+    pbar.set_postfix(logger.peek('full_loss', 'train_loss',
+                                 'train_acc', 'max_gradient'), refresh=False)
 
 
 for model in nets:
@@ -202,7 +199,7 @@ logger['f1_to_perf'] = f1
 logger['rec_to_perf'] = rec
 logger['thr_to_perf'] = thr
 logger['f1_density'] = density
-show_logger_results(logger, colwidth=9)
+logger.show()
 
 # %%
 
@@ -245,7 +242,7 @@ for epoch in range(EPOCHS):
     logger['f1_density'] = density
 
     print('\r', end='')
-    logs = show_logger_results(logger, colwidth=9)
+    logger.show()
     visualize_masks(mask_distributions, mask_activation)
 
 pbar.close()

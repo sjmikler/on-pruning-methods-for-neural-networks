@@ -29,12 +29,12 @@ MaskedConv, MaskedDense = create_layers(tf.identity)
 def regularize(values):
     loss = 0
     for value in values:
-        processed_value = maybe_abs(value)
+        processed_value = maybe_abs(value) + 10
         loss += tf.reduce_sum(processed_value) * mask_regularization
     return loss
 
 
-mask_initial_value = 10.
+mask_initial_value = 5.
 mask_sampling = True
 
 
@@ -58,6 +58,9 @@ mask_optimizer = mixed_precision.LossScaleOptimizer(
     tf.keras.optimizers.SGD(learning_rate=10.0, momentum=0.999, nesterov=True),
     loss_scale=2048)
 
+############## CONFIG ENDS HERE
+logger = Logger(column_width=10)
+
 checkpoint_lookup = {
     '2k': 'data/partial_training_checkpoints/VGG19_2000it/0.h5',
     '8k': 'data/partial_training_checkpoints/VGG19_8000it/0.h5',
@@ -71,7 +74,7 @@ checkpoint_lookup = {
     'perf2': 'data/VGG19_IMP03_ticket/775908/10.h5',
 }
 
-choosen_checkpoints = ['8k']
+choosen_checkpoints = ['2k']
 
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
@@ -101,15 +104,6 @@ if mask_sampling:
 
 ds = datasets.cifar10(128, 128, shuffle=10000)
 
-logger = create_logger(
-    'full_loss',
-    'train_loss',
-    'valid_loss',
-    'train_acc',
-    'valid_acc',
-    'max_gradient',
-)
-
 
 @tf.function
 def valid_step(model, x, y):
@@ -135,10 +129,8 @@ def valid_epoch(model):
 
 def update_pbar():
     pbar.update(1)
-    pbar.set_postfix(peek_logger_results(logger,
-                                         'full_loss', 'train_loss',
-                                         'train_acc', 'max_gradient'),
-                     refresh=False)
+    pbar.set_postfix(logger.peek('full_loss', 'train_loss',
+                                 'train_acc', 'max_gradient'), refresh=False)
 
 
 set_kernel_masks_from_distributions(kernel_masks,
@@ -152,7 +144,7 @@ logger['f1_to_perf'] = f1
 logger['rec_to_perf'] = rec
 logger['thr_to_perf'] = thr
 logger['f1_density'] = density
-show_logger_results(logger, colwidth=9)
+logger.show()
 
 # %%
 
@@ -198,7 +190,7 @@ def train_step(model, x, y):
     else:
         mask_gradients = clip_many(mask_gradients, clip_at=0.1 / mask_optimizer.lr)
     kernel_optimizer.apply_gradients(zip(kernel_gradients, net.trainable_weights))
-    # mask_optimizer.apply_gradients(zip(mask_gradients, mask_updatable))
+    mask_optimizer.apply_gradients(zip(mask_gradients, mask_updatable))
     clip_many(mask_distributions, clip_at=10, inplace=True)
 
 
@@ -242,11 +234,17 @@ for epoch in range(EPOCHS):
     logger['f1_density'] = density
 
     print('\r', end='')
-    logs = show_logger_results(logger, colwidth=9)
+    logs = logger.show()
     visualize_masks(mask_distributions, mask_activation)
 pbar.close()
 
-# prune_and_save_model(net, mask_activation, threshold=0.01,
-#                      path='temp/new_trune_workspace_ckp.h5')
+
+net2 = tf.keras.models.clone_model(net)
+set_all_weights_from_model(net2, net)
+set_kernel_masks_values(get_kernel_masks(net2), mask_distributions)
+get_kernel_masks(net2)
+
+prune_and_save_model(net2, mask_activation, threshold=0.01,
+                     path='temp/new_trune_workspace_ckp.h5')
 
 # %%
