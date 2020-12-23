@@ -28,9 +28,9 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: VGG19_from_truning_during_training
+name: VGG19_from_tanh_continuous
 checkpointBP: data/new_trune_workspace_ckp.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_8000it/1.h5
 
 model: VGG
 model_config:
@@ -42,6 +42,6 @@ model_config:
 
 lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
-num_iterations: 80000
+num_iterations: 72000
 steps_per_epoch: 2000
 REPEAT: 1
