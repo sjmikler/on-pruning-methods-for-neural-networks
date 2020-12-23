@@ -5,7 +5,7 @@ IDX: 770423/0
 REPEAT: 20
 TIME: 2020.12.9 17:17
 checkpoint: data/VGG19_IMP03_ticket/770423/0.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/130735/0.h5
 dataset: cifar10
 directory: data
@@ -44,7 +44,7 @@ IDX: 770423/1
 REPEAT: 20
 TIME: 2020.12.9 18:39
 checkpoint: data/VGG19_IMP03_ticket/770423/1.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/0.h5
 dataset: cifar10
 directory: data
@@ -83,7 +83,7 @@ IDX: 770423/10
 REPEAT: 20
 TIME: 2020.12.10 6:53
 checkpoint: data/VGG19_IMP03_ticket/770423/10.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/9.h5
 dataset: cifar10
 directory: data
@@ -122,7 +122,7 @@ IDX: 770423/11
 REPEAT: 20
 TIME: 2020.12.10 8:15
 checkpoint: data/VGG19_IMP03_ticket/770423/11.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/10.h5
 dataset: cifar10
 directory: data
@@ -161,7 +161,7 @@ IDX: 770423/12
 REPEAT: 20
 TIME: 2020.12.10 9:36
 checkpoint: data/VGG19_IMP03_ticket/770423/12.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/11.h5
 dataset: cifar10
 directory: data
@@ -200,7 +200,7 @@ IDX: 770423/13
 REPEAT: 20
 TIME: 2020.12.10 10:58
 checkpoint: data/VGG19_IMP03_ticket/770423/13.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/12.h5
 dataset: cifar10
 directory: data
@@ -239,7 +239,7 @@ IDX: 770423/14
 REPEAT: 20
 TIME: 2020.12.10 12:19
 checkpoint: data/VGG19_IMP03_ticket/770423/14.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/13.h5
 dataset: cifar10
 directory: data
@@ -278,7 +278,7 @@ IDX: 770423/15
 REPEAT: 20
 TIME: 2020.12.10 13:40
 checkpoint: data/VGG19_IMP03_ticket/770423/15.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/14.h5
 dataset: cifar10
 directory: data
@@ -317,7 +317,7 @@ IDX: 770423/16
 REPEAT: 20
 TIME: 2020.12.10 15:1
 checkpoint: data/VGG19_IMP03_ticket/770423/16.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/15.h5
 dataset: cifar10
 directory: data
@@ -356,7 +356,7 @@ IDX: 770423/17
 REPEAT: 20
 TIME: 2020.12.10 16:22
 checkpoint: data/VGG19_IMP03_ticket/770423/17.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/16.h5
 dataset: cifar10
 directory: data
@@ -395,7 +395,7 @@ IDX: 770423/18
 REPEAT: 20
 TIME: 2020.12.10 17:44
 checkpoint: data/VGG19_IMP03_ticket/770423/18.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/17.h5
 dataset: cifar10
 directory: data
@@ -434,7 +434,7 @@ IDX: 770423/19
 REPEAT: 20
 TIME: 2020.12.10 19:5
 checkpoint: data/VGG19_IMP03_ticket/770423/19.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/18.h5
 dataset: cifar10
 directory: data
@@ -473,7 +473,7 @@ IDX: 770423/2
 REPEAT: 20
 TIME: 2020.12.9 20:1
 checkpoint: data/VGG19_IMP03_ticket/770423/2.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/1.h5
 dataset: cifar10
 directory: data
@@ -512,7 +512,7 @@ IDX: 770423/3
 REPEAT: 20
 TIME: 2020.12.9 21:23
 checkpoint: data/VGG19_IMP03_ticket/770423/3.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/2.h5
 dataset: cifar10
 directory: data
@@ -551,7 +551,7 @@ IDX: 770423/4
 REPEAT: 20
 TIME: 2020.12.9 22:45
 checkpoint: data/VGG19_IMP03_ticket/770423/4.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/3.h5
 dataset: cifar10
 directory: data
@@ -590,7 +590,7 @@ IDX: 770423/5
 REPEAT: 20
 TIME: 2020.12.10 0:6
 checkpoint: data/VGG19_IMP03_ticket/770423/5.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/4.h5
 dataset: cifar10
 directory: data
@@ -629,7 +629,7 @@ IDX: 770423/6
 REPEAT: 20
 TIME: 2020.12.10 1:28
 checkpoint: data/VGG19_IMP03_ticket/770423/6.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/5.h5
 dataset: cifar10
 directory: data
@@ -668,7 +668,7 @@ IDX: 770423/7
 REPEAT: 20
 TIME: 2020.12.10 2:49
 checkpoint: data/VGG19_IMP03_ticket/770423/7.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/6.h5
 dataset: cifar10
 directory: data
@@ -707,7 +707,7 @@ IDX: 770423/8
 REPEAT: 20
 TIME: 2020.12.10 4:11
 checkpoint: data/VGG19_IMP03_ticket/770423/8.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/7.h5
 dataset: cifar10
 directory: data
@@ -746,7 +746,7 @@ IDX: 770423/9
 REPEAT: 20
 TIME: 2020.12.10 5:32
 checkpoint: data/VGG19_IMP03_ticket/770423/9.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_init_2000_v2.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 checkpointBP: data/VGG19_IMP03_ticket/770423/8.h5
 dataset: cifar10
 directory: data

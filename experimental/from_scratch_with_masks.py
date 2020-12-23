@@ -14,16 +14,13 @@ utils.set_precision(16)
 
 
 def maybe_abs(mask):
-    return tf.abs(mask)
-    # return tf.identity(mask)
+    # return tf.abs(mask)
+    return tf.identity(mask)
 
 
 def mask_activation(mask):
-    return tf.tanh(mask)
-    # return tf.sigmoid(mask)
-
-
-MaskedConv, MaskedDense = create_layers(tf.identity)
+    # return tf.tanh(mask)
+    return tf.sigmoid(mask)
 
 
 def regularize(values):
@@ -36,6 +33,7 @@ def regularize(values):
 
 mask_initial_value = 4.
 mask_sampling = True
+MaskedConv, MaskedDense = create_layers(tf.identity if mask_sampling else mask_activation)
 
 
 def set_kernel_masks_from_distributions(kernel_masks,
@@ -74,7 +72,7 @@ checkpoint_lookup = {
     'perf2': 'data/VGG19_IMP03_ticket/775908/10.h5',
 }
 
-choosen_checkpoints = ['full_from_2k']
+choosen_checkpoints = ['2k']
 
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
@@ -137,7 +135,7 @@ set_kernel_masks_from_distributions(kernel_masks,
                                     mask_distributions,
                                     mask_activation)
 valid_epoch(net)
-logger['train_loss'] # initialize
+logger['train_loss']  # initialize
 logger['train_acc']
 mask = update_mask_info(mask_distributions, mask_activation, logger)
 logger.show()
@@ -148,7 +146,8 @@ schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
     boundaries=[32000, 48000, 64000],
     values=[0.1, 0.02, 0.004, 0.0008]
 )
-kernel_optimizer = tf.keras.optimizers.SGD(0.004, momentum=0.9, nesterov=True)
+# kernel_optimizer = tf.keras.optimizers.SGD(0.004, momentum=0.9, nesterov=True)
+kernel_optimizer = tf.keras.optimizers.Adam(0.01)
 all_differentiable = mask_differentiable + net.trainable_weights
 all_updatable = mask_updatable + net.trainable_weights
 
@@ -186,13 +185,13 @@ def train_step(model, x, y):
     else:
         mask_gradients = clip_many(mask_gradients, clip_at=0.1 / mask_optimizer.lr)
     kernel_optimizer.apply_gradients(zip(kernel_gradients, net.trainable_weights))
-    mask_optimizer.apply_gradients(zip(mask_gradients, mask_updatable))
+    # mask_optimizer.apply_gradients(zip(mask_gradients, mask_updatable))
     clip_many(mask_distributions, clip_at=10, inplace=True)
 
 
 # %%
 
-EPOCHS = 40
+EPOCHS = 10
 STEPS = 2000
 
 regularizer_schedule = {
