@@ -11,13 +11,13 @@ def get_kernels(model):
     return [l.kernel for l in model.layers if hasattr(l, 'kernel')]
 
 
-# def set_kernel_masks_value(model, masks):
-#     for i, kernel in enumerate(get_kernel_masks(model)):
-#         if isinstance(masks, int) or isinstance(masks, float):
-#             mask = np.ones_like(kernel.numpy()) * masks
-#         else:
-#             mask = masks[i]
-#         kernel.assign(mask)
+def set_kernel_masks_values_on_model(model, values):
+    for i, kernel in enumerate(get_kernel_masks(model)):
+        if isinstance(values, int) or isinstance(values, float):
+            mask = np.ones_like(kernel.numpy()) * values
+        else:
+            mask = values[i]
+        kernel.assign(mask)
 
 
 def set_kernel_masks_values(masks, values):
@@ -41,6 +41,12 @@ def set_all_weights_from_model(model, source_model):
             w1.assign(w2)
         else:
             print(f"skipping {w1.name}: {w1.shape} != {w2.shape}")
+
+
+def clone_model(model):
+    new_model = tf.keras.models.clone_model(model)
+    set_all_weights_from_model(new_model, model)
+    return new_model
 
 
 def clip_many(values, clip_at, clip_from=None, inplace=False):
@@ -73,57 +79,6 @@ def visualize_masks(masks, mask_activation):
     axes[4].bar(range(len(means)), means)
     fig.show()
     return c
-
-
-def create_logger(*keys):
-    return {key: tf.keras.metrics.Mean() for key in keys}
-
-
-logger_columns = []
-
-
-def show_logger_results(logger, colwidth=10):
-    results = {}
-    for key, value in logger.items():
-        if hasattr(value, 'result'):
-            results[key] = value.result().numpy()
-            value.reset_states()
-        else:
-            results[key] = value
-    p = []
-    for key, value in results.items():
-        p.append(f"{str(value)[:colwidth].ljust(colwidth)}")
-
-    global logger_columns
-    new_logger_columns = list(logger.keys())
-    if new_logger_columns != logger_columns:
-        logger_columns = new_logger_columns
-        show_logger_columns(logger, colwidth)
-
-    print(*p, sep=' | ')
-    return results
-
-
-def show_logger_columns(logger, colwidth=10):
-    p = []
-    for key, value in logger.items():
-        if len(key) > colwidth:
-            p.append(f"{key[:((colwidth - 1) // 2 + (colwidth - 1) % 2)].upper()}-"
-                     f"{key[-((colwidth - 1) // 2):].upper()}")
-        else:
-            p.append(f"{key.upper().ljust(colwidth)}")
-    print(*p, sep=' | ')
-
-
-def peek_logger_results(logger, *columns):
-    results = {}
-    for key in columns:
-        value = logger[key]
-        if hasattr(value, 'result'):
-            results[key] = value.result().numpy()
-        else:
-            results[key] = value
-    return results
 
 
 def update_mask_info(kernel_masks, mask_activation, logger=None):
@@ -293,8 +248,7 @@ def create_layers_vsign(mask_activation):
 def prune_and_save_model(net, mask_activation, threshold, path):
     nonzero = 0
     num_weights = 0
-    model = tf.keras.models.clone_model(net)
-    model.set_weights(net.get_weights())
+    model = clone_model(net)
 
     for l in model.layers:
         if not hasattr(l, 'kernel_mask'):

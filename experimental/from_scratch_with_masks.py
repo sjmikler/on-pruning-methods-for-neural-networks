@@ -14,13 +14,13 @@ utils.set_precision(16)
 
 
 def maybe_abs(mask):
-    # return tf.abs(mask)
-    return tf.identity(mask)
+    return tf.abs(mask)
+    # return tf.identity(mask)
 
 
 def mask_activation(mask):
-    # return tf.tanh(mask)
-    return tf.sigmoid(mask)
+    return tf.tanh(mask)
+    # return tf.sigmoid(mask)
 
 
 MaskedConv, MaskedDense = create_layers(tf.identity)
@@ -28,13 +28,13 @@ MaskedConv, MaskedDense = create_layers(tf.identity)
 
 def regularize(values):
     loss = 0
-    for value in values:
-        processed_value = maybe_abs(value) + 10
+    for i, value in enumerate(values):
+        processed_value = maybe_abs(value)
         loss += tf.reduce_sum(processed_value) * mask_regularization
     return loss
 
 
-mask_initial_value = 5.
+mask_initial_value = 4.
 mask_sampling = True
 
 
@@ -55,7 +55,7 @@ schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
     values=[1000.0, 100.0, 10.0])
 
 mask_optimizer = mixed_precision.LossScaleOptimizer(
-    tf.keras.optimizers.SGD(learning_rate=10.0, momentum=0.999, nesterov=True),
+    tf.keras.optimizers.SGD(learning_rate=100.0, momentum=0.99, nesterov=True),
     loss_scale=2048)
 
 ############## CONFIG ENDS HERE
@@ -74,7 +74,7 @@ checkpoint_lookup = {
     'perf2': 'data/VGG19_IMP03_ticket/775908/10.h5',
 }
 
-choosen_checkpoints = ['2k']
+choosen_checkpoints = ['full_from_2k']
 
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
@@ -137,13 +137,9 @@ set_kernel_masks_from_distributions(kernel_masks,
                                     mask_distributions,
                                     mask_activation)
 valid_epoch(net)
+logger['train_loss'] # initialize
+logger['train_acc']
 mask = update_mask_info(mask_distributions, mask_activation, logger)
-f1, prc, rec, thr, density = compare_masks(perf_kernel_masks, mask_distributions,
-                                           mask_activation=mask_activation)
-logger['f1_to_perf'] = f1
-logger['rec_to_perf'] = rec
-logger['thr_to_perf'] = thr
-logger['f1_density'] = density
 logger.show()
 
 # %%
@@ -152,7 +148,7 @@ schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
     boundaries=[32000, 48000, 64000],
     values=[0.1, 0.02, 0.004, 0.0008]
 )
-kernel_optimizer = tf.keras.optimizers.SGD(schedule, momentum=0.9, nesterov=True)
+kernel_optimizer = tf.keras.optimizers.SGD(0.004, momentum=0.9, nesterov=True)
 all_differentiable = mask_differentiable + net.trainable_weights
 all_updatable = mask_updatable + net.trainable_weights
 
@@ -200,7 +196,7 @@ EPOCHS = 40
 STEPS = 2000
 
 regularizer_schedule = {
-    0: 1e-7,
+    0: 1e-8,
     # 4: 2e-7,
     # 6: 3e-7,
     # 7: 4e-7,
@@ -238,13 +234,9 @@ for epoch in range(EPOCHS):
     visualize_masks(mask_distributions, mask_activation)
 pbar.close()
 
-
-net2 = tf.keras.models.clone_model(net)
-set_all_weights_from_model(net2, net)
-set_kernel_masks_values(get_kernel_masks(net2), mask_distributions)
-get_kernel_masks(net2)
-
-prune_and_save_model(net2, mask_activation, threshold=0.01,
-                     path='temp/new_trune_workspace_ckp.h5')
+# temp = clone_model(net)
+# set_kernel_masks_values_on_model(temp, mask_distributions)
+# prune_and_save_model(temp, mask_activation, threshold=0.01,
+#                      path='temp/new_trune_workspace_ckp.h5')
 
 # %%

@@ -14,13 +14,13 @@ utils.set_precision(16)
 
 
 def maybe_abs(mask):
-    # return tf.abs(mask)
-    return tf.identity(mask)
+    return tf.abs(mask)
+    # return tf.identity(mask)
 
 
 def mask_activation(mask):
-    # return tf.tanh(mask)
-    return tf.sigmoid(mask)
+    return tf.tanh(mask)
+    # return tf.sigmoid(mask)
 
 
 def regularize(values):
@@ -31,7 +31,7 @@ def regularize(values):
     return loss
 
 
-mask_initial_value = 5.
+mask_initial_value = 4.
 mask_sampling = False
 MaskedConv, MaskedDense = create_layers(tf.identity if mask_sampling else mask_activation)
 
@@ -72,7 +72,7 @@ checkpoint_lookup = {
     'perf2': 'data/VGG19_IMP03_ticket/775908/10.h5',
 }
 
-choosen_checkpoints = ['8k']
+choosen_checkpoints = ['8k2']
 
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
@@ -96,15 +96,6 @@ else:
     all_updatable = kernel_masks
 
 net.load_weights(checkpoint_lookup[choosen_checkpoints[0]])
-
-# for w1, w2 in zip(get_kernels(perf_net), get_kernels(net)):
-#     w2 = w2.numpy()
-#     w2[w2 >= 0] = 1
-#     w2[w2 < 0] = -1
-#     w = w1.numpy()
-#     w = np.abs(w)
-#     w1.assign(w * w2)
-
 net.compile(deepcopy(optimizer), deepcopy(loss_fn))
 set_kernel_masks_values(mask_distributions, mask_initial_value)
 if mask_sampling:
@@ -191,6 +182,9 @@ def update_pbar():
 
 for model in nets:
     valid_epoch(model)
+logger['full_loss']
+logger['train_loss']
+logger['train_acc']
 
 mask = update_mask_info(mask_distributions, mask_activation, logger)
 f1, prc, rec, thr, density = compare_masks(perf_kernel_masks, mask_distributions,
@@ -246,7 +240,7 @@ for epoch in range(EPOCHS):
     visualize_masks(mask_distributions, mask_activation)
 
 pbar.close()
-# prune_and_save_model(net, mask_activation, threshold=0.01,
-#                      path='temp/new_trune_workspace_ckp.h5')
+model = prune_and_save_model(net, mask_activation, threshold=0.1,
+                             path='temp/new_trune_workspace_ckp.h5')
 
 # %%
