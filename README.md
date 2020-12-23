@@ -3,7 +3,7 @@
 * `experiments.yaml`
 
 Contains experiments. The first element is **global config** which contains default values for experiments. All the
-experiments will be updated with it, but values specified later, in experiments have priority over **global config**.
+experiments will be updated with it, but values specified later, in experiments, have priority over **global config**.
 
 **Special names**
 
