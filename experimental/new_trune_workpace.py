@@ -126,7 +126,7 @@ def train_step(model, kernel_masks, x, y):
         loss = model.loss(y, outs)
 
         loss += reg_fn(kernel_masks) * decay
-        scaled_loss = model.optimizer.get_scaled_loss(loss)
+        scaled_loss = model.mask_optimizer.get_scaled_loss(loss)
 
     loss_metric(y, outs)
     accu_metric(y, outs)

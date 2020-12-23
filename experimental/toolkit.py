@@ -35,6 +35,14 @@ def set_kernel_masks_object(model, masks):
         l.kernel_mask = km
 
 
+def set_all_weights_from_model(model, source_model):
+    for w1, w2 in zip(model.weights, source_model.weights):
+        if w1.shape == w2.shape:
+            w1.assign(w2)
+        else:
+            print(f"skipping {w1.name}: {w1.shape} != {w2.shape}")
+
+
 def clip_many(values, clip_at, clip_from=None, inplace=False):
     if clip_from is None:
         clip_from = -clip_at
@@ -105,6 +113,17 @@ def show_logger_columns(logger, colwidth=10):
         else:
             p.append(f"{key.upper().ljust(colwidth)}")
     print(*p, sep=' | ')
+
+
+def peek_logger_results(logger, *columns):
+    results = {}
+    for key in columns:
+        value = logger[key]
+        if hasattr(value, 'result'):
+            results[key] = value.result().numpy()
+        else:
+            results[key] = value
+    return results
 
 
 def update_mask_info(kernel_masks, mask_activation, logger=None):
@@ -187,6 +206,74 @@ def create_layers(mask_activation):
         def call(self, x):
             multipler = mask_activation(self.kernel_mask)
             masked_w = tf.multiply(self.kernel, multipler)
+            result = tf.nn.conv2d(x, masked_w, strides=self.strides, padding=self.padding.upper())
+
+            if self.use_bias:
+                result = tf.add(result, self.bias)
+            return self.activation(result)
+
+        def set_pruning_mask(self, new_mask: np.ndarray):
+            tf.assert_equal(new_mask.shape, self.kernel_mask.shape)
+            self.kernel_mask.assign(new_mask)
+
+        def apply_pruning_mask(self):
+            self.kernel.assign(tf.multiply(self.kernel, self.kernel_mask))
+
+    return MaskedConv, MaskedDense
+
+
+def create_layers_vsign(mask_activation):
+    class MaskedDense(tf.keras.layers.Dense):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+        def build(self, input_shape):
+            super().build(input_shape)
+            self.kernel_mask = self.add_weight(
+                name="kernel_mask",
+                shape=[2, *self.kernel.shape],
+                dtype=self.kernel.dtype,
+                initializer="ones",
+                trainable=False,
+            )
+
+        def call(self, x):
+            multipler = mask_activation(self.kernel_mask)
+            mask = multipler[0] * (multipler[1] * 2 - 1)
+
+            masked_w = tf.multiply(self.kernel, mask)
+            result = tf.matmul(x, masked_w)
+
+            if self.use_bias:
+                result = tf.add(result, self.bias)
+            return self.activation(result)
+
+        def set_pruning_mask(self, new_mask: np.ndarray):
+            tf.assert_equal(new_mask.shape, self.kernel_mask.shape)
+            self.kernel_mask.assign(new_mask)
+
+        def apply_pruning_mask(self):
+            self.kernel.assign(tf.multiply(self.kernel, self.kernel_mask))
+
+    class MaskedConv(tf.keras.layers.Conv2D):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+        def build(self, input_shape):
+            super().build(input_shape)
+            self.kernel_mask = self.add_weight(
+                name="kernel_mask",
+                shape=[2, *self.kernel.shape],
+                dtype=self.kernel.dtype,
+                initializer="ones",
+                trainable=False,
+            )
+
+        def call(self, x):
+            multipler = mask_activation(self.kernel_mask)
+            mask = multipler[0] * (multipler[1] * 2 - 1)
+
+            masked_w = tf.multiply(self.kernel, mask)
             result = tf.nn.conv2d(x, masked_w, strides=self.strides, padding=self.padding.upper())
 
             if self.use_bias:
