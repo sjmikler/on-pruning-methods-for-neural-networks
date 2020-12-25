@@ -115,6 +115,7 @@ def load_from_yaml(yaml_path):
             rnd_idx = random.randint(100000, 999999)
             for rep in range(exp.get('REPEAT') or 1):
                 parsed_exp = deepcopy(exp)
+                parsed_exp['REP'] = rep
                 parsed_exp['IDX'] = f"{rnd_idx}/{rep}"
 
                 parsed_exp = cool_parse_exp(parsed_exp, unpacked_experiments)

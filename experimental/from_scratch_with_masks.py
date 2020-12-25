@@ -53,11 +53,11 @@ schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
     values=[1000.0, 100.0, 10.0])
 
 mask_optimizer = mixed_precision.LossScaleOptimizer(
-    tf.keras.optimizers.SGD(learning_rate=100.0, momentum=0.99, nesterov=True),
+    tf.keras.optimizers.SGD(learning_rate=100.0, momentum=0., nesterov=True),
     loss_scale=2048)
 
 ############## CONFIG ENDS HERE
-logger = Logger(column_width=10)
+logger = Logger(column_width=8)
 
 checkpoint_lookup = {
     '2k': 'data/partial_training_checkpoints/VGG19_2000it/0.h5',
@@ -113,9 +113,16 @@ def valid_step(model, x, y):
 
 
 @tf.function
-def train_epoch(model, steps):
+def train_epoch_kernels(model, steps):
     for x, y in ds['train'].take(steps):
-        train_step(model, x, y)
+        train_step_kernels(model, x, y)
+        tf.numpy_function(update_pbar, inp=[], Tout=[])
+
+
+@tf.function
+def train_epoch_masks(model, steps):
+    for x, y in ds['train'].take(steps):
+        train_step_masks(model, x, y)
         tf.numpy_function(update_pbar, inp=[], Tout=[])
 
 
@@ -135,7 +142,7 @@ set_kernel_masks_from_distributions(kernel_masks,
                                     mask_distributions,
                                     mask_activation)
 valid_epoch(net)
-logger['train_loss']  # initialize
+logger['train_loss']
 logger['train_acc']
 mask = update_mask_info(mask_distributions, mask_activation, logger)
 logger.show()
@@ -146,8 +153,7 @@ schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
     boundaries=[32000, 48000, 64000],
     values=[0.1, 0.02, 0.004, 0.0008]
 )
-# kernel_optimizer = tf.keras.optimizers.SGD(0.004, momentum=0.9, nesterov=True)
-kernel_optimizer = tf.keras.optimizers.Adam(0.01)
+kernel_optimizer = tf.keras.optimizers.SGD(0.1, momentum=0.9, nesterov=True)
 all_differentiable = mask_differentiable + net.trainable_weights
 all_updatable = mask_updatable + net.trainable_weights
 
@@ -165,8 +171,11 @@ def train_step(model, x, y):
         loss = loss_fn(y, outs)
         logger['train_loss'](loss)
 
-        loss += regularize(mask_distributions)
-        loss += tf.add_n(model.losses)
+        mask_decay = regularize(mask_distributions)
+        kernel_decay = tf.add_n(model.losses)
+        loss += kernel_decay + mask_decay
+        logger['kernel_decay'](kernel_decay)
+        logger['mask_decay'](mask_decay)
         logger['full_loss'](loss)
         scaled_loss = mask_optimizer.get_scaled_loss(loss)
 
@@ -185,28 +194,84 @@ def train_step(model, x, y):
     else:
         mask_gradients = clip_many(mask_gradients, clip_at=0.1 / mask_optimizer.lr)
     kernel_optimizer.apply_gradients(zip(kernel_gradients, net.trainable_weights))
-    # mask_optimizer.apply_gradients(zip(mask_gradients, mask_updatable))
+    mask_optimizer.apply_gradients(zip(mask_gradients, mask_updatable))
+    clip_many(mask_distributions, clip_at=10, inplace=True)
+
+
+@tf.function
+def train_step_kernels(model, x, y):
+    if mask_sampling:
+        set_kernel_masks_from_distributions(kernel_masks,
+                                            mask_distributions,
+                                            mask_activation)
+    with tf.GradientTape() as tape:
+        outs = model(x, training=True)
+        outs = tf.cast(outs, tf.float32)
+        loss = loss_fn(y, outs)
+        logger['train_loss'](loss)
+
+        kernel_decay = tf.add_n(model.losses)
+        loss += kernel_decay
+        logger['kernel_decay'](kernel_decay)
+        logger['full_loss'](loss)
+        scaled_loss = mask_optimizer.get_scaled_loss(loss)
+
+    scaled_grads = tape.gradient(target=scaled_loss, sources=net.trainable_weights)
+    grads = mask_optimizer.get_unscaled_gradients(scaled_grads)
+
+    max_gradient = tf.reduce_max([tf.reduce_max(tf.abs(grad)) for grad in grads])
+    logger['train_acc'](tf.keras.metrics.sparse_categorical_accuracy(y, outs))
+    logger['max_gradient'](max_gradient)
+
+    kernel_gradients = grads
+    kernel_optimizer.apply_gradients(zip(kernel_gradients, net.trainable_weights))
+
+
+@tf.function
+def train_step_masks(model, x, y):
+    if mask_sampling:
+        set_kernel_masks_from_distributions(kernel_masks,
+                                            mask_distributions,
+                                            mask_activation)
+    with tf.GradientTape() as tape:
+        tape.watch(mask_differentiable)
+        outs = model(x, training=True)
+        outs = tf.cast(outs, tf.float32)
+        loss = loss_fn(y, outs)
+        logger['train_loss'](loss)
+
+        mask_decay = regularize(mask_distributions)
+        loss += mask_decay
+        logger['mask_decay'](mask_decay)
+        logger['full_loss'](loss)
+        scaled_loss = mask_optimizer.get_scaled_loss(loss)
+
+    scaled_grads = tape.gradient(target=scaled_loss, sources=mask_differentiable)
+    grads = mask_optimizer.get_unscaled_gradients(scaled_grads)
+
+    max_gradient = tf.reduce_max([tf.reduce_max(tf.abs(grad)) for grad in grads])
+    logger['train_acc'](tf.keras.metrics.sparse_categorical_accuracy(y, outs))
+    logger['max_gradient'](max_gradient)
+
+    mask_gradients = grads
+    if callable(mask_optimizer.lr):
+        mask_gradients = clip_many(mask_gradients, clip_at=0.1 / mask_optimizer.lr(mask_optimizer.iterations))
+    else:
+        mask_gradients = clip_many(mask_gradients, clip_at=0.1 / mask_optimizer.lr)
+    mask_optimizer.apply_gradients(zip(mask_gradients, mask_updatable))
     clip_many(mask_distributions, clip_at=10, inplace=True)
 
 
 # %%
 
-EPOCHS = 10
-STEPS = 2000
+EPOCHS = 2
+STEPS = 20
 
 regularizer_schedule = {
-    0: 1e-8,
-    # 4: 2e-7,
-    # 6: 3e-7,
-    # 7: 4e-7,
-    # 9: 5e-7,
-    # 10: 6e-7,
-    # 11: 7e-7,
-    # 12: 8e-7,
-    # 13: 9e-7,
-    # 14: 1e-6,
+    0: 1e-7,
 }
 
+logger.show_header()
 pbar = tqdm.tqdm(total=EPOCHS * STEPS, position=0, mininterval=0.5)
 
 for epoch in range(EPOCHS):
@@ -214,7 +279,8 @@ for epoch in range(EPOCHS):
         mask_regularization.assign(regularizer_schedule[epoch])
 
     t0 = time.time()
-    train_epoch(net, STEPS)
+    # train_epoch_masks(net, STEPS)
+    train_epoch_kernels(net, STEPS)
     valid_epoch(net)
     logger['epoch_time'] = time.time() - t0
 
@@ -237,5 +303,6 @@ pbar.close()
 # set_kernel_masks_values_on_model(temp, mask_distributions)
 # prune_and_save_model(temp, mask_activation, threshold=0.01,
 #                      path='temp/new_trune_workspace_ckp.h5')
+
 
 # %%

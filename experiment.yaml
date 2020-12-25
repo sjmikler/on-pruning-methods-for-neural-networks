@@ -28,13 +28,11 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: VGG19_LT_with_some_skipping
-checkpointBP: data/VGG19_IMP03_ticket/775908/8.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
+name: VGG19_IMP02_ticket
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/1.h5
 
-pruning: magnitude
 pruning_config:
-    sparsity: 0.9903110989593
+    sparsity: 0
 
 model: VGG
 model_config:
@@ -50,13 +48,13 @@ num_iterations: 80000
 steps_per_epoch: 2000
 REPEAT: 1
 ---
-name: VGG19_LT_with_some_skipping
-checkpointBP: data/VGG19_IMP03_ticket/775908/9.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
+name: VGG19_IMP02_ticket
+checkpointBP: checkpoint[-1]
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/1.h5
 
 pruning: magnitude
 pruning_config:
-    sparsity: 0.9903110989593
+    sparsity: exec 1 - (1 - sparsity[-1]) * 0.8
 
 model: VGG
 model_config:
@@ -70,26 +68,4 @@ lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
 num_iterations: 80000
 steps_per_epoch: 2000
-REPEAT: 1
----
-name: VGG19_LT_with_some_skipping
-checkpointBP: data/VGG19_IMP03_ticket/775908/10.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
-
-pruning: magnitude
-pruning_config:
-    sparsity: 0.9903110989593
-
-model: VGG
-model_config:
-    version: 19
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l1_reg: 0
-    l2_reg: 1e-4
-
-lr_boundaries: [32000, 48000, 64000]
-lr_values: [0.1, 0.02, 0.004, 0.0008]
-num_iterations: 80000
-steps_per_epoch: 2000
-REPEAT: 1
+REPEAT: 24
