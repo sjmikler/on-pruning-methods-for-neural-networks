@@ -122,10 +122,7 @@ for exp in experiment_queue:
     if exp.name == "skip":  # just skip the training
         print("SKIPPING TRAINING", end="\n\n")
     else:
-        steps_per_epoch = min(
-            exp.num_iterations, exp.steps_per_epoch
-        )  # for short trainings
-
+        steps_per_epoch = min(exp.num_iterations, exp.steps_per_epoch)
         try:
             history = model.fit(
                 x=ds.train,
