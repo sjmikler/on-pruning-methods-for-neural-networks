@@ -113,16 +113,9 @@ def valid_step(model, x, y):
 
 
 @tf.function
-def train_epoch_kernels(model, steps):
+def train_epoch(model, steps):
     for x, y in ds['train'].take(steps):
-        train_step_kernels(model, x, y)
-        tf.numpy_function(update_pbar, inp=[], Tout=[])
-
-
-@tf.function
-def train_epoch_masks(model, steps):
-    for x, y in ds['train'].take(steps):
-        train_step_masks(model, x, y)
+        train_step(model, x, y)
         tf.numpy_function(update_pbar, inp=[], Tout=[])
 
 
@@ -194,70 +187,6 @@ def train_step(model, x, y):
     else:
         mask_gradients = clip_many(mask_gradients, clip_at=0.1 / mask_optimizer.lr)
     kernel_optimizer.apply_gradients(zip(kernel_gradients, net.trainable_weights))
-    mask_optimizer.apply_gradients(zip(mask_gradients, mask_updatable))
-    clip_many(mask_distributions, clip_at=10, inplace=True)
-
-
-@tf.function
-def train_step_kernels(model, x, y):
-    if mask_sampling:
-        set_kernel_masks_from_distributions(kernel_masks,
-                                            mask_distributions,
-                                            mask_activation)
-    with tf.GradientTape() as tape:
-        outs = model(x, training=True)
-        outs = tf.cast(outs, tf.float32)
-        loss = loss_fn(y, outs)
-        logger['train_loss'](loss)
-
-        kernel_decay = tf.add_n(model.losses)
-        loss += kernel_decay
-        logger['kernel_decay'](kernel_decay)
-        logger['full_loss'](loss)
-        scaled_loss = mask_optimizer.get_scaled_loss(loss)
-
-    scaled_grads = tape.gradient(target=scaled_loss, sources=net.trainable_weights)
-    grads = mask_optimizer.get_unscaled_gradients(scaled_grads)
-
-    max_gradient = tf.reduce_max([tf.reduce_max(tf.abs(grad)) for grad in grads])
-    logger['train_acc'](tf.keras.metrics.sparse_categorical_accuracy(y, outs))
-    logger['max_gradient'](max_gradient)
-
-    kernel_gradients = grads
-    kernel_optimizer.apply_gradients(zip(kernel_gradients, net.trainable_weights))
-
-
-@tf.function
-def train_step_masks(model, x, y):
-    if mask_sampling:
-        set_kernel_masks_from_distributions(kernel_masks,
-                                            mask_distributions,
-                                            mask_activation)
-    with tf.GradientTape() as tape:
-        tape.watch(mask_differentiable)
-        outs = model(x, training=True)
-        outs = tf.cast(outs, tf.float32)
-        loss = loss_fn(y, outs)
-        logger['train_loss'](loss)
-
-        mask_decay = regularize(mask_distributions)
-        loss += mask_decay
-        logger['mask_decay'](mask_decay)
-        logger['full_loss'](loss)
-        scaled_loss = mask_optimizer.get_scaled_loss(loss)
-
-    scaled_grads = tape.gradient(target=scaled_loss, sources=mask_differentiable)
-    grads = mask_optimizer.get_unscaled_gradients(scaled_grads)
-
-    max_gradient = tf.reduce_max([tf.reduce_max(tf.abs(grad)) for grad in grads])
-    logger['train_acc'](tf.keras.metrics.sparse_categorical_accuracy(y, outs))
-    logger['max_gradient'](max_gradient)
-
-    mask_gradients = grads
-    if callable(mask_optimizer.lr):
-        mask_gradients = clip_many(mask_gradients, clip_at=0.1 / mask_optimizer.lr(mask_optimizer.iterations))
-    else:
-        mask_gradients = clip_many(mask_gradients, clip_at=0.1 / mask_optimizer.lr)
     mask_optimizer.apply_gradients(zip(mask_gradients, mask_updatable))
     clip_many(mask_distributions, clip_at=10, inplace=True)
 

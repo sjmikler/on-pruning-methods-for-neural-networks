@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
+from copy import deepcopy
 
 
 def get_kernel_masks(model):
@@ -47,6 +48,15 @@ def clone_model(model):
     new_model = tf.keras.models.clone_model(model)
     set_all_weights_from_model(new_model, model)
     return new_model
+
+
+def reset_weights_to_checkpoint(model, ckp, skip_keyword=None):
+    temp = tf.keras.models.clone_model(model)
+    temp.load_weights(ckp)
+    for w1, w2 in zip(model.weights, temp.weights):
+        if skip_keyword in w1.name:
+            continue
+        w1.assign(w2)
 
 
 def clip_many(values, clip_at, clip_from=None, inplace=False):
@@ -348,7 +358,7 @@ class Logger:
 
         results = {}
         for key in keys:
-            value = self.data[key]
+            value = self.data.get(key)
             if hasattr(value, 'result'):
                 results[key] = value.result().numpy()
             else:

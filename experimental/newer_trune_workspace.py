@@ -14,13 +14,13 @@ utils.set_precision(16)
 
 
 def maybe_abs(mask):
-    return tf.abs(mask)
-    # return tf.identity(mask)
+    # return tf.abs(mask)
+    return tf.identity(mask)
 
 
 def mask_activation(mask):
-    return tf.tanh(mask)
-    # return tf.sigmoid(mask)
+    # return tf.tanh(mask)
+    return tf.sigmoid(mask)
 
 
 def regularize(values):
@@ -32,7 +32,7 @@ def regularize(values):
 
 
 mask_initial_value = 4.
-mask_sampling = False
+mask_sampling = True
 MaskedConv, MaskedDense = create_layers(tf.identity if mask_sampling else mask_activation)
 
 
@@ -48,12 +48,8 @@ def set_kernel_masks_from_distributions(kernel_masks,
         km.assign(tf.cast(rnd <= tf.abs(probs), km.dtype) * sign)
 
 
-schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
-    boundaries=[4000, 12000],
-    values=[1000.0, 100.0, 10.0])
-
 optimizer = mixed_precision.LossScaleOptimizer(
-    tf.keras.optimizers.SGD(learning_rate=100.0, momentum=0.99, nesterov=True),
+    tf.keras.optimizers.SGD(learning_rate=10.0, momentum=0.9, nesterov=True),
     loss_scale=4096)
 
 ############## CONFIG ENDS HERE
@@ -72,7 +68,7 @@ checkpoint_lookup = {
     'perf2': 'data/VGG19_IMP03_ticket/775908/10.h5',
 }
 
-choosen_checkpoints = ['8k2']
+choosen_checkpoints = ['8k']
 
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
@@ -84,6 +80,8 @@ perf_kernel_masks = get_kernel_masks(perf_net)
 
 kernel_masks = get_kernel_masks(net)
 regularizer_value = tf.Variable(0.)
+kernels = get_kernels(net)
+kernels = [tf.abs(k) for k in kernels]
 
 ################ FOR MASK SAMPLING
 if mask_sampling:
@@ -133,6 +131,9 @@ for i in range(len(nets)):
         scaled_grads = tape.gradient(target=scaled_loss, sources=all_differentiable)
         grads = model.optimizer.get_unscaled_gradients(scaled_grads)
 
+        for i, k in enumerate(kernels):
+            grads[i] = grads[i] / k
+
         max_gradient = tf.reduce_max([tf.reduce_max(tf.abs(grad)) for grad in grads])
         logger['train_acc'](tf.keras.metrics.sparse_categorical_accuracy(y, outs))
         logger['max_gradient'](max_gradient)
@@ -143,6 +144,7 @@ for i in range(len(nets)):
             grads = clip_many(grads, clip_at=0.1 / model.optimizer.lr)
         model.optimizer.apply_gradients(zip(grads, all_updatable))
         clip_many(mask_distributions, clip_at=15, inplace=True)
+        return grads
 
 
     train_steps.append(train_step)
