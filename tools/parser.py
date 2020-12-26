@@ -68,8 +68,7 @@ def cool_parse_exp(exp, past_experiments):
         for cool_name, cool_idx in cool_args:
             past_value = past_experiments[int(cool_idx)][cool_name]
             v = v.replace(f'{cool_name}[{cool_idx}]', str(past_value))
-            print(
-                f"REPLACED IN {k}: {cool_name}[{cool_idx}] WITH {past_value}")
+            print(f"REPLACED IN {k}: {cool_name}[{cool_idx}] WITH {past_value}")
         if isinstance(v, str) and v.startswith('exec'):
             expr1 = v
             v = v.replace('exec ', 'temp = ')
@@ -115,8 +114,8 @@ def load_from_yaml(yaml_path):
             rnd_idx = random.randint(100000, 999999)
             for rep in range(exp.get('REPEAT') or 1):
                 parsed_exp = deepcopy(exp)
-                parsed_exp['REP'] = str(rep)
-                parsed_exp['IDX'] = f"{rnd_idx}/{rep}"
+                parsed_exp['RND_IDX'] = rnd_idx
+                parsed_exp['REP'] = rep
 
                 parsed_exp = cool_parse_exp(parsed_exp, unpacked_experiments)
                 unpacked_experiments.append(parsed_exp)

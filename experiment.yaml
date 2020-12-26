@@ -1,16 +1,17 @@
 # DEFAULTS:
 REPEAT: 1
 GLOBAL_REPEAT: 1
-name: skip # with default name=skip, training will be skipped if no name is specified
-precision: 16 # 16 or anything else for default 32
-directory: temp/1226_tests
-full_path: exec f"{directory}/{name}/{IDX}"
-checkpoint: exec f"{directory}/{name}/{IDX}.h5"
+name: skip # with default name=skip, training will be skipped
+precision: 16 # 16 for mixed precision or anything else for default 32 bit
 queue: null # specify path for queue file, if null keeps queue in memory
+
+directory: temp/1226_tests
+full_path: exec f"{directory}/{name}/{RND_IDX}/{REP}"
+checkpoint: exec f"{directory}/{name}/{RND_IDX}/{REP}.h5"
 
 pruning: none # none|random|l1|snip|grasp + shuffle weight|layer|mask
 pruning_config:
-    structure: false # true for classic structural pruning | int N for enforcing N gorups
+    structure: false # true for classic structural pruning | int N for enforcing N groups
     sparsity: 0
 
 dataset: cifar10 # mnist|cifar10 available
@@ -33,7 +34,7 @@ checkpointBP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 
 pruning: SNIP
 pruning_config:
-    sparsity: exec [0.5, 0.8, 0.9, 0.95][REP]
+    sparsity: 0.2
     n_batches: 10
 
 model: VGG
