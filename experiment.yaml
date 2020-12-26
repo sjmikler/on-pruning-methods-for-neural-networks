@@ -34,7 +34,7 @@ checkpointBP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 
 pruning: SNIP
 pruning_config:
-    sparsity: 0.2
+    sparsity: 0.5
     n_batches: 10
 
 model: VGG
@@ -49,4 +49,70 @@ lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
 num_iterations: 80
 steps_per_epoch: 2000
-REPEAT: 4
+REPEAT: 1
+---
+name: VGG19_snip_control
+checkpointBP: data/partial_training_checkpoints/VGG19_2000it/0.h5
+
+pruning: SNIP
+pruning_config:
+    sparsity: 0.8
+    n_batches: 10
+
+model: VGG
+model_config:
+    version: 19
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l1_reg: 0
+    l2_reg: 1e-4
+
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80
+steps_per_epoch: 2000
+REPEAT: 1
+---
+name: VGG19_snip_control
+checkpointBP: data/partial_training_checkpoints/VGG19_2000it/0.h5
+
+pruning: SNIP
+pruning_config:
+    sparsity: 0.9
+    n_batches: 10
+
+model: VGG
+model_config:
+    version: 19
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l1_reg: 0
+    l2_reg: 1e-4
+
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80
+steps_per_epoch: 2000
+REPEAT: 1
+---
+name: VGG19_snip_control
+checkpointBP: data/partial_training_checkpoints/VGG19_2000it/0.h5
+
+pruning: SNIP
+pruning_config:
+    sparsity: 0.95
+    n_batches: 10
+
+model: VGG
+model_config:
+    version: 19
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l1_reg: 0
+    l2_reg: 1e-4
+
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80
+steps_per_epoch: 2000
+REPEAT: 1
