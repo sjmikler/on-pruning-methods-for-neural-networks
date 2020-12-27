@@ -352,7 +352,7 @@ def prune_IMP_complete(model, config):
     masks = saliences2masks(saliences, percentage=config.sparsity)
     set_kernel_masks_for_model(model, masks)
 
-    if config.get('checkpoint_AP'):
+    if config.get('checkpointAP'):
         signs = []
         for w in model.weights:
             sign = w.numpy()
@@ -364,7 +364,7 @@ def prune_IMP_complete(model, config):
                                     skip_keyword="kernel_mask")
         if config.get('preserve_BP_sign'):
             for w1, sign in zip(model.weights, signs):
-                w1.assign(np.abs(w1.numpy()) * signs)
+                w1.assign(np.abs(w1.numpy()) * sign)
     return model
 
 

@@ -29,12 +29,12 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: VGG19_imp_preserve_sign
-checkpointBP: data/temp.h5
+name: VGG19_imp_preserve_sign_real
+checkpointBP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 
 pruning: IMP_complete
 pruning_config:
-    sparsity: 0.865782272
+    sparsity: 0.0
     preserve_BP_sign: true
     checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 
@@ -52,14 +52,14 @@ num_iterations: 80000
 steps_per_epoch: 2000
 REPEAT: 1
 ---
-name: VGG19_imp_preserve_sign
+name: VGG19_imp_preserve_sign_real
 checkpointBP: checkpoint[-1]
 
 pruning: IMP_complete
 pruning_config:
     sparsity: exec 1 - (1-sparsity[-1]) * 0.8
-    checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
     preserve_BP_sign: true
+    checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 
 model: VGG
 model_config:
@@ -73,4 +73,4 @@ lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
 num_iterations: 80000
 steps_per_epoch: 2000
-REPEAT: 20
+REPEAT: 25
