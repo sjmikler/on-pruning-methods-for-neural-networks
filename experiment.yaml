@@ -30,7 +30,13 @@ steps_per_epoch: 2000
 # EXPERIMENTS:
 ---
 name: VGG19_imp_preserve_sign
-checkpointBP: data/partial_training_checkpoints/VGG19_2000it/0.h5
+checkpointBP: data/temp.h5
+
+pruning: IMP_complete
+pruning_config:
+    sparsity: 0.865782272
+    preserve_BP_sign: true
+    checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 
 model: VGG
 model_config:
@@ -67,4 +73,4 @@ lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
 num_iterations: 80000
 steps_per_epoch: 2000
-REPEAT: 25
+REPEAT: 20
