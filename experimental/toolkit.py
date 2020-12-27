@@ -367,6 +367,3 @@ class Logger:
 
     def clear(self):
         self.data = {}
-
-
-logger = Logger(10)

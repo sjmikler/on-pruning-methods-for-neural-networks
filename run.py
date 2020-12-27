@@ -98,22 +98,12 @@ for exp in experiment_queue:
 
     # load or reset weights after the pruning, do not change masks
     if exp.checkpointAP is not None:
-        model_copy = model
-        model = model_func(**model_config)
-        if exp.checkpointAP != "random":
-            model.load_weights(exp.checkpointAP)
-        num_masks = 0
-        for w1, w2 in zip(model_copy.weights, model.weights):
-            if "kernel_mask" in w1.name:
-                w2.assign(w1.value())
-                num_masks += 1
-        del model_copy
-        for layer in model.layers:
-            if hasattr(layer, "apply_pruning_mask"):
-                layer.apply_pruning_mask()
-        print(
-            f"LOADED AFTER PRUNING {exp.checkpointAP}, but keeping {num_masks} masks!"
-        )
+        if exp.checkpointAP == 'random':
+            ckp = None
+        else:
+            ckp = exp.checkpointAP
+        num_masks = pruning.reset_weights_to_checkpoint(model, ckp=ckp, skip_keyword='kernel_mask')
+        print(f"LOADED AFTER PRUNING {exp.checkpointAP}, but keeping {num_masks} masks!")
 
     # apply pruning from previously calculated masks
     pruning.apply_pruning_masks(model, pruning_method=exp.pruning)
