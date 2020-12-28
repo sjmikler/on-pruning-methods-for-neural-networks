@@ -68,7 +68,7 @@ checkpoint_lookup = {
     'perf2': 'data/VGG19_IMP03_ticket/775908/10.h5',
 }
 
-choosen_checkpoints = ['8k']
+choosen_checkpoints = ['16k']
 
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
@@ -216,6 +216,7 @@ regularizer_schedule = {
 }
 
 pbar = tqdm.tqdm(total=EPOCHS * STEPS, position=0, mininterval=0.5)
+logger.show_header()
 
 for epoch in range(EPOCHS):
     if epoch in regularizer_schedule:
