@@ -271,7 +271,7 @@ def prune_TRUNE(model, dataset, config):
     num_iterations = config.num_iterations
     steps_per_epoch = config.steps_per_epoch
 
-    from tools.trune import truning
+    from experimental.tools.trune import truning
     model = truning(model, learning_rate, momentum, weight_decay, num_iterations,
                     steps_per_epoch,
                     dataset=dataset)

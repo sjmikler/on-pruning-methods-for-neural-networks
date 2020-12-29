@@ -44,7 +44,7 @@ def log_from_history(history, model, info):
     info["TIME"] = f"{date.year}.{date.month}.{date.day} {date.hour}:{date.minute}"
     info["ACC"] = maxi_acc
 
-    with open(f"{info['full_path']}.yaml", "a") as f:
+    with open(f"{info['yaml_logdir']}", "a") as f:
         for k, v in info.items():
             print(f"{k}: {v}", file=f)
         print("---", file=f)

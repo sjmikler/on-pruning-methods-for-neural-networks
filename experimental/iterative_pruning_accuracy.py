@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from experimental.gather_logs import recursive_gather_logs
+from tools.collect_logs import recursive_collect_logs
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -21,7 +21,7 @@ for name, (path, *eid) in name2path.items():
     if path.endswith('.yaml'):
         logs = yaml.safe_load_all(open(path, 'r'))
     else:
-        logs = recursive_gather_logs(path)
+        logs = recursive_collect_logs(path)
 
     for exp in logs:
         if not exp:

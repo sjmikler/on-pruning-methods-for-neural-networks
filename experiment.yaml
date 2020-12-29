@@ -1,4 +1,4 @@
-# DEFAULTS:
+# GLOBAL CONFIG:
 REPEAT: 1
 GLOBAL_REPEAT: 1
 name: skip # with default name=skip, training will be skipped
@@ -6,8 +6,11 @@ precision: 16 # 16 for mixed precision or anything else for default 32 bit
 queue: null # specify path for queue file, if null keeps queue in memory
 
 directory: temp/1226_tests
+# REP is a value from [0, REPEAT-1] interval
+# RND_IDX is autimatically assigned in `run.py`
 full_path: exec f"{directory}/{name}/{RND_IDX}/{REP}"
 checkpoint: exec f"{directory}/{name}/{RND_IDX}/{REP}.h5"
+yaml_logdir: exec f"{directory}/{name}/{RND_IDX}/{REP}.yaml"
 
 pruning: none # none|random|l1|snip|grasp + shuffle weight|layer|mask
 pruning_config:
@@ -15,12 +18,12 @@ pruning_config:
     sparsity: 0
 
 dataset: cifar10 # mnist|cifar10 available
-model: lenet
-model_config:
-    input_shape: [28, 28, 1]
-    layer_sizes: [400, 400, 400]
-    n_classes: 10
-    l2_reg: 1e-4
+#model: lenet
+#model_config:
+#    input_shape: [28, 28, 1]
+#    layer_sizes: [400, 400, 400]
+#    n_classes: 10
+#    l2_reg: 1e-4
 
 lr_boundaries: [6000, 12000]
 lr_values: [0.1, 0.01, 0.001]

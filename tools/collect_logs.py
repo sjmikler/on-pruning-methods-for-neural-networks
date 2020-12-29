@@ -4,7 +4,7 @@ import argparse
 import sys
 
 
-def recursive_gather_logs(path):
+def recursive_collect_logs(path):
     logs = []
     for x in os.listdir(path):
         if x.endswith('.yaml'):
@@ -15,7 +15,7 @@ def recursive_gather_logs(path):
                         if not exp in logs:
                             logs.append(exp)
         if os.path.isdir(npath := os.path.join(path, x)):
-            for exp in recursive_gather_logs(npath):
+            for exp in recursive_collect_logs(npath):
                 if not exp in logs:
                     logs.append(exp)
     return logs
@@ -32,6 +32,6 @@ if __name__ == '__main__':
     if not args.dest:
         args.dest = os.path.join(args.path, 'gathered_logs.yaml')
 
-    logs = recursive_gather_logs(args.path)
+    logs = recursive_collect_logs(args.path)
     with open(args.dest, 'w') as f:
         yaml.safe_dump_all(logs, f)
