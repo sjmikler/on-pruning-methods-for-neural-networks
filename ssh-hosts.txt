@@ -1,5 +1,0 @@
-ssh -p 10270 root@ssh4.vast.ai
-ssh i311091@10.244.17.138 ssh i311091@ai-01.stud.ii;
-ssh i311091@10.244.17.138 ssh i311091@ai-02.stud.ii;
-ssh i311091@10.244.17.138 ssh i311091@ai-03.stud.ii;
-ssh i311091@10.244.17.138 ssh i311091@ai-04.stud.ii;
