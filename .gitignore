@@ -2,8 +2,5 @@ temp
 */__pycache__
 .idea
 .dvc/*
-!.dvc/tmp
 !.dvc/config
-.dvc/tmp/*
-!.dvc/tmp/gdrive-user-credentials.json
 *.h5
