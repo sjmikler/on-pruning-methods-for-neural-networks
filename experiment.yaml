@@ -5,7 +5,7 @@ name: skip # with default name=skip, training will be skipped
 precision: 16 # 16 for mixed precision or anything else for default 32 bit
 queue: null # specify path for queue file, if null keeps queue in memory
 
-directory: temp/1226_tests
+directory: temp/1230_tests
 # REP is a value from [0, REPEAT-1] interval
 # RND_IDX is autimatically assigned in `run.py`
 full_path: exec f"{directory}/{name}/{RND_IDX}/{REP}"
