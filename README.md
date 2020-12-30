@@ -1,7 +1,6 @@
-### Experiment definition: `experiments.yaml`
+## Defining experiments
 
-Contains experiments. The first element is **global config** which contains default values for experiments. All the
-experiments will be updated with it, but values specified later, in experiments, have priority over **global config**.
+File `experiments.yaml` defines experiments. The first element is **global config** which contains default values for experiments. All the experiments will be updated with it, but values specified later, in experiments, have priority over **global config**.
 
 **Special names**
 
@@ -11,23 +10,16 @@ experiments will be updated with it, but values specified later, in experiments,
 4. `RND_IDX`: is added by `run.py` and can be used to uniquely identify an experiment.
 5. `checkpoint` will be used by `run.py` for `model.save_weights(ckp)` method.
 
-### Script `run.py`
+## Running experiments
 
-Runs trainings specified in `experiment.yaml`. If `queue` parameter is specified as a valid path, the queue of the
-experiments will be stored in it and can be modified when experiments are running. Otherwise, queue is stored in RAM
-memory and cannot be modified.
+Script `run.py` runs trainings specified in `experiment.yaml`. If `queue` parameter is specified as a valid path, the queue of the experiments will be stored in it and can be modified when experiments are running. Otherwise, queue is stored in RAM memory and cannot be modified.
 
 1. You can use `--dry` flag to test your experiment parsing
 2. You can use any flag, like `--sparsity=0.5` or `--precision=32` to update **global config** from command line.
-3. `steps_per_epoch` should be larger than number of batches in the dataset. Otherwise, you will not use all the samples
-   during the training.
-4. `checkpointBP` is **checkpoint After Pruning** and `checkpointBP` is **checkpoint Before Pruning**. You can load any
-   checkpoint before pruning, but after pruning **masks from the checkpoint will be skipped**.
-5. If experiment is stopped with `KeyboardInterrupt`, there will be 2 second pause during which `run.py` can be
-   interrupted completely. If not interrupted completely, next experiment in the queue will start instead. Interrupted
-   experiments will not leave any checkpoints.
-6. If `name: skip`, training will not be performed, but values (like `sparsity: 0.0`) can be used in fancy parsing.
-   Skipped experiments will not leave any checkpoints.
+3. `steps_per_epoch` should be larger than number of batches in the dataset. Otherwise, you will not use all the samples during the training.
+4. `checkpointBP` is **checkpoint After Pruning** and `checkpointBP` is **checkpoint Before Pruning**. You can load any checkpoint before pruning, but after pruning **masks from the checkpoint will be skipped**.
+5. If experiment is stopped with `KeyboardInterrupt`, there will be 2 second pause during which `run.py` can be interrupted completely. If not interrupted completely, next experiment in the queue will start instead. Interrupted experiments will not leave any checkpoints.
+6. If `name: skip`, training will not be performed, but values (like `sparsity: 0.0`) can be used in fancy parsing. Skipped experiments will not leave any checkpoints.
 
 ```
 PROCEDURES IN ORDER:
@@ -40,15 +32,13 @@ PROCEDURES IN ORDER:
 
 Before running the training, experiments will be parsed...
 
-### Fancy experiment parsing
+## Fancy experiment parsing
 
-Values for experiments can be specified explicitly, e.g. `sparsity: 0.9`, but there are some tricks to simplify longer
-and more complicated experiments.
+Values for experiments can be specified explicitly, e.g. `sparsity: 0.9`, but there are some tricks to simplify longer and more complicated experiments.
 
 * You can use `parameter[n]` to reuse value of parameter named `parameter` from experiment number `n`.
 
-* You can use `exec` in the beginning of a parameter value to execute the statement in Python and do super cool
-  tricks...
+* You can use `exec` in the beginning of a parameter value to execute the statement in Python and do super cool tricks...
 
 #### Tricks:
 
@@ -90,3 +80,23 @@ number: exec list[0]
 ```
 
 > `number` will be `[1, 2, 3]`, not `2`.
+
+## Logs management
+
+Logs `.yaml` are saved in location passed as `experiment.yaml/yaml_logdir`. These contain experiment formulation and test accuracy of a network. Following tool can recursively collect logs from `.yaml` files in subdirectories of `path`.
+
+```
+tools.collect_logs.py 
+   --path=[will be recursively serached for .yaml logs] 
+   --dest=[where cumulative log will be saved, end it with .yaml]
+```
+
+example usage:
+
+```
+python tools.collect_logs.py 
+   --path=data/VGG19_IMP03_ticket 
+   --dest=data/VGG19_IMP03_ticket/collected_logs.yaml
+```
+
+Tensorboard logs with training and validation history is saved **after** the training in `experiment.yaml/full_path`. 

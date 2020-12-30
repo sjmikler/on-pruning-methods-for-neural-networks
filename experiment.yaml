@@ -7,7 +7,7 @@ queue: null # specify path for queue file, if null keeps queue in memory
 
 directory: temp/1230_tests
 # REP is a value from [0, REPEAT-1] interval
-# RND_IDX is autimatically assigned in `run.py`
+# RND_IDX is automatically assigned in `run.py`
 full_path: exec f"{directory}/{name}/{RND_IDX}/{REP}"
 checkpoint: exec f"{directory}/{name}/{RND_IDX}/{REP}.h5"
 yaml_logdir: exec f"{directory}/{name}/{RND_IDX}/{REP}.yaml"
