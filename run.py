@@ -1,18 +1,18 @@
 # %%
 
-import sys
 import datetime
-import time
-import tensorflow as tf
-from tensorflow.keras.mixed_precision import experimental as mixed_precision
 import pprint
+import sys
+import time
 
+import tensorflow as tf
+
+from tools import datasets, models, parser, pruning
 from tools import utils
 from tools.utils import ddict
 
 utils.set_memory_growth()
 
-from tools import datasets, models, parser, pruning
 
 default_config, experiment_queue = parser.load_from_yaml(yaml_path="experiment.yaml")
 default_config = ddict(default_config)

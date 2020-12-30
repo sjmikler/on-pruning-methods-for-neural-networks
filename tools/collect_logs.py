@@ -1,7 +1,6 @@
 import os
 import yaml
 import argparse
-import sys
 
 
 def recursive_collect_logs(path):
@@ -12,11 +11,11 @@ def recursive_collect_logs(path):
             with open(full_path, 'r') as f:
                 for exp in yaml.safe_load_all(f):
                     if exp:
-                        if not exp in logs:
+                        if exp not in logs:
                             logs.append(exp)
         if os.path.isdir(npath := os.path.join(path, x)):
             for exp in recursive_collect_logs(npath):
-                if not exp in logs:
+                if exp not in logs:
                     logs.append(exp)
     return logs
 

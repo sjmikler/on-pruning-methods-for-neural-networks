@@ -26,14 +26,15 @@ def mask_activation(mask):
 def regularize(values):
     loss = 0
     for value in values:
-        processed_value = maybe_abs(value)
+        processed_value = maybe_abs(value) + 10
         loss += tf.reduce_sum(processed_value) * regularizer_value
     return loss
 
 
 mask_initial_value = 4.
-mask_sampling = True
-MaskedConv, MaskedDense = create_layers(tf.identity if mask_sampling else mask_activation)
+mask_sampling = False
+MaskedConv, MaskedDense = create_layers(tf.identity
+                                        if mask_sampling else mask_activation)
 
 
 def set_kernel_masks_from_distributions(kernel_masks,
@@ -49,7 +50,7 @@ def set_kernel_masks_from_distributions(kernel_masks,
 
 
 optimizer = mixed_precision.LossScaleOptimizer(
-    tf.keras.optimizers.SGD(learning_rate=10.0, momentum=0.9, nesterov=True),
+    tf.keras.optimizers.SGD(learning_rate=100.0, momentum=0.9, nesterov=True),
     loss_scale=4096)
 
 ############## CONFIG ENDS HERE
@@ -68,7 +69,7 @@ checkpoint_lookup = {
     'perf2': 'data/VGG19_IMP03_ticket/775908/10.h5',
 }
 
-choosen_checkpoints = ['16k']
+choosen_checkpoints = ['8k']
 
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
@@ -85,7 +86,8 @@ kernels = [tf.abs(k) for k in kernels]
 
 ################ FOR MASK SAMPLING
 if mask_sampling:
-    mask_distributions = [tf.Variable(tf.ones_like(mask)) for mask in kernel_masks]
+    mask_distributions = [tf.Variable(tf.ones_like(mask))
+                          for mask in kernel_masks]
     all_differentiable = kernel_masks + mask_distributions
     all_updatable = mask_distributions + mask_distributions
 else:
@@ -97,7 +99,9 @@ net.load_weights(checkpoint_lookup[choosen_checkpoints[0]])
 net.compile(deepcopy(optimizer), deepcopy(loss_fn))
 set_kernel_masks_values(mask_distributions, mask_initial_value)
 if mask_sampling:
-    set_kernel_masks_from_distributions(kernel_masks, mask_distributions, mask_activation)
+    set_kernel_masks_from_distributions(kernel_masks,
+                                        mask_distributions,
+                                        mask_activation)
 
 nets = [net]
 for i, ckp in enumerate(choosen_checkpoints[1:]):
@@ -128,18 +132,24 @@ for i in range(len(nets)):
             logger['full_loss'](loss)
             scaled_loss = model.optimizer.get_scaled_loss(loss)
 
-        scaled_grads = tape.gradient(target=scaled_loss, sources=all_differentiable)
+        scaled_grads = tape.gradient(target=scaled_loss,
+                                     sources=all_differentiable)
         grads = model.optimizer.get_unscaled_gradients(scaled_grads)
 
-        for i, k in enumerate(kernels):
-            grads[i] = grads[i] / k
+        # for i, k in enumerate(kernels):
+        #     grads[i] = grads[i] / k
 
-        max_gradient = tf.reduce_max([tf.reduce_max(tf.abs(grad)) for grad in grads])
-        logger['train_acc'](tf.keras.metrics.sparse_categorical_accuracy(y, outs))
+        max_gradient = tf.reduce_max([tf.reduce_max(tf.abs(grad))
+                                      for grad in grads])
+        logger['train_acc'](
+            tf.keras.metrics.sparse_categorical_accuracy(y, outs))
         logger['max_gradient'](max_gradient)
 
         if callable(model.optimizer.lr):
-            grads = clip_many(grads, clip_at=0.1 / model.optimizer.lr(model.optimizer.iterations))
+            grads = clip_many(
+                grads,
+                clip_at=0.1 / model.optimizer.lr(model.optimizer.iterations)
+            )
         else:
             grads = clip_many(grads, clip_at=0.1 / model.optimizer.lr)
         model.optimizer.apply_gradients(zip(grads, all_updatable))
@@ -171,8 +181,8 @@ def train_epoch(models, steps):
 
 
 @tf.function
-def valid_epoch(model):
-    for x, y in ds['valid']:
+def valid_epoch(model, ds):
+    for x, y in ds:
         valid_step(model, x, y)
 
 
@@ -183,13 +193,11 @@ def update_pbar():
 
 
 for model in nets:
-    valid_epoch(model)
-logger['full_loss']
-logger['train_loss']
-logger['train_acc']
+    valid_epoch(model, ds['train'].take(500))
 
 mask = update_mask_info(mask_distributions, mask_activation, logger)
-f1, prc, rec, thr, density = compare_masks(perf_kernel_masks, mask_distributions,
+f1, prc, rec, thr, density = compare_masks(perf_kernel_masks,
+                                           mask_distributions,
                                            mask_activation=mask_activation)
 logger['f1_to_perf'] = f1
 logger['rec_to_perf'] = rec
@@ -203,20 +211,11 @@ EPOCHS = 4
 STEPS = 2000
 
 regularizer_schedule = {
-    0: 1e-7,
-    # 1: 5e-7,
-    # 6: 3e-7,
-    # 7: 4e-7,
-    # 9: 5e-7,
-    # 10: 6e-7,
-    # 11: 7e-7,
-    # 12: 8e-7,
-    # 13: 9e-7,
-    # 14: 1e-6,
+    0: 1e-6,
 }
 
-pbar = tqdm.tqdm(total=EPOCHS * STEPS, position=0, mininterval=0.5)
 logger.show_header()
+pbar = tqdm.tqdm(total=EPOCHS * STEPS, position=0, mininterval=0.5)
 
 for epoch in range(EPOCHS):
     if epoch in regularizer_schedule:
@@ -225,14 +224,16 @@ for epoch in range(EPOCHS):
     t0 = time.time()
     train_epoch(nets, STEPS)
     for model in nets:
-        valid_epoch(model)
+        valid_epoch(model, ds['valid'])
     logger['epoch_time'] = time.time() - t0
 
     mask = update_mask_info(mask_distributions, mask_activation, logger)
-    f1, prc, rec, thr, density = compare_masks(perf_kernel_masks, mask_distributions,
-                                               mask_activation=mask_activation,
-                                               # force_sparsity=0.98
-                                               )
+    f1, prc, rec, thr, density = compare_masks(
+        perf_kernel_masks,
+        mask_distributions,
+        mask_activation=mask_activation,
+        # force_sparsity=0.98
+    )
     logger['f1_to_perf'] = f1
     logger['rec_to_perf'] = rec
     logger['thr_to_perf'] = thr
@@ -243,7 +244,7 @@ for epoch in range(EPOCHS):
     visualize_masks(mask_distributions, mask_activation)
 
 pbar.close()
-model = prune_and_save_model(net, mask_activation, threshold=0.1,
+model = prune_and_save_model(net, mask_activation, threshold=0.01,
                              path='temp/new_trune_workspace_ckp.h5')
 
 # %%
