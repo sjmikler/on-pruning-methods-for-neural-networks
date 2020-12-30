@@ -94,7 +94,7 @@ tools.collect_logs.py
 example usage:
 
 ```
-python tools.collect_logs.py 
+python -m tools.collect_logs.py 
    --path=data/VGG19_IMP03_ticket 
    --dest=data/VGG19_IMP03_ticket/collected_logs.yaml
 ```
