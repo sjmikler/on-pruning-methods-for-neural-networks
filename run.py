@@ -13,7 +13,6 @@ from tools.utils import ddict
 
 utils.set_memory_growth()
 
-
 default_config, experiment_queue = parser.load_from_yaml(yaml_path="experiment.yaml")
 default_config = ddict(default_config)
 utils.set_precision(default_config.precision)
@@ -62,8 +61,9 @@ ds = datasets.get_dataset(default_config.dataset, default_config.precision)
 # %%
 
 for exp in experiment_queue:
-    print("EXPERIMENT:")
+    print("\nEXPERIMENT:")
     pprint.pprint(exp)
+    print()
     if dry:
         continue
     exp = ddict(exp)

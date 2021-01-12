@@ -5,7 +5,7 @@ name: skip # with default name=skip, training will be skipped
 precision: 16 # 16 for mixed precision or anything else for default 32 bit
 queue: null # specify path for queue file, if null keeps queue in memory
 
-directory: temp/1230_tests
+directory: temp/21.01.12_tests
 # REP is a value from [0, REPEAT-1] interval
 # RND_IDX is automatically assigned in `run.py`
 full_path: exec f"{directory}/{name}/{RND_IDX}/{REP}"
@@ -32,9 +32,9 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: VGG19_trune003
-
-checkpointBP: data/new_trune_workspace_ckp.h5
+name: VGG19_trune0145
+checkpointBP: temp/new_trune_workspace_ckp.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 
 model: VGG
 model_config:
@@ -44,7 +44,7 @@ model_config:
     l1_reg: 0
     l2_reg: 1e-4
 
-lr_boundaries: [32000, 48000, 64000]
+lr_boundaries: [16000, 32000, 48000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
 num_iterations: 80000
 steps_per_epoch: 2000

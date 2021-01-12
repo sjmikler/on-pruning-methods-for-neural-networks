@@ -73,22 +73,29 @@ def clip_many(values, clip_at, clip_from=None, inplace=False):
         return r
 
 
+def concatenate_flattened(arrays):
+    return np.concatenate([x.flatten() for x in arrays], axis=0)
+
+
 def visualize_masks(masks, mask_activation):
     fig, axes = plt.subplots(5, 1, figsize=(7, 20), constrained_layout=True)
-    masks = [mask.numpy().flatten() for mask in masks]
+    activated_masks = [mask_activation(mask).numpy() for mask in masks]
+    masks = [mask.numpy() for mask in masks]
 
-    c = np.concatenate(masks[:4])
-    axes[0].hist(c, bins=30)
-    axes[1].hist(mask_activation(c).numpy(), bins=30)
+    axes[0].set_title('4 layers not activated')
+    axes[0].hist(concatenate_flattened(masks[:4]), bins=30)
+    axes[1].set_title('4 layers activated')
+    axes[1].hist(concatenate_flattened(activated_masks[:4]), bins=30)
+    axes[2].set_title('all layers not activated')
+    axes[2].hist(concatenate_flattened(masks), bins=30)
+    axes[3].set_title('all layers activated')
+    axes[3].hist(concatenate_flattened(activated_masks), bins=30)
 
-    c = np.concatenate(masks)
-    axes[2].hist(c, bins=30)
-    axes[3].hist(mask_activation(c).numpy(), bins=30)
-
-    means = [np.mean(np.abs(mask_activation(mask).numpy())) for mask in masks]
+    means = [np.mean(np.abs(mask)) for mask in activated_masks]
+    axes[4].set_title('density of layers')
     axes[4].bar(range(len(means)), means)
     fig.show()
-    return c
+    return fig
 
 
 def update_mask_info(kernel_masks, mask_activation, logger=None):
@@ -97,15 +104,15 @@ def update_mask_info(kernel_masks, mask_activation, logger=None):
         for mask in kernel_masks
     ])
     if logger:
-        logger['density'] = np.mean(mask)
-        logger['mask_std'] = np.std(mask)
+        logger['avg_mask'] = np.mean(mask)
+        # logger['mask_std'] = np.std(mask)
     return mask
 
 
 def compare_masks(perf_m, m, mask_activation, force_sparsity=None):
     from sklearn.metrics import precision_recall_curve
-    m = np.concatenate([x.numpy().flatten() for x in m])
-    m = np.abs(mask_activation(m).numpy())
+    m = np.concatenate([mask_activation(x).numpy().flatten() for x in m])
+    m = np.abs(m)
 
     perf_m = np.concatenate([x.numpy().flatten() for x in perf_m])
 
@@ -203,8 +210,9 @@ def create_layers_vsign(mask_activation):
             )
 
         def call(self, x):
-            multipler = mask_activation(self.kernel_mask)
-            mask = multipler[0] * (multipler[1] * 2 - 1)
+            mask = mask_activation(self.kernel_mask)
+            # mask = multipler[0] * (multipler[1] * 2 - 1)
+            # mask = multipler[0] - multipler[1]
 
             masked_w = tf.multiply(self.kernel, mask)
             result = tf.matmul(x, masked_w)
@@ -235,8 +243,9 @@ def create_layers_vsign(mask_activation):
             )
 
         def call(self, x):
-            multipler = mask_activation(self.kernel_mask)
-            mask = multipler[0] * (multipler[1] * 2 - 1)
+            mask = mask_activation(self.kernel_mask)
+            # mask = multipler[0] * (multipler[1] * 2 - 1)
+            # mask = multipler[0] - multipler[1]
 
             masked_w = tf.multiply(self.kernel, mask)
             result = tf.nn.conv2d(x, masked_w, strides=self.strides, padding=self.padding.upper())
@@ -283,7 +292,7 @@ class Logger:
         self.skip = []
 
     def __getitem__(self, item):
-        if not item in self.data:
+        if item not in self.data:
             self.data[item] = tf.keras.metrics.Mean()
         return self.data[item]
 

@@ -145,13 +145,13 @@ for i in range(len(nets)):
             tf.keras.metrics.sparse_categorical_accuracy(y, outs))
         logger['max_gradient'](max_gradient)
 
-        if callable(model.optimizer.lr):
-            grads = clip_many(
-                grads,
-                clip_at=0.1 / model.optimizer.lr(model.optimizer.iterations)
-            )
-        else:
-            grads = clip_many(grads, clip_at=0.1 / model.optimizer.lr)
+        # if callable(model.optimizer.lr):
+        #     grads = clip_many(
+        #         grads,
+        #         clip_at=0.1 / model.optimizer.lr(model.optimizer.iterations)
+        #     )
+        # else:
+        #     grads = clip_many(grads, clip_at=0.1 / model.optimizer.lr)
         model.optimizer.apply_gradients(zip(grads, all_updatable))
         clip_many(mask_distributions, clip_at=15, inplace=True)
         return grads

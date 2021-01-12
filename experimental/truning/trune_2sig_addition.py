@@ -5,58 +5,38 @@ from experimental.toolkit import *
 import tensorflow as tf
 import numpy as np
 from copy import deepcopy
+
 from tools import models, datasets, utils
 import tensorflow.keras.mixed_precision.experimental as mixed_precision
-from tqdm import tqdm
+import tqdm
 
 utils.set_memory_growth()
 utils.set_precision(16)
 
 
 def maybe_abs(mask):
-    # return tf.abs(mask)
     return tf.identity(mask)
 
 
 def mask_activation(mask):
-    # return tf.tanh(mask)
-    return tf.sigmoid(mask)
+    return tf.sigmoid(mask[0]) - tf.sigmoid(mask[1])
 
 
-MaskedConv, MaskedDense = create_layers(tf.identity)
-MaskedConv_vsign, MaskedDense_vsign = create_layers_vsign(tf.identity)
+MaskedConv, MaskedDense = create_layers(mask_activation)
+MaskedConv_vsign, MaskedDense_vsign = create_layers_vsign(mask_activation)
 
 
 def regularize(values):
     loss = 0
     for value in values:
-        processed_value = maybe_abs(value[0])
+        processed_value = maybe_abs(value) + 10
         loss += tf.reduce_sum(processed_value) * regularizer_value
     return loss
 
 
-mask_initial_value = 10.
-mask_sampling = False
-
-
-def set_kernel_masks_from_distributions(kernel_masks,
-                                        distributions,
-                                        mask_activation):
-    for km, d in zip(kernel_masks, distributions):
-        probs = mask_activation(d)
-        sign = tf.cast(probs >= 0, probs.dtype)
-        sign = sign * 2 - 1
-
-        rnd = tf.random.uniform(shape=probs.shape, dtype=probs.dtype)
-        km.assign(tf.cast(rnd <= tf.abs(probs), km.dtype) * sign)
-
-
-schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
-    boundaries=[4000, 12000],
-    values=[1000.0, 100.0, 10.0])
-
+mask_initial_value = 4.
 optimizer = mixed_precision.LossScaleOptimizer(
-    tf.keras.optimizers.SGD(learning_rate=10.0, momentum=0.99, nesterov=True),
+    tf.keras.optimizers.SGD(learning_rate=100.0, momentum=0.9, nesterov=True),
     loss_scale=4096)
 
 checkpoint_lookup = {
@@ -93,24 +73,16 @@ kernel_masks = get_kernel_masks(net)
 regularizer_value = tf.Variable(0.)
 
 ################ IF MASK SAMPLING
-if mask_sampling:
-    mask_distributions = [tf.Variable(tf.ones_like(mask)) for mask in kernel_masks]
-    all_differentiable = kernel_masks + mask_distributions
-    all_updatable = mask_distributions + mask_distributions
-else:
-    mask_distributions = kernel_masks
-    all_differentiable = kernel_masks
-    all_updatable = kernel_masks
+mask_distributions = kernel_masks
+all_differentiable = kernel_masks
+all_updatable = kernel_masks
 
-set_kernel_masks_values(mask_distributions, mask_initial_value)
+# set_kernel_masks_values(mask_distributions, mask_initial_value)
 for km in mask_distributions:
     ones = np.ones_like(km.numpy())
     ones[0] = mask_initial_value
     ones[1] = -mask_initial_value
     km.assign(ones)
-
-if mask_sampling:
-    set_kernel_masks_from_distributions(kernel_masks, mask_distributions, mask_activation)
 
 net.compile(deepcopy(optimizer), deepcopy(loss_fn))
 ds = datasets.cifar10(128, 128, shuffle=10000)
@@ -120,10 +92,6 @@ logger = Logger(column_width=10)
 
 @tf.function
 def train_step(model, x, y):
-    if mask_sampling:
-        set_kernel_masks_from_distributions(kernel_masks,
-                                            mask_distributions,
-                                            mask_activation)
     with tf.GradientTape() as tape:
         tape.watch(all_differentiable)
         outs = model(x, training=True)
@@ -167,8 +135,8 @@ def train_epoch(model, steps):
 
 
 @tf.function
-def valid_epoch(model):
-    for x, y in ds['valid']:
+def valid_epoch(model, ds):
+    for x, y in ds:
         valid_step(model, x, y)
 
 
@@ -178,11 +146,11 @@ def update_pbar():
                                  'train_acc', 'max_gradient'), refresh=False)
 
 
-valid_epoch(net)
+valid_epoch(net, ds['train'].take(50))
 mask = update_mask_info(mask_distributions, mask_activation, logger)
 
-km0 = [v[0] for v in mask_distributions]
-f1, prc, rec, thr, density = compare_masks(perf_kernel_masks, km0,
+f1, prc, rec, thr, density = compare_masks(perf_kernel_masks,
+                                           mask_distributions,
                                            mask_activation=mask_activation)
 logger['f1_to_perf'] = f1
 logger['rec_to_perf'] = rec
@@ -190,12 +158,15 @@ logger['thr_to_perf'] = thr
 logger['f1_density'] = density
 logger.show()
 
+visualize_masks(mask_distributions, mask_activation)
+
 # %%
+
 EPOCHS = 4
 STEPS = 2000
 
 regularizer_schedule = {
-    0: 1e-7,
+    0: 1e-6,
 }
 
 logger.show_header()
