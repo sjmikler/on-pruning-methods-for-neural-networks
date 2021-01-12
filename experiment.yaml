@@ -33,7 +33,7 @@ steps_per_epoch: 2000
 # EXPERIMENTS:
 ---
 name: VGG19_trune0145
-checkpointBP: temp/new_trune_workspace_ckp.h5
+checkpointBP: data/new_trune_workspace_ckp.h5
 checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 
 model: VGG
