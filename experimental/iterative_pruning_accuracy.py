@@ -17,6 +17,7 @@ name2path = {
 name2result = defaultdict(list)
 
 plt.figure(figsize=(8, 5), dpi=200)
+plt.scatter([1-0.00294], [0.9058], label='Truning', marker='x', s=100)
 
 for name, (path, *eid) in name2path.items():
     if path.endswith('.yaml'):

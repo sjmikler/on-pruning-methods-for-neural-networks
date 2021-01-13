@@ -30,7 +30,7 @@ model.load_weights(ckp_lookup['8k'])
 ds = datasets.cifar10()
 reg_rate = tf.Variable(1e-7)
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-optimizer = tf.keras.optimizers.SGD(learning_rate=0.1,
+optimizer = tf.keras.optimizers.SGD(learning_rate=1.,
                                     momentum=0.99,
                                     nesterov=True)
 optimizer = mixed_precision.LossScaleOptimizer(optimizer, loss_scale=4096)
@@ -92,7 +92,7 @@ logger.show()
 
 # %%
 
-EPOCHS = 1
+EPOCHS = 8
 ITERS = 2000
 reg_rate.assign(1e-6)
 
@@ -120,7 +120,7 @@ for epoch in range(EPOCHS):
     logger['epoch_time'] = epoch_time
     logger.show()
 
-toolkit.prune_and_save_model(model, mask_activation, threshold=0.1,
+toolkit.prune_and_save_model(model, mask_activation, threshold=0.01,
                              path='temp/new_trune_workspace_ckp.h5')
 
 # %%
