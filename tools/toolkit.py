@@ -1,11 +1,10 @@
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from copy import deepcopy
 
 
 def get_kernel_masks(model):
-    return [w for w in model.weights if 'kernel_mask' in w.name]
+    return [l.kernel_mask for l in model.layers if hasattr(l, 'kernel_mask')]
 
 
 def get_kernels(model):
@@ -37,20 +36,26 @@ def set_kernel_masks_object(model, masks):
 
 
 def set_all_weights_from_model(model, source_model):
+    """Warning if a pair doesn't match."""
+
     for w1, w2 in zip(model.weights, source_model.weights):
         if w1.shape == w2.shape:
             w1.assign(w2)
         else:
-            print(f"skipping {w1.name}: {w1.shape} != {w2.shape}")
+            print(f"WARNING: Skipping {w1.name}: {w1.shape} != {w2.shape}")
 
 
 def clone_model(model):
+    """tf.keras.models.clone_model + toolkit.set_all_weights_from_model"""
+
     new_model = tf.keras.models.clone_model(model)
     set_all_weights_from_model(new_model, model)
     return new_model
 
 
 def reset_weights_to_checkpoint(model, ckp, skip_keyword=None):
+    """Resets inplace. Skips if `skip_keyboard in weight.name`."""
+
     temp = tf.keras.models.clone_model(model)
     temp.load_weights(ckp)
     for w1, w2 in zip(model.weights, temp.weights):
@@ -60,6 +65,8 @@ def reset_weights_to_checkpoint(model, ckp, skip_keyword=None):
 
 
 def clip_many(values, clip_at, clip_from=None, inplace=False):
+    """Clips a list of tf or np arrays. Returns tf arrays."""
+
     if clip_from is None:
         clip_from = -clip_at
 
@@ -74,47 +81,55 @@ def clip_many(values, clip_at, clip_from=None, inplace=False):
 
 
 def concatenate_flattened(arrays):
-    return np.concatenate([x.flatten() for x in arrays], axis=0)
+    return np.concatenate([x.flatten() if isinstance(x, np.ndarray)
+                           else x.numpy().flatten() for x in arrays], axis=0)
 
 
-def visualize_masks(masks, mask_activation):
-    fig, axes = plt.subplots(5, 1, figsize=(7, 20), constrained_layout=True)
-    activated_masks = [mask_activation(mask).numpy() for mask in masks]
+def visualize_masks(masks, mask_activation=None):
+    n_plots = 5 if mask_activation else 3
+    figheight = 20 if mask_activation else 14
+    fig, axes = plt.subplots(n_plots, 1,
+                             figsize=(7, figheight),
+                             constrained_layout=True)
     masks = [mask.numpy() for mask in masks]
+    if mask_activation:
+        activated_masks = [mask_activation(mask).numpy() for mask in masks]
+        axes[0].set_title('early layers not activated')
+        axes[0].hist(concatenate_flattened(masks[:4]), bins=30)
+        axes[1].set_title('early layers activated')
+        axes[1].hist(concatenate_flattened(activated_masks[:4]), bins=30)
+        axes[2].set_title('all layers not activated')
+        axes[2].hist(concatenate_flattened(masks), bins=30)
+        axes[3].set_title('all layers activated')
+        axes[3].hist(concatenate_flattened(activated_masks), bins=30)
+        last_plot = 4
+    else:
+        axes[0].set_title('early layers')
+        axes[0].hist(concatenate_flattened(masks[:4]), bins=30)
+        axes[1].set_title('all layers')
+        axes[1].hist(concatenate_flattened(masks), bins=30)
+        last_plot = 2
 
-    axes[0].set_title('4 layers not activated')
-    axes[0].hist(concatenate_flattened(masks[:4]), bins=30)
-    axes[1].set_title('4 layers activated')
-    axes[1].hist(concatenate_flattened(activated_masks[:4]), bins=30)
-    axes[2].set_title('all layers not activated')
-    axes[2].hist(concatenate_flattened(masks), bins=30)
-    axes[3].set_title('all layers activated')
-    axes[3].hist(concatenate_flattened(activated_masks), bins=30)
-
-    means = [np.mean(np.abs(mask)) for mask in activated_masks]
-    axes[4].set_title('density of layers')
-    axes[4].bar(range(len(means)), means)
+    averages = [np.mean(np.abs(mask)) for mask in activated_masks]
+    axes[last_plot].set_title('density of layers')
+    axes[last_plot].bar(range(len(averages)), averages)
     fig.show()
     return fig
 
 
-def update_mask_info(kernel_masks, mask_activation, logger=None):
-    mask = np.concatenate([
-        tf.abs(mask_activation(mask)).numpy().flatten()
-        for mask in kernel_masks
-    ])
+def log_mask_info(kernel_masks, mask_activation, logger=None):
+    masks = [mask_activation(m) for m in kernel_masks]
+    masks = np.abs(concatenate_flattened(masks))
     if logger:
-        logger['avg_mask'] = np.mean(mask)
-        # logger['mask_std'] = np.std(mask)
-    return mask
+        logger['avg_mask'] = np.mean(masks)
+        logger['mask_std'] = np.std(masks)
+    return masks
 
 
 def compare_masks(perf_m, m, mask_activation, force_sparsity=None):
     from sklearn.metrics import precision_recall_curve
-    m = np.concatenate([mask_activation(x).numpy().flatten() for x in m])
-    m = np.abs(m)
-
-    perf_m = np.concatenate([x.numpy().flatten() for x in perf_m])
+    m = np.abs(concatenate_flattened([mask_activation(x) for x in m]))
+    perf_m = concatenate_flattened(perf_m)
 
     prc, rec, thr = precision_recall_curve(perf_m, m)
     f1_scores = [2 * p * r / (p + r) if (p + r) else -1 for p, r in zip(prc, rec)]
@@ -130,7 +145,9 @@ def compare_masks(perf_m, m, mask_activation, force_sparsity=None):
     return f1_scores[idx], prc[idx], rec[idx], thr[idx], f1_density
 
 
-def create_layers(mask_activation):
+def create_masked_layers(mask_activation):
+    """With custom mask_activation."""
+
     class MaskedDense(tf.keras.layers.Dense):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
@@ -178,76 +195,6 @@ def create_layers(mask_activation):
         def call(self, x):
             multipler = mask_activation(self.kernel_mask)
             masked_w = tf.multiply(self.kernel, multipler)
-            result = tf.nn.conv2d(x, masked_w, strides=self.strides, padding=self.padding.upper())
-
-            if self.use_bias:
-                result = tf.add(result, self.bias)
-            return self.activation(result)
-
-        def set_pruning_mask(self, new_mask: np.ndarray):
-            tf.assert_equal(new_mask.shape, self.kernel_mask.shape)
-            self.kernel_mask.assign(new_mask)
-
-        def apply_pruning_mask(self):
-            self.kernel.assign(tf.multiply(self.kernel, self.kernel_mask))
-
-    return MaskedConv, MaskedDense
-
-
-def create_layers_vsign(mask_activation):
-    class MaskedDense(tf.keras.layers.Dense):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-
-        def build(self, input_shape):
-            super().build(input_shape)
-            self.kernel_mask = self.add_weight(
-                name="kernel_mask",
-                shape=[2, *self.kernel.shape],
-                dtype=self.kernel.dtype,
-                initializer="ones",
-                trainable=False,
-            )
-
-        def call(self, x):
-            mask = mask_activation(self.kernel_mask)
-            # mask = multipler[0] * (multipler[1] * 2 - 1)
-            # mask = multipler[0] - multipler[1]
-
-            masked_w = tf.multiply(self.kernel, mask)
-            result = tf.matmul(x, masked_w)
-
-            if self.use_bias:
-                result = tf.add(result, self.bias)
-            return self.activation(result)
-
-        def set_pruning_mask(self, new_mask: np.ndarray):
-            tf.assert_equal(new_mask.shape, self.kernel_mask.shape)
-            self.kernel_mask.assign(new_mask)
-
-        def apply_pruning_mask(self):
-            self.kernel.assign(tf.multiply(self.kernel, self.kernel_mask))
-
-    class MaskedConv(tf.keras.layers.Conv2D):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-
-        def build(self, input_shape):
-            super().build(input_shape)
-            self.kernel_mask = self.add_weight(
-                name="kernel_mask",
-                shape=[2, *self.kernel.shape],
-                dtype=self.kernel.dtype,
-                initializer="ones",
-                trainable=False,
-            )
-
-        def call(self, x):
-            mask = mask_activation(self.kernel_mask)
-            # mask = multipler[0] * (multipler[1] * 2 - 1)
-            # mask = multipler[0] - multipler[1]
-
-            masked_w = tf.multiply(self.kernel, mask)
             result = tf.nn.conv2d(x, masked_w, strides=self.strides, padding=self.padding.upper())
 
             if self.use_bias:

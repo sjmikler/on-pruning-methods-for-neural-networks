@@ -32,8 +32,9 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: ensemble_model_test
-checkpointBP: temp/ensemble_model_test.h5
+name: new_trune_workspace_ckp_bigger_lr
+checkpointBP: temp/new_trune_workspace_ckp.h5
+checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 
 model: VGG
 model_config:
@@ -43,8 +44,8 @@ model_config:
     l1_reg: 0
     l2_reg: 1e-4
 
-lr_boundaries: [32000, 48000, 64000]
-lr_values: [0.1, 0.02, 0.004, 0.0008]
+lr_boundaries: [1000, 32000, 48000, 64000]
+lr_values: [0.01, 0.1, 0.02, 0.004, 0.0008]
 num_iterations: 80000
 steps_per_epoch: 2000
 REPEAT: 1

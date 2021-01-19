@@ -1,7 +1,7 @@
 # %%
 
 import time
-from experimental.toolkit import *
+from tools.toolkit import *
 import tensorflow as tf
 import numpy as np
 from copy import deepcopy
@@ -22,7 +22,7 @@ def mask_activation(mask):
     return tf.sigmoid(mask[0]) - tf.sigmoid(mask[1])
 
 
-MaskedConv, MaskedDense = create_layers(mask_activation)
+MaskedConv, MaskedDense = create_masked_layers(mask_activation)
 MaskedConv_vsign, MaskedDense_vsign = create_layers_vsign(mask_activation)
 
 
@@ -147,7 +147,7 @@ def update_pbar():
 
 
 valid_epoch(net, ds['train'].take(50))
-mask = update_mask_info(mask_distributions, mask_activation, logger)
+mask = log_mask_info(mask_distributions, mask_activation, logger)
 
 f1, prc, rec, thr, density = compare_masks(perf_kernel_masks,
                                            mask_distributions,
@@ -181,7 +181,7 @@ for epoch in range(EPOCHS):
     valid_epoch(net, ds['valid'])
     logger['epoch_time'] = time.time() - t0
 
-    mask = update_mask_info(mask_distributions, mask_activation, logger)
+    mask = log_mask_info(mask_distributions, mask_activation, logger)
     f1, prc, rec, thr, density = compare_masks(
         perf_kernel_masks,
         mask_distributions,

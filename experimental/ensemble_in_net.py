@@ -1,16 +1,13 @@
 import time
 
-import matplotlib.pyplot as plt
-import numpy as np
 import tensorflow as tf
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 from tqdm import tqdm
 
-from experimental import toolkit
+from tools import toolkit
 import tools.datasets as datasets
 import tools.models as models
 import tools.utils as utils
-import tools.pruning as pruning
 
 utils.set_memory_growth()
 utils.set_precision(16)

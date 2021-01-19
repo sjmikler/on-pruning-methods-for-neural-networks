@@ -2,10 +2,8 @@
 
 import tqdm
 import time
-from experimental.toolkit import *
+from tools.toolkit import *
 import tensorflow as tf
-import numpy as np
-from copy import deepcopy
 from tools import models, datasets, utils
 import tensorflow.keras.mixed_precision.experimental as mixed_precision
 
@@ -33,7 +31,7 @@ def regularize(values):
 
 mask_initial_value = 4.
 mask_sampling = True
-MaskedConv, MaskedDense = create_layers(tf.identity if mask_sampling else mask_activation)
+MaskedConv, MaskedDense = create_masked_layers(tf.identity if mask_sampling else mask_activation)
 
 
 def set_kernel_masks_from_distributions(kernel_masks,
@@ -137,7 +135,7 @@ set_kernel_masks_from_distributions(kernel_masks,
 valid_epoch(net)
 logger['train_loss']
 logger['train_acc']
-mask = update_mask_info(mask_distributions, mask_activation, logger)
+mask = log_mask_info(mask_distributions, mask_activation, logger)
 logger.show()
 
 # %%
@@ -213,7 +211,7 @@ for epoch in range(EPOCHS):
     valid_epoch(net)
     logger['epoch_time'] = time.time() - t0
 
-    mask = update_mask_info(mask_distributions, mask_activation, logger)
+    mask = log_mask_info(mask_distributions, mask_activation, logger)
     f1, prc, rec, thr, density = compare_masks(perf_kernel_masks, mask_distributions,
                                                mask_activation=mask_activation,
                                                # force_sparsity=0.98

@@ -16,13 +16,12 @@ def structurize_matrix(matrix, n_clusters):
 
 def structurize_dense(matrix, n_clusters):
     """
-    finds similar matirx with `n_clusters` unique rows
+    Finds similar structurized matirx with `n_clusters` unique rows
     :param matrix: numpy 2-dimensional array
     :param n_clusters: int, number of clusters to find
     :return: structured array, the same shape and dtype and matrix
     """
     from sklearn.cluster import KMeans
-
     kmeans = KMeans(n_clusters)
 
     clusters = kmeans.fit_predict(matrix)
@@ -41,7 +40,6 @@ def structurize_conv(matrix, n_clusters):
     matrix = matrix.reshape(matrix.shape[0], -1)
 
     from sklearn.cluster import KMeans
-
     kmeans = KMeans(n_clusters)
 
     clusters = kmeans.fit_predict(matrix)
@@ -54,6 +52,8 @@ def structurize_conv(matrix, n_clusters):
 
 
 def reset_weights_to_checkpoint(model, ckp=None, skip_keyword=None):
+    """Reset network in place, ignore conflicts."""
+
     temp = tf.keras.models.clone_model(model)
     if ckp:
         temp.load_weights(ckp)
@@ -63,6 +63,7 @@ def reset_weights_to_checkpoint(model, ckp=None, skip_keyword=None):
             skipped += 1
             continue
         w1.assign(w2)
+    print(f"WARNING: Skipped {skipped} layers!")
     return skipped
 
 
@@ -164,7 +165,7 @@ def minus_grasp_saliences(model, loader, batches=1):
 def get_pruning_mask(saliences, percentage):
     """
     :param saliences: list of saliences arrays
-    :param percentage: at most this many weights will be zeroed
+    :param percentage: at most this many percentage of weights will be zeroed
     :return: list of masks of 1's and 0's with corresponding sizes
     """
     sizes = [w.size for w in saliences]
@@ -207,7 +208,7 @@ def set_kernel_masks_for_model(model, masks_dict):
                 if mask == weight.name:
                     layer.set_pruning_mask(masks_dict[mask])
                     print(f"pruning {weight.name} to {layer.sparsity * 100:.2f}%")
-                    print(f"left in {weight.name} to {layer.left_unpruned}")
+                    print(f"left in {weight.name} : {layer.left_unpruned}")
 
 
 def l1_saliences_over_channel(saliences):
@@ -232,7 +233,7 @@ def l1_saliences_over_channel(saliences):
 
 # %%
 
-def structurize_any(structure, saliences):
+def structurize_anything(structure, saliences):
     if structure is True:
         print(f"NEURON-WISE STRUCTURING!")
         saliences = l1_saliences_over_channel(saliences)
@@ -255,14 +256,14 @@ def prune_GraSP(model, dataset, config):
     saliences = grasp_saliences(model, dataset, batches=n_batches)
     saliences = extract_kernels(saliences)
     if structure:
-        saliences = structurize_any(structure, saliences)
+        saliences = structurize_anything(structure, saliences)
     masks = saliences2masks(saliences, percentage=sparsity)
     set_kernel_masks_for_model(model, masks)
     return model
 
 
 def prune_TRUNE(model, dataset, config):
-    """Experimental, learnable pruning."""
+    """Experimental, learnable pruning. Very early version."""
 
     print(config)
     learning_rate = config.learning_rate
@@ -283,7 +284,7 @@ def prune_TRUNE(model, dataset, config):
 
 
 def prune_SNIP(model, dataset, config):
-    """Prune by saliences `W*G` for W being weights an G being gradients."""
+    """Prune by saliences `|W*G|` for W being weights an G being gradients."""
 
     sparsity = config.sparsity
     n_batches = config.n_batches or 1
@@ -292,14 +293,14 @@ def prune_SNIP(model, dataset, config):
     saliences = snip_saliences(model, dataset, batches=n_batches)
     saliences = extract_kernels(saliences)
     if structure:
-        saliences = structurize_any(structure, saliences)
+        saliences = structurize_anything(structure, saliences)
     masks = saliences2masks(saliences, percentage=sparsity)
     set_kernel_masks_for_model(model, masks)
     return model
 
 
 def prune_pseudo_SNIP(model, dataset, config):
-    """In SNIP we take `W*G` to calculate salience, here G is random from [-1, 1]."""
+    """In SNIP's `W*G` we replace gradients G with a random from [-1, 1]."""
 
     sparsity = config.sparsity
     n_batches = config.n_batches or 1
@@ -308,7 +309,7 @@ def prune_pseudo_SNIP(model, dataset, config):
     saliences = psuedo_snip_saliences(model)
     saliences = extract_kernels(saliences)
     if structure:
-        saliences = structurize_any(structure, saliences)
+        saliences = structurize_anything(structure, saliences)
     masks = saliences2masks(saliences, percentage=sparsity)
     set_kernel_masks_for_model(model, masks)
     return model
@@ -322,7 +323,7 @@ def prune_random(model, config):
     saliences = {w.name: np.random.rand(*w.shape) for w in model.trainable_weights}
     saliences = extract_kernels(saliences)
     if structure:
-        saliences = structurize_any(structure, saliences)
+        saliences = structurize_anything(structure, saliences)
     masks = saliences2masks(saliences, percentage=sparsity)
     set_kernel_masks_for_model(model, masks)
     return model
@@ -336,19 +337,22 @@ def prune_l1(model, config):
     saliences = {w.name: np.abs(w.numpy()) for w in model.trainable_weights}
     saliences = extract_kernels(saliences)
     if structure:
-        saliences = structurize_any(structure, saliences)
+        saliences = structurize_anything(structure, saliences)
     masks = saliences2masks(saliences, percentage=sparsity)
     set_kernel_masks_for_model(model, masks)
     return model
 
 
 def prune_IMP_complete(model, config):
-    """Like l1 pruning, but contains checkpointAP step with additional options."""
+    """Like l1 pruning, but contains checkpointAP step with additional options.
+
+    Deprecated
+    """
 
     saliences = {w.name: np.abs(w.numpy()) for w in model.trainable_weights}
     saliences = extract_kernels(saliences)
     if config.structure:
-        saliences = structurize_any(config.structure, saliences)
+        saliences = structurize_anything(config.structure, saliences)
     masks = saliences2masks(saliences, percentage=config.sparsity)
     set_kernel_masks_for_model(model, masks)
 

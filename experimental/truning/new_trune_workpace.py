@@ -6,10 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-from sklearn.metrics import precision_recall_curve
-from tools import datasets, models, pruning, utils
+from tools import datasets, models, utils
 import tensorflow.keras.mixed_precision.experimental as mixed_precision
-import tensorflow_addons as tfa
 
 utils.set_memory_growth()
 utils.set_precision(16)
@@ -194,7 +192,7 @@ def report_average_mask(model, detailed=False, mask_activation=MASK_ACTIVATION):
 #
 #     f1_density = np.mean(m >= thr[idx])
 #     return f1_scores[idx], prc[idx], rec[idx], thr[idx], f1_density
-from experimental.toolkit import compare_masks
+from tools.toolkit import compare_masks
 
 
 def get_kernel_masks(model):

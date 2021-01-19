@@ -2,9 +2,8 @@
 
 import tqdm
 import time
-from experimental.toolkit import *
+from tools.toolkit import *
 import tensorflow as tf
-import numpy as np
 from copy import deepcopy
 from tools import models, datasets, utils
 import tensorflow.keras.mixed_precision.experimental as mixed_precision
@@ -33,7 +32,7 @@ def regularize(values):
 
 mask_initial_value = 4.
 mask_sampling = False
-MaskedConv, MaskedDense = create_layers(tf.identity
+MaskedConv, MaskedDense = create_masked_layers(tf.identity
                                         if mask_sampling else mask_activation)
 
 
@@ -195,7 +194,7 @@ def update_pbar():
 for model in nets:
     valid_epoch(model, ds['train'].take(500))
 
-mask = update_mask_info(mask_distributions, mask_activation, logger)
+mask = log_mask_info(mask_distributions, mask_activation, logger)
 f1, prc, rec, thr, density = compare_masks(perf_kernel_masks,
                                            mask_distributions,
                                            mask_activation=mask_activation)
@@ -227,7 +226,7 @@ for epoch in range(EPOCHS):
         valid_epoch(model, ds['valid'])
     logger['epoch_time'] = time.time() - t0
 
-    mask = update_mask_info(mask_distributions, mask_activation, logger)
+    mask = log_mask_info(mask_distributions, mask_activation, logger)
     f1, prc, rec, thr, density = compare_masks(
         perf_kernel_masks,
         mask_distributions,

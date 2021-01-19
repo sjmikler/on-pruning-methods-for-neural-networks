@@ -5,8 +5,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
-from experimental import toolkit
-from tools import models, datasets, utils
+from tools import models, datasets, utils, toolkit
 
 utils.set_memory_growth()
 utils.set_precision(16)
@@ -16,7 +15,7 @@ def mask_activation(mask):
     return tf.sigmoid(mask)
 
 
-conv, dense = toolkit.create_layers(mask_activation)
+conv, dense = toolkit.create_masked_layers(mask_activation)
 model = models.VGG((32, 32, 3), n_classes=10, version=19,
                    CONV_LAYER=conv,
                    DENSE_LAYER=dense)
@@ -70,6 +69,7 @@ def train_step(x, y):
     for i, kernel in enumerate(kernels):
         grads[i] = grads[i] / tf.abs(kernel)
 
+    grads = toolkit.clip_many(grads, 0.1 / optimizer.lr, inplace=False)
     optimizer.apply_gradients(zip(grads, kernel_masks))
     toolkit.clip_many(kernel_masks, 15, inplace=True)
 
@@ -93,8 +93,8 @@ logger.show()
 # %%
 
 EPOCHS = 8
-ITERS = 20
-reg_rate.assign(1e-6)
+ITERS = 2000
+reg_rate.assign(1e-7)
 
 all_grads = []
 logger.show_header()
@@ -102,24 +102,23 @@ logger.show_header()
 for epoch in range(EPOCHS):
     t0 = time.time()
     for x, y in ds['train'].take(ITERS):
-        for k, ok in zip(kernels, org_kernels):
-            nk = np.random.randn(*ok.shape) * np.std(ok)
-            k.assign(nk)
+        # for k, ok in zip(kernels, org_kernels):
+        #     nk = np.random.randn(*ok.shape) * np.std(ok)
+        #     k.assign(nk)
 
         grads = train_step(x, y)
         # if grads:
         #     all_grads.append([g.numpy() for g in grads])
-    epoch_time = time.time() - t0
+    logger['train_time'] = time.time() - t0
 
     for x, y in ds['valid']:
         valid_step(x, y)
 
-    toolkit.update_mask_info(kernel_masks, mask_activation, logger)
+    toolkit.log_mask_info(kernel_masks, mask_activation, logger)
     toolkit.visualize_masks(kernel_masks, mask_activation)
-    logger['epoch_time'] = epoch_time
     logger.show()
 
-toolkit.prune_and_save_model(model, mask_activation, threshold=0.01,
+toolkit.prune_and_save_model(model, mask_activation, threshold=0.1,
                              path='temp/new_trune_workspace_ckp.h5')
 
 # %%

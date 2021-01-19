@@ -2,10 +2,8 @@
 
 import tqdm
 import time
-from experimental.toolkit import *
+from tools.toolkit import *
 import tensorflow as tf
-import numpy as np
-from copy import deepcopy
 from tools import models, datasets, utils, pruning, layers
 import tensorflow.keras.mixed_precision.experimental as mixed_precision
 
@@ -34,7 +32,7 @@ def regularize(values):
 
 mask_initial_value = 5.
 mask_sampling = True
-MaskedConv, MaskedDense = create_layers(tf.identity if mask_sampling else mask_activation)
+MaskedConv, MaskedDense = create_masked_layers(tf.identity if mask_sampling else mask_activation)
 MaskedConv = layers.MaskedConv
 MaskedDense = layers.MaskedDense
 
@@ -132,7 +130,7 @@ def valid_epoch(model):
 
 
 valid_epoch(net)
-mask = update_mask_info(mask_distributions, mask_activation, logger)
+mask = log_mask_info(mask_distributions, mask_activation, logger)
 logger.show()
 
 
@@ -229,7 +227,7 @@ for _ in range(50):
         valid_epoch(net)
         # logger['epoch_time'] = time.time() - t0
 
-        mask = update_mask_info(kernel_masks, mask_activation, logger)
+        mask = log_mask_info(kernel_masks, mask_activation, logger)
 
         print('\r', end='')
         logs = logger.show()
@@ -281,7 +279,7 @@ for epoch in range(EPOCHS):
     valid_epoch(net)
     # logger['epoch_time'] = time.time() - t0
 
-    mask = update_mask_info(mask_distributions, mask_activation, logger)
+    mask = log_mask_info(mask_distributions, mask_activation, logger)
 
     print('\r', end='')
     logs = logger.show()
