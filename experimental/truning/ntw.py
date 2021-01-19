@@ -93,7 +93,7 @@ logger.show()
 # %%
 
 EPOCHS = 8
-ITERS = 2000
+ITERS = 20
 reg_rate.assign(1e-6)
 
 all_grads = []
@@ -102,10 +102,9 @@ logger.show_header()
 for epoch in range(EPOCHS):
     t0 = time.time()
     for x, y in ds['train'].take(ITERS):
-        # if np.random.rand() < 0.1:
-        #     for k, ok in zip(kernels, org_kernels):
-        #         nk = ok * (1 + (np.random.rand(*ok.shape) - 0.5))
-        #         k.assign(nk)
+        for k, ok in zip(kernels, org_kernels):
+            nk = np.random.randn(*ok.shape) * np.std(ok)
+            k.assign(nk)
 
         grads = train_step(x, y)
         # if grads:

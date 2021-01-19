@@ -32,7 +32,8 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: IterativeLRrewind
+name: ensemble_model_test
+checkpointBP: temp/ensemble_model_test.h5
 
 model: VGG
 model_config:
@@ -42,25 +43,8 @@ model_config:
     l1_reg: 0
     l2_reg: 1e-4
 
-lr_boundaries: [16000, 32000, 48000]
+lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
 num_iterations: 80000
 steps_per_epoch: 2000
 REPEAT: 1
----
-name: IterativeLRrewind
-checkpointAP: checkpoint[-1]
-
-model: VGG
-model_config:
-    version: 19
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l1_reg: 0
-    l2_reg: 1e-4
-
-lr_boundaries: [16000, 32000, 48000]
-lr_values: [0.1, 0.02, 0.004, 0.0008]
-num_iterations: 80000
-steps_per_epoch: 2000
-REPEAT: 20
