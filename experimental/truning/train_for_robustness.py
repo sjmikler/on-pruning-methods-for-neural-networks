@@ -93,7 +93,7 @@ set_kernel_masks_values(mask_distributions, mask_initial_value)
 if mask_sampling:
     set_kernel_masks_from_distributions(kernel_masks, mask_distributions, mask_activation)
 
-ds = datasets.cifar10(128, 128, shuffle=10000)
+ds = datasets.cifar10(128, 128, shuffle_train=10000)
 
 
 def update_pbar():

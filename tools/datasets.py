@@ -6,7 +6,8 @@ from tools.utils import ddict
 def cifar10(training_batch_size=128,
             validation_batch_size=128,
             dtype=tf.float32,
-            shuffle=10000):
+            shuffle_train=10000,
+            repeat_train=True):
     subtract = [0.49139968, 0.48215841, 0.44653091]
     divide = [0.24703223, 0.24348513, 0.26158784]
 
@@ -25,8 +26,10 @@ def cifar10(training_batch_size=128,
 
     ds = tfds.load(name='cifar10', as_supervised=True)
     ds = ddict(ds)
-    ds.train = ds.train.repeat()
-    ds.train = ds.train.shuffle(shuffle)
+    if repeat_train:
+        ds.train = ds.train.repeat()
+    if shuffle_train:
+        ds.train = ds.train.shuffle(shuffle_train)
     ds.train = ds.train.map(train_prep)
     ds.train = ds.train.batch(training_batch_size)
 
@@ -63,7 +66,7 @@ def get_dataset(ds_name, precision):
         return cifar10(training_batch_size=128,
                        validation_batch_size=512,
                        dtype=tf.float16 if precision == 16 else tf.float32,
-                       shuffle=20000)
+                       shuffle_train=20000)
     elif ds_name == 'mnist':
         return mnist(training_batch_size=100,
                      validation_batch_size=400,

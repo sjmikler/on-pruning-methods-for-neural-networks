@@ -110,7 +110,7 @@ for i, ckp in enumerate(choosen_checkpoints[1:]):
     nets[i].compile(deepcopy(optimizer), deepcopy(loss_fn))
     set_kernel_masks_object(nets[i], kernel_masks)
 
-ds = datasets.cifar10(128, 128, shuffle=10000)
+ds = datasets.cifar10(128, 128, shuffle_train=10000)
 
 train_steps = []
 for i in range(len(nets)):

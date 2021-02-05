@@ -85,7 +85,7 @@ for km in mask_distributions:
     km.assign(ones)
 
 net.compile(deepcopy(optimizer), deepcopy(loss_fn))
-ds = datasets.cifar10(128, 128, shuffle=10000)
+ds = datasets.cifar10(128, 128, shuffle_train=10000)
 
 logger = Logger(column_width=10)
 

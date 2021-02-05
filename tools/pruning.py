@@ -201,14 +201,15 @@ def extract_kernels(dictionary):
 # %%
 
 
-def set_kernel_masks_for_model(model, masks_dict):
+def set_kernel_masks_for_model(model, masks_dict, silent=False):
     for mask in masks_dict:
         for layer in model.layers:
             for weight in layer.weights:
                 if mask == weight.name:
                     layer.set_pruning_mask(masks_dict[mask])
-                    print(f"pruning {weight.name} to {layer.sparsity * 100:.2f}%")
-                    print(f"left in {weight.name} : {layer.left_unpruned}")
+                    if not silent:
+                        print(f"pruning {weight.name} to {layer.sparsity * 100:.2f}%")
+                        print(f"left in {weight.name} : {layer.left_unpruned}")
 
 
 def l1_saliences_over_channel(saliences):
@@ -244,6 +245,17 @@ def structurize_anything(structure, saliences):
             saliences.items()
         }
     return saliences
+
+
+def prune_by_saliences(model, saliences, config, silent=False):
+    sparsity = config.sparsity
+    structure = config.structure
+    saliences = extract_kernels(saliences)
+    if structure:
+        saliences = structurize_anything(structure, saliences)
+    masks = saliences2masks(saliences, percentage=sparsity)
+    set_kernel_masks_for_model(model, masks, silent)
+    return model
 
 
 def prune_GraSP(model, dataset, config):
@@ -315,7 +327,7 @@ def prune_pseudo_SNIP(model, dataset, config):
     return model
 
 
-def prune_random(model, config):
+def prune_random(model, config, silent=False):
     """Random, non-uniform pruning."""
 
     sparsity = config.sparsity
@@ -325,11 +337,11 @@ def prune_random(model, config):
     if structure:
         saliences = structurize_anything(structure, saliences)
     masks = saliences2masks(saliences, percentage=sparsity)
-    set_kernel_masks_for_model(model, masks)
+    set_kernel_masks_for_model(model, masks, silent)
     return model
 
 
-def prune_l1(model, config):
+def prune_l1(model, config, silent=False):
     """Prune smallest magnitudes."""
 
     sparsity = config.sparsity
@@ -339,7 +351,7 @@ def prune_l1(model, config):
     if structure:
         saliences = structurize_anything(structure, saliences)
     masks = saliences2masks(saliences, percentage=sparsity)
-    set_kernel_masks_for_model(model, masks)
+    set_kernel_masks_for_model(model, masks, silent)
     return model
 
 

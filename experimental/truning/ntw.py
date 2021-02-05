@@ -22,10 +22,13 @@ model = models.VGG((32, 32, 3), n_classes=10, version=19,
 
 ckp_lookup = {
     '2k': 'data/partial_training_checkpoints/VGG19_2000it/0.h5',
-    '8k': 'data/partial_training_checkpoints/VGG19_8000it/0.h5'
+    '8k': 'data/partial_training_checkpoints/VGG19_8000it/0.h5',
+    'full': 'data/VGG19_IMP03_ticket/130735/0.h5',
+    '50%': 'data/VGG19_IMP03_ticket/770423/1.h5',
+    'sparse': 'data/VGG19_IMP03_ticket/770423/5.h5'
 }
 
-model.load_weights(ckp_lookup['8k'])
+model.load_weights(ckp_lookup['sparse'])
 ds = datasets.cifar10()
 reg_rate = tf.Variable(1e-7)
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
@@ -40,6 +43,11 @@ logger = toolkit.Logger(column_width=10)
 
 kernels = toolkit.get_kernels(model)
 org_kernels = [k.numpy() for k in kernels]
+
+for k, km in zip(kernels, kernel_masks):
+    t = np.zeros_like(k.numpy())
+    t[k.numpy() == 0] = -20
+    km.assign_add(t)
 
 
 def mask_regularization(masks):
@@ -72,7 +80,6 @@ def train_step(x, y):
     grads = toolkit.clip_many(grads, 0.1 / optimizer.lr, inplace=False)
     optimizer.apply_gradients(zip(grads, kernel_masks))
     toolkit.clip_many(kernel_masks, 15, inplace=True)
-
     logger['train_acc'](tf.keras.metrics.sparse_categorical_accuracy(y, outs))
     # return grads
 
@@ -92,7 +99,7 @@ logger.show()
 
 # %%
 
-EPOCHS = 8
+EPOCHS = 6
 ITERS = 2000
 reg_rate.assign(1e-7)
 
@@ -118,8 +125,9 @@ for epoch in range(EPOCHS):
     toolkit.visualize_masks(kernel_masks, mask_activation)
     logger.show()
 
-toolkit.prune_and_save_model(model, mask_activation, threshold=0.1,
-                             path='temp/new_trune_workspace_ckp.h5')
+model.save_weights('temp/new_trune_workspace_continuous4.h5')
+# toolkit.prune_and_save_model(model, mask_activation, threshold=0.0001,
+#                              path='temp/new_trune_workspace_ckp.h5')
 
 # %%
 

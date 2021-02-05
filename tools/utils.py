@@ -40,6 +40,11 @@ def set_precision(precision):
         mixed_precision.set_policy(policy)
 
 
+def mixed_precision_optimizer(optimizer, loss_scale='dynamic'):
+    import tensorflow.keras.mixed_precision.experimental as mixed_precision
+    return mixed_precision.LossScaleOptimizer(optimizer, loss_scale=loss_scale)
+
+
 def disable_gpu():
     import tensorflow as tf
     tf.config.set_visible_devices([], 'GPU')

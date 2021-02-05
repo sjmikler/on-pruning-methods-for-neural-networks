@@ -113,7 +113,7 @@ if mask_sampling:
     set_kernel_masks_from_distributions(kernel_masks, mask_distributions, mask_activation)
 
 net.compile(deepcopy(optimizer), deepcopy(loss_fn))
-ds = datasets.cifar10(128, 128, shuffle=10000)
+ds = datasets.cifar10(128, 128, shuffle_train=10000)
 
 logger = Logger(column_width=10)
 

@@ -102,15 +102,16 @@ def visualize_masks(masks, mask_activation=None):
         axes[2].hist(concatenate_flattened(masks), bins=30)
         axes[3].set_title('all layers activated')
         axes[3].hist(concatenate_flattened(activated_masks), bins=30)
+        averages = [np.mean(np.abs(mask)) for mask in activated_masks]
         last_plot = 4
     else:
         axes[0].set_title('early layers')
         axes[0].hist(concatenate_flattened(masks[:4]), bins=30)
         axes[1].set_title('all layers')
         axes[1].hist(concatenate_flattened(masks), bins=30)
+        averages = [np.mean(np.abs(mask)) for mask in masks]
         last_plot = 2
 
-    averages = [np.mean(np.abs(mask)) for mask in activated_masks]
     axes[last_plot].set_title('density of layers')
     axes[last_plot].bar(range(len(averages)), averages)
     fig.show()
@@ -323,3 +324,51 @@ class Logger:
 
     def clear(self):
         self.data = {}
+
+
+# %%
+
+@tf.function
+def train_step(x, y,
+               model,
+               optimizer,
+               loss_fn,
+               trainable_weights,
+               variables_to_watch=None,
+               logger=None):
+    with tf.GradientTape() as tape:
+        if variables_to_watch:
+            tape.watch(variables_to_watch)
+        outs = model(x, training=True)
+        outs = tf.cast(outs, tf.float32)
+        loss = loss_fn(y, outs)
+        scaled_loss = optimizer.get_scaled_loss(loss)
+
+    scaled_grads = tape.gradient(scaled_loss, trainable_weights)
+    grads = optimizer.get_unscaled_gradients(scaled_grads)
+    optimizer.apply_gradients(zip(grads, trainable_weights))
+    acc = tf.keras.metrics.sparse_categorical_accuracy(y, outs)
+    if logger:
+        logger['train_loss'](loss)
+        logger['train_acc'](acc)
+    else:
+        return loss, acc
+
+
+@tf.function
+def valid_step(x, y,
+               model,
+               loss_fn,
+               logger=None,
+               training=False):
+    outs = model(x, training=training)
+    outs = tf.cast(outs, tf.float32)
+    loss = loss_fn(y, outs)
+    acc = tf.keras.metrics.sparse_categorical_accuracy(y, outs)
+    if logger:
+        logger['valid_loss'](loss)
+        logger['valid_acc'](acc)
+    else:
+        return loss, acc
+
+# %%

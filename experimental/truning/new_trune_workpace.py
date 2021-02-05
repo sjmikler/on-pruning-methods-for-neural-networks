@@ -205,7 +205,7 @@ model_perf = models.VGG((32, 32, 3), n_classes=10, version=19)
 model_perf.load_weights('data/VGG19_IMP03_ticket/770423/10.h5')
 perf_kernel_masks = get_kernel_masks(model_perf)
 
-ds = datasets.cifar10(128, 128, shuffle=10000)
+ds = datasets.cifar10(128, 128, shuffle_train=10000)
 optimizer = tf.optimizers.SGD(learning_rate=100, momentum=0.99, nesterov=True)
 optimizer = mixed_precision.LossScaleOptimizer(optimizer, "dynamic")
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
