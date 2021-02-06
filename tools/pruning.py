@@ -52,7 +52,7 @@ def structurize_conv(matrix, n_clusters):
 
 
 def reset_weights_to_checkpoint(model, ckp=None, skip_keyword=None):
-    """Reset network in place, ignore conflicts."""
+    """Reset network in place, ability to skip keybword."""
 
     temp = tf.keras.models.clone_model(model)
     if ckp:
@@ -63,7 +63,8 @@ def reset_weights_to_checkpoint(model, ckp=None, skip_keyword=None):
             skipped += 1
             continue
         w1.assign(w2)
-    print(f"WARNING: Skipped {skipped} layers!")
+    print(
+        f"INFO RESET: Skipped {skipped} layers with keyword {skip_keyword}!")
     return skipped
 
 

@@ -32,13 +32,13 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: magnitude_1shot50
+name: magnitude_1shot86
 checkpointBP: data/VGG19_IMP03_ticket/130735/0.h5
 checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 
 pruning: magnitude
 pruning_config:
-    sparsity: 0.5
+    sparsity: 0.86
 
 model: VGG
 model_config:
@@ -54,13 +54,13 @@ num_iterations: 80000
 steps_per_epoch: 2000
 REPEAT: 1
 ---
-name: magnitude_1shot70
+name: magnitude_1shot_over86
 checkpointBP: data/VGG19_IMP03_ticket/130735/0.h5
 checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
 
 pruning: magnitude
 pruning_config:
-    sparsity: 0.7
+    sparsity: exec sparsity[-1] + 0.01
 
 model: VGG
 model_config:
@@ -74,70 +74,4 @@ lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
 num_iterations: 80000
 steps_per_epoch: 2000
-REPEAT: 1
----
-name: magnitude_1shot75
-checkpointBP: data/VGG19_IMP03_ticket/130735/0.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
-
-pruning: magnitude
-pruning_config:
-    sparsity: 0.75
-
-model: VGG
-model_config:
-    version: 19
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l1_reg: 0
-    l2_reg: 1e-4
-
-lr_boundaries: [32000, 48000, 64000]
-lr_values: [0.1, 0.02, 0.004, 0.0008]
-num_iterations: 80000
-steps_per_epoch: 2000
-REPEAT: 1
----
-name: magnitude_1shot80
-checkpointBP: data/VGG19_IMP03_ticket/130735/0.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
-
-pruning: magnitude
-pruning_config:
-    sparsity: 0.80
-
-model: VGG
-model_config:
-    version: 19
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l1_reg: 0
-    l2_reg: 1e-4
-
-lr_boundaries: [32000, 48000, 64000]
-lr_values: [0.1, 0.02, 0.004, 0.0008]
-num_iterations: 80000
-steps_per_epoch: 2000
-REPEAT: 1
----
-name: magnitude_1shot85
-checkpointBP: data/VGG19_IMP03_ticket/130735/0.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
-
-pruning: magnitude
-pruning_config:
-    sparsity: 0.85
-
-model: VGG
-model_config:
-    version: 19
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l1_reg: 0
-    l2_reg: 1e-4
-
-lr_boundaries: [32000, 48000, 64000]
-lr_values: [0.1, 0.02, 0.004, 0.0008]
-num_iterations: 80000
-steps_per_epoch: 2000
-REPEAT: 1
+REPEAT: 10
