@@ -9,5 +9,5 @@
 /new_trune_workspace_ckp4.h5
 /VGG19_IMP02_LRrew
 /VGG19_IMP03_LRrew
-/VGG13_2000it
-/VGG13_full
+/partial_training_checkpoints/VGG13_2000it
+/partial_training_checkpoints/VGG13_full
