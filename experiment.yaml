@@ -5,7 +5,7 @@ name: skip # with default name=skip, training will be skipped
 precision: 16 # 16 for mixed precision or anything else for default 32 bit
 queue: null # specify path for queue file, if null keeps queue in memory
 
-directory: temp/21.02.05_tests
+directory: data/partial_training_checkpoints
 # REP is a value from [0, REPEAT-1] interval
 # RND_IDX is automatically assigned in `run.py`
 full_path: exec f"{directory}/{name}/{RND_IDX}/{REP}"
@@ -32,17 +32,36 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: magnitude_1shot86
-checkpointBP: data/VGG19_IMP03_ticket/130735/0.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
+name: VGG13_2000it
 
-pruning: magnitude
-pruning_config:
-    sparsity: 0.86
+#pruning: magnitude
+#pruning_config:
+#    sparsity: 0.86
 
 model: VGG
 model_config:
-    version: 19
+    version: 13
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l1_reg: 0
+    l2_reg: 1e-4
+
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 2000
+steps_per_epoch: 2000
+REPEAT: 1
+---
+name: VGG13_full
+checkpointBP: checkpoint[-1]
+
+#pruning: magnitude
+#pruning_config:
+#    sparsity: exec sparsity[-1] + 0.01
+
+model: VGG
+model_config:
+    version: 13
     input_shape: [32, 32, 3]
     n_classes: 10
     l1_reg: 0
@@ -53,25 +72,3 @@ lr_values: [0.1, 0.02, 0.004, 0.0008]
 num_iterations: 80000
 steps_per_epoch: 2000
 REPEAT: 1
----
-name: magnitude_1shot_over86
-checkpointBP: data/VGG19_IMP03_ticket/130735/0.h5
-checkpointAP: data/partial_training_checkpoints/VGG19_2000it/0.h5
-
-pruning: magnitude
-pruning_config:
-    sparsity: exec sparsity[-1] + 0.01
-
-model: VGG
-model_config:
-    version: 19
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l1_reg: 0
-    l2_reg: 1e-4
-
-lr_boundaries: [32000, 48000, 64000]
-lr_values: [0.1, 0.02, 0.004, 0.0008]
-num_iterations: 80000
-steps_per_epoch: 2000
-REPEAT: 10
