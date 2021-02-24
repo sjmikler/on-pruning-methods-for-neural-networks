@@ -32,10 +32,10 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: VGG13_pruning97
-checkpointBP: data/VGG19_IMP03_ticket/130735/0.h5
+name: VGG13_truning97
+checkpointBP: data/new_trune_workspace.h5
 
-pruning: magnitude
+pruning: kernel mask
 pruning_config:
     sparsity: 0.97
 
