@@ -248,9 +248,14 @@ def structurize_anything(structure, saliences):
     return saliences
 
 
-def prune_by_saliences(model, saliences, config, silent=False):
+def prune_by_kernel_masks(model, config, silent=False):
     sparsity = config.sparsity
     structure = config.structure
+    saliences = {}
+    for layer in model.layers:
+        if hasattr(layer, 'kernel_mask'):
+            kernel = layer.kernel
+            saliences[kernel.name] = layer.kernel_mask.numpy()
     saliences = extract_kernels(saliences)
     if structure:
         saliences = structurize_anything(structure, saliences)
@@ -259,7 +264,7 @@ def prune_by_saliences(model, saliences, config, silent=False):
     return model
 
 
-def prune_GraSP(model, dataset, config):
+def prune_GraSP(model, dataset, config, silent=False):
     """Hessian related pruning."""
 
     sparsity = config.sparsity
@@ -271,11 +276,11 @@ def prune_GraSP(model, dataset, config):
     if structure:
         saliences = structurize_anything(structure, saliences)
     masks = saliences2masks(saliences, percentage=sparsity)
-    set_kernel_masks_for_model(model, masks)
+    set_kernel_masks_for_model(model, masks, silent)
     return model
 
 
-def prune_TRUNE(model, dataset, config):
+def prune_TRUNE(model, dataset, config, silent=False):
     """Experimental, learnable pruning. Very early version."""
 
     print(config)
@@ -292,11 +297,12 @@ def prune_TRUNE(model, dataset, config):
     set_kernel_masks_for_model(model,
                                masks_dict={layer.kernel.name: layer.kernel_mask.numpy()
                                            for layer in model.layers if
-                                           hasattr(layer, 'kernel_mask')})
+                                           hasattr(layer, 'kernel_mask')},
+                               silent=silent)
     return model
 
 
-def prune_SNIP(model, dataset, config):
+def prune_SNIP(model, dataset, config, silent=False):
     """Prune by saliences `|W*G|` for W being weights an G being gradients."""
 
     sparsity = config.sparsity
@@ -308,11 +314,11 @@ def prune_SNIP(model, dataset, config):
     if structure:
         saliences = structurize_anything(structure, saliences)
     masks = saliences2masks(saliences, percentage=sparsity)
-    set_kernel_masks_for_model(model, masks)
+    set_kernel_masks_for_model(model, masks, silent)
     return model
 
 
-def prune_pseudo_SNIP(model, dataset, config):
+def prune_pseudo_SNIP(model, dataset, config, silent=False):
     """In SNIP's `W*G` we replace gradients G with a random from [-1, 1]."""
 
     sparsity = config.sparsity
@@ -324,7 +330,7 @@ def prune_pseudo_SNIP(model, dataset, config):
     if structure:
         saliences = structurize_anything(structure, saliences)
     masks = saliences2masks(saliences, percentage=sparsity)
-    set_kernel_masks_for_model(model, masks)
+    set_kernel_masks_for_model(model, masks, silent)
     return model
 
 
@@ -499,6 +505,10 @@ def set_pruning_masks(model,
         model = prune_TRUNE(model=model,
                             config=pruning_config,
                             dataset=dataset)
+    elif contains_any(pruning_method.lower(), 'kernel mask'):
+        print("PRUNING BY KERNEL MASK VALUES")
+        model = prune_by_kernel_masks(model=model,
+                                      config=pruning_config)
     else:
         raise KeyError(f"PRUNING {pruning_method} is unknown!")
     return model

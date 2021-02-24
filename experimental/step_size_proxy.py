@@ -2,12 +2,12 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from tools import models, toolkit, utils, datasets, layers, pruning
-import matplotlib.scale
 
 ds = datasets.cifar10(repeat_train=False, shuffle_train=False)
 model = models.VGG((32, 32, 3), n_classes=10, version=19)
-model.load_weights('data/VGG19_IMP03_ticket/130735/0.h5')
-# model.load_weights('temp/new_trune_workspace_continuous4.h5')
+# model.load_weights('data/VGG19_IMP03_ticket/130735/0.h5')
+model.load_weights('temp/new_trune_workspace.h5')
+# model.load_weights('temp/new_trune_workspace_destillation.h5')
 # model.load_weights('data/VGG13_full/701455/0.h5')
 # model.load_weights('data/VGG19_IMP03_ticket/770423/0.h5')
 # model.load_weights('data/VGG19_IMP03_ticket/770423/1.h5')
@@ -16,7 +16,7 @@ loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
 # %%
 
-method = 'magnitude'
+method = 'truning'
 
 sp2acc = []
 sp = [
@@ -62,8 +62,8 @@ for sparsity in sp:
 fig, ax = plt.subplots()
 ax.grid()
 
-# %%
 
+# %%
 
 
 def forward(x):

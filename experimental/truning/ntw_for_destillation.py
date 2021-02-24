@@ -16,9 +16,9 @@ def mask_activation(mask):
 
 
 conv, dense = toolkit.create_masked_layers(mask_activation)
-model = models.VGG((32, 32, 3), n_classes=10, version=19,
-                   CONV_LAYER=conv,
-                   DENSE_LAYER=dense)
+parent_model = models.VGG((32, 32, 3), n_classes=10, version=19,
+                          CONV_LAYER=conv,
+                          DENSE_LAYER=dense)
 
 ckp_lookup = {
     '2k': 'data/partial_training_checkpoints/VGG19_2000it/0.h5',
@@ -28,10 +28,13 @@ ckp_lookup = {
     '98% sparse': 'data/VGG19_IMP03_ticket/770423/5.h5'
 }
 
-model.load_weights(ckp_lookup['full'])
+parent_model.load_weights(ckp_lookup['full'])
+toolkit.set_kernel_masks_values_on_model(parent_model, 5.)
+
+model = toolkit.clone_model(parent_model)
 ds = datasets.cifar10()
 reg_rate = tf.Variable(1e-7)
-loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+loss_fn = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
 optimizer = tf.keras.optimizers.SGD(learning_rate=1.,
                                     momentum=0.99,
                                     nesterov=True)
@@ -59,11 +62,14 @@ def mask_regularization(masks):
 
 @tf.function
 def train_step(x, y):
+    parent_outs = parent_model(x, training=False)
+    parent_outs = tf.math.sigmoid(parent_outs)
+    parent_outs = tf.cast(parent_outs, tf.float32)
     with tf.GradientTape() as tape:
         tape.watch(kernel_masks)
         outs = model(x, training=True)
         outs = tf.cast(outs, tf.float32)
-        loss = loss_fn(y, outs)
+        loss = loss_fn(parent_outs, outs)
         logger['train_loss'](loss)
 
         reg_loss = mask_regularization(kernel_masks)
@@ -87,8 +93,6 @@ def train_step(x, y):
 def valid_step(x, y):
     outs = model(x, training=False)
     outs = tf.cast(outs, tf.float32)
-    loss = loss_fn(y, outs)
-    logger['valid_loss'](loss)
     logger['valid_acc'](tf.keras.metrics.sparse_categorical_accuracy(y, outs))
 
 
@@ -109,8 +113,8 @@ for epoch in range(EPOCHS):
     t0 = time.time()
     for x, y in ds['train'].take(ITERS):
         grads = train_step(x, y)
-
     logger['train_time'] = time.time() - t0
+
     for x, y in ds['valid']:
         valid_step(x, y)
 
@@ -118,7 +122,7 @@ for epoch in range(EPOCHS):
     toolkit.visualize_masks(kernel_masks, mask_activation)
     logger.show()
 
-model.save_weights('temp/new_trune_workspace.h5')
+model.save_weights('temp/new_trune_workspace_destillation.h5')
 # toolkit.prune_and_save_model(model, mask_activation, threshold=0.0001,
 #                              path='temp/new_trune_workspace_ckp.h5')
 
