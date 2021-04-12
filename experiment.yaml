@@ -32,18 +32,42 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: test
+name: magnitude_basic_pruning90
 model: WRN
 model_config:
     input_shape: [32, 32, 3]
     n_classes: 10
     N: 16
-    K: 4
+    K: 8
     l1_reg: 0
     l2_reg: 1e-4
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.90
 
 lr_boundaries: [32000, 48000, 64000]
 lr_values: [0.1, 0.02, 0.004, 0.0008]
 num_iterations: 80000
 steps_per_epoch: 2000
-REPEAT: 1
+REPEAT: 3
+---
+name: magnitude_basic_pruning95
+model: WRN
+model_config:
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    N: 16
+    K: 8
+    l1_reg: 0
+    l2_reg: 1e-4
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.95
+
+lr_boundaries: [32000, 48000, 64000]
+lr_values: [0.1, 0.02, 0.004, 0.0008]
+num_iterations: 80000
+steps_per_epoch: 2000
+REPEAT: 3

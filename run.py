@@ -11,7 +11,7 @@ from tools import datasets, models, parser, pruning
 from tools import utils
 from tools.utils import ddict
 
-utils.set_memory_growth()
+# utils.set_memory_growth()
 
 default_config, experiment_queue = parser.load_from_yaml(yaml_path="experiment.yaml")
 default_config = ddict(default_config)
