@@ -118,7 +118,7 @@ for epoch in range(EPOCHS):
     toolkit.visualize_masks(kernel_masks, mask_activation)
     logger.show()
 
-model.save_weights('temp/new_trune_workspace.h5')
+model.save_weights('temp/new_trune_workspace2.h5')
 # toolkit.prune_and_save_model(model, mask_activation, threshold=0.0001,
 #                              path='temp/new_trune_workspace_ckp.h5')
 

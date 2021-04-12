@@ -167,6 +167,8 @@ def ResNet(
 ):
     if version:
         raise KeyError("Versions not defined yet!")
+    if kwargs:
+        print(f"ResNet: unknown parameters: {kwargs.keys()}")
 
     exec_outs = {}
     exec(f'var = {activation}', None, exec_outs)
@@ -292,7 +294,7 @@ def ResNet(
     return model
 
 
-def WRN(N, K, *args, **kwargs):
+def WRN(N, K, *args, **kwargs) -> tf.keras.Model:
     """args, kwargs parameters:
         * input_shape,
         * n_classes,
@@ -390,6 +392,8 @@ def get_model(model_name):
         return VGG
     elif model_name.lower() in ['resnet']:
         return ResNet
+    elif model_name.lower() in ['wrn', 'wide_resnet', 'wide resnet']:
+        return WRN
     elif model_name.lower() in ['lenet', 'dense lenet', 'dense_lenet']:
         return LeNet
     else:

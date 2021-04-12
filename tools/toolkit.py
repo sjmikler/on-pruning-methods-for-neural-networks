@@ -80,7 +80,7 @@ def clip_many(values, clip_at, clip_from=None, inplace=False):
         return r
 
 
-def concatenate_flattened(arrays):
+def concatenate_flattened(arrays) -> np.ndarray:
     return np.concatenate([x.flatten() if isinstance(x, np.ndarray)
                            else x.numpy().flatten() for x in arrays], axis=0)
 

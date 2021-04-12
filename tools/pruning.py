@@ -460,6 +460,8 @@ def report_density(model, detailed=False):
             if detailed:
                 print(f"density of {w.name:>16}: {km.sum() / km.size:6.4f}")
 
+    if max_nonzero == 0:
+        return 1.0
     return nonzero / max_nonzero
 
 

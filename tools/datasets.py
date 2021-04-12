@@ -64,7 +64,7 @@ def mnist(training_batch_size=100,
 def get_dataset(ds_name, precision):
     if ds_name == 'cifar10':
         return cifar10(training_batch_size=128,
-                       validation_batch_size=512,
+                       validation_batch_size=256,
                        dtype=tf.float16 if precision == 16 else tf.float32,
                        shuffle_train=20000)
     elif ds_name == 'mnist':

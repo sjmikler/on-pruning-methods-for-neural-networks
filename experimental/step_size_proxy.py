@@ -4,19 +4,21 @@ import matplotlib.pyplot as plt
 from tools import models, toolkit, utils, datasets, layers, pruning
 
 ds = datasets.cifar10(repeat_train=False, shuffle_train=False)
-model = models.VGG((32, 32, 3), n_classes=10, version=19)
+# model = models.VGG((32, 32, 3), n_classes=10, version=19)
+model = models.WRN(16, 4, (32, 32, 3), n_classes=10)
 # model.load_weights('data/VGG19_IMP03_ticket/130735/0.h5')
-model.load_weights('temp/new_trune_workspace.h5')
+# model.load_weights('temp/new_trune_workspace.h5')
 # model.load_weights('temp/new_trune_workspace_destillation.h5')
 # model.load_weights('data/VGG13_full/701455/0.h5')
 # model.load_weights('data/VGG19_IMP03_ticket/770423/0.h5')
 # model.load_weights('data/VGG19_IMP03_ticket/770423/1.h5')
 # model.load_weights('data/VGG19_IMP03_ticket/770423/5.h5')
+model.load_weights('temp/21.03.01_tests/WRN16_4_80000/404502/0.h5')
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
 # %%
 
-method = 'truning'
+method = 'magnitude'
 
 sp2acc = []
 sp = [
@@ -47,7 +49,7 @@ for sparsity in sp:
     pruning.apply_pruning_for_model(model)
 
     Acc = tf.keras.metrics.Mean()
-    for x, y in ds.valid:
+    for x, y in ds.train:
         loss, acc = toolkit.valid_step(x, y, model, loss_fn, training=True)
         Acc(tf.reduce_mean(acc))
     acc = Acc.result()
@@ -81,7 +83,7 @@ ax.set_ylim(0.5, 1.01)
 ax.set_xlabel('1-shot pruning sparsity')
 ax.set_title("Accuracy without retraining the network")
 
-ax.plot(*zip(*sp2acc), linewidth=2, label='Magnitude pruning (VGG19)')
+ax.plot(*zip(*sp2acc), linewidth=2, label='Magnitude pruning (VGG19) BN LOCKED')
 ax.legend()
 
 ax.set_xlim(0.5, 0.995)

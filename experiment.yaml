@@ -3,9 +3,9 @@ REPEAT: 1
 GLOBAL_REPEAT: 1
 name: skip # with default name=skip, training will be skipped
 precision: 16 # 16 for mixed precision or anything else for default 32 bit
-queue: queue.yaml # specify path for queue file, if null keeps queue in memory
+queue: null # specify path for queue file, if null keeps queue in memory
 
-directory: temp/21.02.08_tests
+directory: temp/21.04.12_tests
 # REP is a value from [0, REPEAT-1] interval
 # RND_IDX is automatically assigned in `run.py`
 full_path: exec f"{directory}/{name}/{RND_IDX}/{REP}"
@@ -32,18 +32,13 @@ steps_per_epoch: 2000
 
 # EXPERIMENTS:
 ---
-name: VGG13_truning97
-checkpointBP: data/new_trune_workspace.h5
-
-pruning: kernel mask
-pruning_config:
-    sparsity: 0.97
-
-model: VGG
+name: test
+model: WRN
 model_config:
-    version: 19
     input_shape: [32, 32, 3]
     n_classes: 10
+    N: 16
+    K: 4
     l1_reg: 0
     l2_reg: 1e-4
 
