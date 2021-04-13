@@ -1,27 +1,33 @@
 # %%
 
+import argparse
 import datetime
 import pprint
-import sys
 import time
 
-import tensorflow as tf
+arg_parser = argparse.ArgumentParser()
+arg_parser.add_argument("--dry", default=False, type=bool,
+                        help="Skip training but parse experiments")
+arg_parser.add_argument("--gpu", default=None, type=int,
+                        help="Which GPU to use during training")
+arg_parser.add_argument("-mg", "--memory-growth", default=True, type=bool,
+                        help="Set memory grotwh")
+argv = arg_parser.parse_args()
 
-from tools import datasets, models, parser, pruning
-from tools import utils
+import tensorflow as tf
+from tools import datasets, models, parser, pruning, utils
 from tools.utils import ddict
 
-# utils.set_memory_growth()
+if argv.gpu is not None:
+    gpus = tf.config.get_visible_devices('GPU')
+    tf.config.set_visible_devices(gpus[argv.gpu], 'GPU')
+
+if argv.memory_growth:
+    utils.set_memory_growth()
 
 default_config, experiment_queue = parser.load_from_yaml(yaml_path="experiment.yaml")
 default_config = ddict(default_config)
 utils.set_precision(default_config.precision)
-
-if "--dry" in sys.argv:
-    dry = True
-else:
-    dry = False
-
 
 # %%
 
@@ -64,7 +70,7 @@ for exp in experiment_queue:
     print("\nEXPERIMENT:")
     pprint.pprint(exp)
     print()
-    if dry:
+    if argv.dry:
         continue
     exp = ddict(exp)
 
@@ -102,8 +108,10 @@ for exp in experiment_queue:
             ckp = None
         else:
             ckp = exp.checkpointAP
-        num_masks = pruning.reset_weights_to_checkpoint(model, ckp=ckp, skip_keyword='kernel_mask')
-        print(f"LOADED AFTER PRUNING {exp.checkpointAP}, but keeping {num_masks} masks!")
+        num_masks = pruning.reset_weights_to_checkpoint(model, ckp=ckp,
+                                                        skip_keyword='kernel_mask')
+        print(
+            f"LOADED AFTER PRUNING {exp.checkpointAP}, but keeping {num_masks} masks!")
 
     # apply pruning from previously calculated masks
     pruning.apply_pruning_masks(model, pruning_method=exp.pruning)
