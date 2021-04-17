@@ -1,5 +1,7 @@
 import tensorflow as tf
-from tools.layers import MaskedConv, MaskedDense, GumbelMaskedConv, GumbelMaskedDense
+
+from tools.layers import MaskedConv, MaskedDense
+from tools.utils import cprint
 
 DENSE_LAYER = MaskedDense
 CONV_LAYER = MaskedConv
@@ -86,7 +88,7 @@ def VGG(input_shape,
         CONV_LAYER=CONV_LAYER,
         **kwargs):
     if kwargs:
-        print(f"VGG: unknown parameters: {kwargs.keys()}")
+        cprint(f"VGG: unknown parameters: {kwargs.keys()}")
     if version:
         if version == 11:
             group_sizes = (1, 1, 2, 2, 2)
@@ -99,7 +101,8 @@ def VGG(input_shape,
         else:
             raise KeyError(f"Unkown version={version}!")
 
-    regularizer = tf.keras.regularizers.l1_l2(l1_reg, l2_reg) if l2_reg or l1_reg else None
+    regularizer = tf.keras.regularizers.l1_l2(l1_reg,
+                                              l2_reg) if l2_reg or l1_reg else None
     bias_regularizer = regularizer if regularize_bias else None
 
     def conv3x3(*args, **kwargs):
@@ -168,13 +171,11 @@ def ResNet(
     if version:
         raise KeyError("Versions not defined yet!")
     if kwargs:
-        print(f"ResNet: unknown parameters: {kwargs.keys()}")
+        cprint(f"ResNet: unknown parameters: {kwargs.keys()}")
 
-    exec_outs = {}
-    exec(f'var = {activation}', None, exec_outs)
-    activation = exec_outs.pop('var')
-
-    regularizer = tf.keras.regularizers.l1_l2(l1_reg, l2_reg) if l2_reg or l1_reg else None
+    activation = eval(activation)
+    regularizer = tf.keras.regularizers.l1_l2(l1_reg,
+                                              l2_reg) if l2_reg or l1_reg else None
     bias_regularizer = regularizer if regularize_bias else None
 
     def conv(filters, kernel_size, use_bias=False, **kwargs):
@@ -269,7 +270,7 @@ def ResNet(
 
             if pyramid:
                 if len(features) > 2:
-                    print(f"PyramidNet ignored intermediate width in {features}")
+                    cprint(f"PyramidNet ignored intermediate width in {features}")
 
                 shortcut = shortcut_pyramid
                 width = int(
@@ -328,8 +329,9 @@ def LeNet(input_shape,
           initializer='glorot_uniform',
           **kwargs):
     if kwargs:
-        print(f"LeNet: unknown parameters: {kwargs.keys()}")
-    regularizer = tf.keras.regularizers.l1_l2(l1_reg, l2_reg) if l2_reg or l1_reg else None
+        cprint(f"LeNet: unknown parameters: {kwargs.keys()}")
+    regularizer = tf.keras.regularizers.l1_l2(l1_reg,
+                                              l2_reg) if l2_reg or l1_reg else None
     initializer = initializer
 
     def dense(*args, **kwargs):
@@ -356,8 +358,9 @@ def LeNetConv(input_shape,
               initializer='glorot_uniform',
               **kwargs):
     if kwargs:
-        print(f"Unknown parameters: {kwargs}")
-    regularizer = tf.keras.regularizers.l1_l2(l1_reg, l2_reg) if l2_reg or l1_reg else None
+        cprint(f"Unknown parameters: {kwargs}")
+    regularizer = tf.keras.regularizers.l1_l2(l1_reg,
+                                              l2_reg) if l2_reg or l1_reg else None
     initializer = initializer
 
     def dense(*args, **kwargs):
