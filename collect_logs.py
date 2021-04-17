@@ -1,6 +1,7 @@
-import os
-import yaml
 import argparse
+import os
+
+import yaml
 
 
 def recursive_collect_logs(path):
@@ -22,13 +23,12 @@ def recursive_collect_logs(path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Manipulation of .yaml logs.")
-    parser.add_argument('--path', type=str,
+    parser.add_argument('-p', '--path', type=str, required=True,
                         help='directory from which recursive log gathering will begin')
-    parser.add_argument('--dest', type=str, default="",
-                        help='where to save gathered yaml logs')
-
+    parser.add_argument('-d', '--dest', type=str, default=None,
+                        help='where to save gathered yaml logs, by default it is the same as --path')
     args = parser.parse_args()
-    if not args.dest:
+    if args.dest is None:
         args.dest = os.path.join(args.path, 'gathered_logs.yaml')
 
     logs = recursive_collect_logs(args.path)

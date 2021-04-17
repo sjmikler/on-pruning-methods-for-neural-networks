@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from tools.utils import contains_any
+from tools.utils import contains_any, cprint
 
 
 def structurize_matrix(matrix, n_clusters):
@@ -52,7 +52,7 @@ def structurize_conv(matrix, n_clusters):
 
 
 def reset_weights_to_checkpoint(model, ckp=None, skip_keyword=None):
-    """Reset network in place, ability to skip keybword."""
+    """Reset network in place, has an ability to skip keybword."""
 
     temp = tf.keras.models.clone_model(model)
     if ckp:
@@ -63,7 +63,7 @@ def reset_weights_to_checkpoint(model, ckp=None, skip_keyword=None):
             skipped += 1
             continue
         w1.assign(w2)
-    print(
+    cprint(
         f"INFO RESET: Skipped {skipped} layers with keyword {skip_keyword}!")
     return skipped
 
@@ -176,7 +176,7 @@ def get_pruning_mask(saliences, percentage):
     flat_mask = np.ones_like(flatten)
 
     threshold = np.percentile(flatten, percentage * 100)
-    print(f'pruning threshold: {threshold:8.5f}')
+    cprint(f'pruning threshold: {threshold:8.5f}')
     flat_mask[flatten < threshold] = 0
 
     cumsizes = np.cumsum(sizes)[:-1]
@@ -209,8 +209,8 @@ def set_kernel_masks_for_model(model, masks_dict, silent=False):
                 if mask == weight.name:
                     layer.set_pruning_mask(masks_dict[mask])
                     if not silent:
-                        print(f"pruning {weight.name} to {layer.sparsity * 100:.2f}%")
-                        print(f"left in {weight.name} : {layer.left_unpruned}")
+                        cprint(f"pruning {weight.name} to {layer.sparsity * 100:.2f}%")
+                        cprint(f"left in {weight.name} : {layer.left_unpruned}")
 
 
 def l1_saliences_over_channel(saliences):
@@ -237,10 +237,10 @@ def l1_saliences_over_channel(saliences):
 
 def structurize_anything(structure, saliences):
     if structure is True:
-        print(f"NEURON-WISE STRUCTURING!")
+        cprint(f"NEURON-WISE STRUCTURING!")
         saliences = l1_saliences_over_channel(saliences)
     elif isinstance(structure, int):
-        print(f"ENFORCING {structure} GROUPS!")
+        cprint(f"ENFORCING {structure} GROUPS!")
         saliences = {
             key: structurize_matrix(value, structure) for key, value in
             saliences.items()
@@ -277,28 +277,6 @@ def prune_GraSP(model, dataset, config, silent=False):
         saliences = structurize_anything(structure, saliences)
     masks = saliences2masks(saliences, percentage=sparsity)
     set_kernel_masks_for_model(model, masks, silent)
-    return model
-
-
-def prune_TRUNE(model, dataset, config, silent=False):
-    """Experimental, learnable pruning. Very early version."""
-
-    print(config)
-    learning_rate = config.learning_rate
-    momentum = config.momentum
-    weight_decay = float(config.weight_decay)
-    num_iterations = config.num_iterations
-    steps_per_epoch = config.steps_per_epoch
-
-    from experimental.tools.trune import truning
-    model = truning(model, learning_rate, momentum, weight_decay, num_iterations,
-                    steps_per_epoch,
-                    dataset=dataset)
-    set_kernel_masks_for_model(model,
-                               masks_dict={layer.kernel.name: layer.kernel_mask.numpy()
-                                           for layer in model.layers if
-                                           hasattr(layer, 'kernel_mask')},
-                               silent=silent)
     return model
 
 
@@ -458,7 +436,7 @@ def report_density(model, detailed=False):
             max_nonzero += km.size
             nonzero += (km != 0).sum()
             if detailed:
-                print(f"density of {w.name:>16}: {km.sum() / km.size:6.4f}")
+                cprint(f"density of {w.name:>16}: {km.sum() / km.size:6.4f}")
 
     if max_nonzero == 0:
         return 1.0
@@ -472,43 +450,38 @@ def set_pruning_masks(model,
                       pruning_config,
                       dataset):
     if contains_any(pruning_method.lower(), 'none', 'nothing'):
-        print('NO PRUNING')
+        cprint('NO PRUNING')
         return model
     elif contains_any(pruning_method.lower(), 'random'):
-        print('RANDOM PRUNING')
+        cprint('RANDOM PRUNING')
         model = prune_random(model=model,
                              config=pruning_config)
     elif contains_any(pruning_method.lower(), 'snip'):
         if contains_any(pruning_method.lower(), 'pseudo_snip'):
-            print('PSUEDO SNIP PRUNING')
+            cprint('PSUEDO SNIP PRUNING')
             model = prune_pseudo_SNIP(model=model,
                                       config=pruning_config,
                                       dataset=dataset.train)
         else:
-            print('SNIP PRUNING')
+            cprint('SNIP PRUNING')
             model = prune_SNIP(model=model,
                                config=pruning_config,
                                dataset=dataset.train)
     elif contains_any(pruning_method.lower(), 'grasp'):
-        print('GRASP PRUNING')
+        cprint('GRASP PRUNING')
         model = prune_GraSP(model=model,
                             config=pruning_config,
                             dataset=dataset.train)
     elif contains_any(pruning_method.lower(), 'l1', 'magnitude'):
-        print('WEIGHT MAGNITUDE PRUNING')
+        cprint('WEIGHT MAGNITUDE PRUNING')
         model = prune_l1(model=model,
                          config=pruning_config)
     elif contains_any(pruning_method.lower(), 'imp_complete'):
-        print('IMP COMPLETE PRUNING')
+        cprint('IMP COMPLETE PRUNING')
         model = prune_IMP_complete(model=model,
                                    config=pruning_config)
-    elif contains_any(pruning_method.lower(), 'trune'):
-        print('TRUNE')
-        model = prune_TRUNE(model=model,
-                            config=pruning_config,
-                            dataset=dataset)
     elif contains_any(pruning_method.lower(), 'kernel mask'):
-        print("PRUNING BY KERNEL MASK VALUES")
+        cprint("PRUNING BY KERNEL MASK VALUES")
         model = prune_by_kernel_masks(model=model,
                                       config=pruning_config)
     else:
@@ -519,20 +492,20 @@ def set_pruning_masks(model,
 def apply_pruning_masks(model,
                         pruning_method):
     if contains_any(pruning_method.lower(), 'shuffle weight'):
-        print("SHUFFLING WEIGHTS IN LAYERS!")
+        cprint("SHUFFLING WEIGHTS IN LAYERS!")
         model = shuffle_weights(model=model)
 
     if contains_any(pruning_method.lower(), 'shuffle layer'):
-        print("SHUFFLING WEIGHTS WITH MASKS IN LAYERS!")
+        cprint("SHUFFLING WEIGHTS WITH MASKS IN LAYERS!")
         model = shuffle_layers(model=model)
 
     if contains_any(pruning_method.lower(), 'shuffle mask'):
-        print("SHUFFLING MASKS IN LAYERS!")
+        cprint("SHUFFLING MASKS IN LAYERS!")
         model = shuffle_masks(model=model)
 
     apply_pruning_for_model(model)
-    density = report_density(model)
-    print(f"REPORTING DENSITY: {density:7.5f}")
+    density = report_density(model, detailed=True)
+    cprint(f"REPORTING DENSITY: {density:7.5f}")
     return model
 
 # %%

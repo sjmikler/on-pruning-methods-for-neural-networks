@@ -1,51 +1,52 @@
-import random
-import yaml
-import sys
 import os
-import re
+import random
+from collections.abc import Iterable
 from copy import deepcopy
+
+import yaml
+
+from tools.utils import cprint, ddict, unddict
 
 
 class YamlExperimentQueue:
     def __init__(self, experiments=None, path='.queue.yaml'):
         self.path = path
-        if experiments:
-            self.set_content(experiments)
+        if experiments:  # if None, can just read existing experiments
+            self.write_content(experiments)
         else:
-            assert os.path.exists(path), "Neither experiments or queue was given!"
+            assert os.path.exists(path), "Neither experiments or queue were given!"
 
-    def get_content(self):
+    def read_content(self):
         with open(self.path, 'r') as f:
             z = list(yaml.safe_load_all(f))
-        return z
+        return [ddict(exp) for exp in z]
 
-    def set_content(self, exps):
+    def write_content(self, exps):
+        assert isinstance(exps, Iterable)
         with open(self.path, 'w') as f:
-            if exps:
-                yaml.safe_dump_all(exps, stream=f)
+            nexps = map(unddict, exps)  # because cannot dump ddict
+            yaml.safe_dump_all(nexps, stream=f)
 
     def append_content(self, exps):
-        existing_content = self.get_content()
+        existing_content = self.read_content()
         exps = existing_content + exps
-        with open(self.path, 'w') as f:
-            if exps:
-                yaml.safe_dump_all(exps, stream=f)
+        self.write_content(exps)
 
     def __bool__(self):
-        z = self.get_content()
+        z = self.read_content()
         return bool(z)
 
     def pop(self):
-        if self:
-            exps = self.get_content()
+        if self:  # else is empty
+            exps = self.read_content()
         else:
             return None
         exp = exps.pop(0)
-        self.set_content(exps)
+        self.write_content(exps)
         return exp
 
     def __iter__(self):
-        print(f"LOADING EXPERIMENT FROM {self.path}")
+        cprint(f"LOADING EXPERIMENT FROM {self.path}")
         while self:
             exp = self.pop()
             yield exp
@@ -54,28 +55,27 @@ class YamlExperimentQueue:
         os.remove(self.path)
 
 
-def cool_parse_exp(exp, past_experiments):
+def cool_parse_exp(exp, E):
     keys = list(exp.keys())
+    assert 'temp' not in keys
+    assert 'E' not in keys
+
     for k in keys:
         v = exp[k]
+
         if isinstance(v, dict):
-            # recurrent parsing of inner dicts
-            past_subdicts = [exp[k] if k in exp else {} for exp in past_experiments]
-            exp[k] = cool_parse_exp(v, past_subdicts)
+            parsed_v = cool_parse_exp(v, E)
+            exp[k] = parsed_v
             continue
 
-        cool_args = re.findall(r"([a-zA-Z0-9_]+)\[([-0-9]+)\]", str(v))
-        for cool_name, cool_idx in cool_args:
-            past_value = past_experiments[int(cool_idx)][cool_name]
-            v = v.replace(f'{cool_name}[{cool_idx}]', str(past_value))
-            print(f"REPLACED IN {k}: {cool_name}[{cool_idx}] WITH {past_value}")
-        if isinstance(v, str) and v.startswith('exec'):
-            expr1 = v
-            v = v.replace('exec ', 'temp = ')
-            exec_storage = exp
-            exec(v, None, exec_storage)
-            v = exec_storage.pop('temp')
-            print(f"RECOGNIZED IN {k}: {expr1} AND REPLACED WITH {v}")
+        if isinstance(v, str) and v.startswith('eval'):
+            org_expr = v
+            v = v[4:].strip()
+            scope = deepcopy(exp)
+            scope['E'] = E
+            v = eval(v, {}, scope)
+            cprint(f"RECOGNIZED FANCY PARSING {k}: {org_expr} --> {v}")
+
         if isinstance(v, str):
             try:
                 v = float(v)
@@ -85,45 +85,44 @@ def cool_parse_exp(exp, past_experiments):
     return exp
 
 
-def load_from_yaml(yaml_path):
-    cmd_arguments = {}
-    for arg in sys.argv:
-        print(f"COMMAND LINE ARGUMENT: {arg}")
+def load_from_yaml(yaml_path, unknown_args):
+    cmd_arguments = ddict()
+    for arg in unknown_args:
+        cprint(f"COMMAND LINE ARGUMENT: {arg}")
         if '--' in arg and '=' in arg:
             key, value = arg.split('=', 1)
             key = key.lstrip('-')
 
-            try:
-                exec_storage = {}
-                exec(f"temp = {value}", None, exec_storage)
-                cmd_arguments[key] = exec_storage['temp']
+            try:  # for parsing integers etc
+                cmd_arguments[key] = eval(value, {}, {})
             except (NameError, SyntaxError):  # for parsing strings
                 cmd_arguments[key] = value
 
-    experiments = list(yaml.safe_load_all(open(yaml_path, "r")))
+    experiments = yaml.safe_load_all(open(yaml_path, "r"))
+    experiments = [ddict(exp) for exp in experiments]
     default = experiments.pop(0)
     default.update(cmd_arguments)
 
     all_unpacked_experiments = []
-    for global_rep in range(default.get('GLOBAL_REPEAT') or 1):
+    for global_rep in range(default.get("GLOBAL_REPEAT") or 1):
         unpacked_experiments = []
         for exp in experiments:
-            expcp = exp.copy()
-            exp.update(default)
-            exp.update(expcp)
-            rnd_idx = random.randint(100000, 999999)
-            for rep in range(exp.get('REPEAT') or 1):
-                parsed_exp = deepcopy(exp)
-                parsed_exp['RND_IDX'] = rnd_idx
-                parsed_exp['REP'] = rep
+            nexp = deepcopy(default)
+            nexp.update(exp)
 
-                parsed_exp = cool_parse_exp(parsed_exp, unpacked_experiments)
-                unpacked_experiments.append(parsed_exp)
+            rnd_idx = random.randint(100000, 999999)
+            for rep in range(exp.get("REPEAT") or 1):
+                nexp_rep = deepcopy(nexp)
+                nexp_rep['RND_IDX'] = rnd_idx
+                nexp_rep['REP'] = rep
+
+                nexp_rep = cool_parse_exp(nexp_rep, unpacked_experiments)
+                unpacked_experiments.append(nexp_rep)
         all_unpacked_experiments.extend(unpacked_experiments)
 
-    if path := default.get('queue'):
+    if path := default.queue:
         queue = YamlExperimentQueue(all_unpacked_experiments, path=path)
     else:
         queue = iter(all_unpacked_experiments)
-    print(f'QUEUE TYPE: {type(queue)}')
+    cprint(f'QUEUE TYPE: {type(queue)}')
     return default, queue
