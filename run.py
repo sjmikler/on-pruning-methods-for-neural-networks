@@ -5,12 +5,12 @@ import time
 from tools.utils import cprint, ddict, logging_from_history
 
 arg_parser = argparse.ArgumentParser()
-arg_parser.add_argument("-d", "--dry", action='store_true',
+arg_parser.add_argument("--dry", action='store_true',
                         help="Skip training but parse experiments")
-arg_parser.add_argument("--gpu", default=None, type=str,
-                        help="Which GPU to use during training")
-arg_parser.add_argument("-nmg", "--no-memory-growth", action='store_true',
+arg_parser.add_argument("--no-memory-growth", action='store_true',
                         help="Disables memory growth")
+arg_parser.add_argument("--gpu", default=None, type=str,
+                        help="Which GPUs to use during training, e.g. 0,1,3 or 1")
 args, unknown_args = arg_parser.parse_known_args()
 
 import tensorflow as tf
@@ -27,6 +27,7 @@ if not args.no_memory_growth:
 
 default_config, experiment_queue = parser.load_from_yaml(yaml_path="experiment.yaml",
                                                          unknown_args=unknown_args)
+
 utils.set_precision(default_config.precision)
 
 
