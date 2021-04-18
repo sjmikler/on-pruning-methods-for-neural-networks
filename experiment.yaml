@@ -14,6 +14,11 @@ checkpoint: eval f"{directory}/{name}/{RND_IDX}/{REP}.h5"
 yaml_logdir: eval f"{directory}/{name}/{RND_IDX}/{REP}.yaml"
 
 dataset: cifar10 # mnist|cifar10 available
+dataset_config:
+    train_batch_size: 128
+    valid_batch_size: 512
+    padding: symmetric
+
 num_iterations: 200
 steps_per_epoch: 2000
 

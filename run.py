@@ -45,7 +45,9 @@ def get_optimizer(optimizer, optimizer_config):
 
 
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-ds = datasets.get_dataset(default_config.dataset, default_config.precision)
+ds = datasets.get_dataset(default_config.dataset,
+                          precision=default_config.precision,
+                          **default_config.dataset_config)
 
 # %%
 
