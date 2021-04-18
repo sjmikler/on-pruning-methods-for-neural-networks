@@ -42,7 +42,7 @@ model_config:
 
 # EXPERIMENTS:
 ---
-name: WRN28_10_reg2.5e-4
+name: WRN28_10_reg2.5e-4_symmetric
 num_iterations: 80000
 
 model: WRN
