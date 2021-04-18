@@ -23,31 +23,43 @@ specified as a valid path, the queue of the experiments will be stored on it as
 a `.yaml` file and can be modified when experiments are running. Otherwise, queue is
 stored in RAM memory and cannot be modified.
 
-1. You can use `--dry` flag without any arguments to test your experiment parsing
-2. You can use any flag, like `--sparsity=0.5` or `--precision=32` to update **global
+1. You can use any flag, like `--sparsity=0.5` or `--precision=32` to update **global
    config** straight from command line. Mainly intended for hardware settings,
    like `--memory-growth=False`
-3. `steps_per_epoch` should be larger than number of batches in the dataset. Otherwise,
+2. `steps_per_epoch` should be larger than number of batches in the dataset. Otherwise,
    you will not use all the samples during the training
-4. `checkpointAP` is **checkpoint After Pruning** and `checkpointBP` is **checkpoint
+3. `checkpointAP` is **checkpoint After Pruning** and `checkpointBP` is **checkpoint
    Before Pruning**. You can load full checkpoint before pruning, but after pruning **
    pruning masks from the checkpoint will be skipped**. This allows for many pruning
    techniques
-5. If experiment is stopped with `KeyboardInterrupt`, there will be 2 second pause
+4. If experiment is stopped with `KeyboardInterrupt`, there will be 2 second pause
    during which `run.py` can be interrupted completely. If not interrupted completely,
    next experiment in the queue will start instead. Interrupted experiments will not
    leave any checkpoints
-6. If `name: skip`, training will not be performed, but values (like `sparsity: 0.0`)
+5. If `name: skip`, training will not be performed, but values (like `sparsity: 0.0`)
    can be used in fancy parsing. Skipped experiments will not leave any checkpoints
+6. `run.py` has more command line arguments. If an argument does not affect experiment
+   results, it is implemented as command line argument, otherwise it should be placed
+   in `experiments.yaml` file.
+   ```
+   > python run.py --help
+   optional arguments:
+     -h, --help            show this help message and exit
+     --dry                 Skip training but parse experiments to confirm correctness
+     --no-memory-growth    Disables memory growth
+     --gpu GPU             Which GPUs to use during training, e.g. 0,1,3 or 1
+     --pick PICK, --cherrypick-experiments PICK
+                           Run only selected experiments, e.g. 0,1,3 or 1
+   ```
 
-```
-PROCEDURES IN ORDER:
-1. Creating model
-2. Loading checkpoint Before Pruning
-3. Applying pruning
-4. Loading checkpoint After Pruning (skip masks from checkpoint)
-5. Pruning related procedures After Pruning (like shuffling masks)
-```
+7. Overview of `run.py`, what happens in order:
+   ```
+   1. Creating model
+   2. Loading checkpoint Before Pruning
+   3. Applying pruning
+   4. Loading checkpoint After Pruning (skip masks from checkpoint)
+   5. Pruning related procedures After Pruning (like shuffling masks)
+   ```
 
 Before running the training, experiments will be parsed...
 

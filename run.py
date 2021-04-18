@@ -12,6 +12,8 @@ arg_parser.add_argument("--no-memory-growth", action='store_true',
                         help="Disables memory growth")
 arg_parser.add_argument("--gpu", default=None, type=str,
                         help="Which GPUs to use during training, e.g. 0,1,3 or 1")
+arg_parser.add_argument("--pick", "--cherrypick-experiments", default=None, type=str,
+                        help="Run only selected experiments, e.g. 0,1,3 or 1")
 args, unknown_args = arg_parser.parse_known_args()
 
 import tensorflow as tf
@@ -47,7 +49,12 @@ ds = datasets.get_dataset(default_config.dataset, default_config.precision)
 
 # %%
 
-for exp in experiment_queue:
+for exp_idx, exp in enumerate(experiment_queue):
+    if args.pick is not None:
+        if str(exp_idx) not in args.pick:
+            cprint(f"SKIPPING EXPERIMENT {exp_idx}")
+            continue
+
     cprint("EXPERIMENT:")
     pprint.pprint(exp)
     print()

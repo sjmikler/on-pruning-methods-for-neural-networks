@@ -37,7 +37,7 @@ model_config:
 
 # EXPERIMENTS:
 ---
-name: WRN16_8_full_with_2.5_preactivateF
+name: WRN16_8_80k_32k
 num_iterations: 80000
 
 model: WRN
@@ -47,9 +47,12 @@ model_config:
     input_shape: [32, 32, 3]
     n_classes: 10
     l2_reg: 2.5e-4
-    preactivate_blocks: false
+optimizer_config:
+    learning_rate: tf.optimizers.schedules.PiecewiseConstantDecay([32000, 48000, 64000], [0.1, 0.02, 0.004, 0.0008])
+    momentum: 0.9
+    nesterov: True
 ---
-name: WRN16_8_full_with_2.5_preactivateT
+name: WRN16_8_80k_24k
 num_iterations: 80000
 
 model: WRN
@@ -59,4 +62,37 @@ model_config:
     input_shape: [32, 32, 3]
     n_classes: 10
     l2_reg: 2.5e-4
-    preactivate_blocks: true
+optimizer_config:
+    learning_rate: tf.optimizers.schedules.PiecewiseConstantDecay([24000, 48000, 64000], [0.1, 0.02, 0.004, 0.0008])
+    momentum: 0.9
+    nesterov: True
+---
+name: WRN16_8_80k_32k_2e-4
+num_iterations: 80000
+
+model: WRN
+model_config:
+    N: 16
+    K: 8
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l2_reg: 2e-4
+optimizer_config:
+    learning_rate: tf.optimizers.schedules.PiecewiseConstantDecay([32000, 48000, 64000], [0.1, 0.02, 0.004, 0.0008])
+    momentum: 0.9
+    nesterov: True
+---
+name: WRN16_8_80k_32k_5e-4
+num_iterations: 80000
+
+model: WRN
+model_config:
+    N: 16
+    K: 8
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l2_reg: 5e-4
+optimizer_config:
+    learning_rate: tf.optimizers.schedules.PiecewiseConstantDecay([32000, 48000, 64000], [0.1, 0.02, 0.004, 0.0008])
+    momentum: 0.9
+    nesterov: True
