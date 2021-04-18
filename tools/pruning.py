@@ -267,6 +267,8 @@ def prune_by_kernel_masks(model, config, silent=False):
 def prune_GraSP(model, dataset, config, silent=False):
     """Hessian related pruning."""
 
+    raise NotImplementedError("Check if the implementation is correct!")
+
     sparsity = config.sparsity
     n_batches = config.n_batches or 1
     structure = config.structure
@@ -429,18 +431,22 @@ def apply_pruning_for_model(model):
 
 def report_density(model, detailed=False):
     nonzero = 0
-    max_nonzero = 0
+    kernels = 0
+    biases = 0
     for w in model.weights:
         if 'kernel_mask' in w.name:
             km = w.numpy()
-            max_nonzero += km.size
+            kernels += km.size
             nonzero += (km != 0).sum()
             if detailed:
                 cprint(f"density of {w.name:>16}: {km.sum() / km.size:6.4f}")
-
-    if max_nonzero == 0:
+        if 'bias' in w.name or 'beta' in w.name:
+            biases += w.shape.num_elements()
+    if detailed:
+        cprint(f"Biases make {biases / (kernels + biases) * 100:6.3f}% of weights!")
+    if kernels == 0:
         return 1.0
-    return nonzero / max_nonzero
+    return nonzero / kernels
 
 
 # %%
@@ -457,7 +463,7 @@ def set_pruning_masks(model,
         model = prune_random(model=model,
                              config=pruning_config)
     elif contains_any(pruning_method.lower(), 'snip'):
-        if contains_any(pruning_method.lower(), 'pseudo_snip'):
+        if contains_any(pruning_method.lower(), 'pseudo'):
             cprint('PSUEDO SNIP PRUNING')
             model = prune_pseudo_SNIP(model=model,
                                       config=pruning_config,

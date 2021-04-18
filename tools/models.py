@@ -1,3 +1,5 @@
+from collections.abc import Iterable
+
 import tensorflow as tf
 
 from tools.layers import MaskedConv, MaskedDense
@@ -5,6 +7,8 @@ from tools.utils import cprint
 
 DENSE_LAYER = MaskedDense
 CONV_LAYER = MaskedConv
+# DENSE_LAYER = tf.keras.layers.Dense
+# CONV_LAYER = tf.keras.layers.Conv2D
 
 
 class GemPool(tf.keras.layers.Layer):
@@ -48,18 +52,15 @@ def classifier(flow,
         maxp = tf.keras.layers.GlobalMaxPool2D()(flow)
         avgp = tf.keras.layers.GlobalAvgPool2D()(flow)
         flow = tf.keras.layers.Concatenate()([maxp, avgp])
-
     if pooling == 'avgpool':
         flow = tf.keras.layers.GlobalAvgPool2D()(flow)
-
     if pooling == 'maxpool':
         flow = tf.keras.layers.GlobalMaxPool2D()(flow)
-
     if pooling == 'gempool':
         flow = GemPool(initial_value=3.0)(flow)
 
     # multiple-head version
-    if hasattr(n_classes, '__len__'):
+    if isinstance(n_classes, Iterable):
         outs = [
             DENSE_LAYER(n_class,
                         bias_regularizer=bias_regularizer,
@@ -162,10 +163,9 @@ def ResNet(
         dropout=0,
         bn_ends_block=False,
         regularize_bias=True,
-        remove_first_relu=False,  # not tested
-        pyramid=False,  # linear PyramidNet
         head=(
-                ('conv', 16, 3, 1),),
+                ('conv', 16, 3, 1),
+        ),
         **kwargs
 ):
     if version:
@@ -199,21 +199,14 @@ def ResNet(
         else:
             return x
 
-    def shortcut_pyramid(x, filters, strides):
-        if strides != 1:
-            x = tf.keras.layers.AvgPool2D(strides)(x)
-
-        to_pad = filters - x.shape[-1]
-        return tf.pad(x, ((0, 0), (0, 0), (0, 0), (0, to_pad))) if to_pad else x
-
     def bn_relu(x, remove_relu=False):
         x = tf.keras.layers.BatchNormalization(beta_regularizer=bias_regularizer,
                                                gamma_regularizer=bias_regularizer)(x)
         return x if remove_relu else activation(x)
 
-    def simple_block(flow, filters, strides):
-        if preactivate_block:
-            flow = bn_relu(flow, remove_first_relu)
+    def simple_block(flow, filters, strides, preactivate):
+        if preactivate:
+            flow = bn_relu(flow)
 
         flow = conv(filters, 3, strides=strides)(flow)
         flow = bn_relu(flow)
@@ -226,9 +219,9 @@ def ResNet(
             flow = bn_relu(flow, remove_relu=True)
         return flow
 
-    def bootleneck_block(flow, filters, strides):
-        if preactivate_block:
-            flow = bn_relu(flow, remove_first_relu)
+    def bootleneck_block(flow, filters, strides, preactivate):
+        if preactivate:
+            flow = bn_relu(flow)
 
         flow = conv(filters // 4, 1)(flow)
         flow = conv(filters // 4, 3, strides=strides)(bn_relu(flow))
@@ -247,7 +240,6 @@ def ResNet(
     flow = inputs
 
     # BUILDING HEAD OF THE NETWORK
-
     for name, *args in head:
         if name == 'conv':
             bias = True if 'bias' in args else False
@@ -260,38 +252,23 @@ def ResNet(
             flow = tf.nn.relu(flow)
 
     # BUILD THE RESIDUAL BLOCKS
-    layer_idx, num_layers = 0, sum(group_sizes)
     for group_size, width, stride in zip(group_sizes, features, strides):
-        flow = bn_relu(flow, remove_first_relu)
-        preactivate_block = False
-
         for _ in range(group_size):
-            layer_idx += 1
-
-            if pyramid:
-                if len(features) > 2:
-                    cprint(f"PyramidNet ignored intermediate width in {features}")
-
-                shortcut = shortcut_pyramid
-                width = int(
-                    (features[-1] - features[0]) * layer_idx / num_layers + features[0])
-
-            residual = block(flow, width, stride)
+            residual = block(flow, width, stride, preactivate=True)
             flow = residual + shortcut(flow, width, stride)
-            preactivate_block = True
             stride = 1
 
     # BUILDING THE CLASSIFIER
     flow = bn_relu(flow, remove_relu=True)
-    flow = tf.nn.relu(flow)
+    flow = tf.nn.relu(flow)  # use relu here even if different activation is choosen
 
-    outs = classifier(flow,
-                      n_classes,
-                      regularizer=regularizer,
-                      bias_regularizer=bias_regularizer,
-                      initializer=initializer,
-                      pooling=final_pooling)
-    model = tf.keras.Model(inputs=inputs, outputs=outs)
+    outputs = classifier(flow,
+                         n_classes,
+                         regularizer=regularizer,
+                         bias_regularizer=bias_regularizer,
+                         initializer=initializer,
+                         pooling=final_pooling)
+    model = tf.keras.Model(inputs=inputs, outputs=outputs)
     return model
 
 

@@ -14,17 +14,19 @@ checkpoint: eval f"{directory}/{name}/{RND_IDX}/{REP}.h5"
 yaml_logdir: eval f"{directory}/{name}/{RND_IDX}/{REP}.yaml"
 
 dataset: cifar10 # mnist|cifar10 available
+num_iterations: 200
+steps_per_epoch: 2000
+
+optimizer: tf.optimizers.SGD
+optimizer_config:
+    learning_rate: tf.optimizers.schedules.PiecewiseConstantDecay([32000, 48000, 64000], [0.1, 0.02, 0.004, 0.0008])
+    momentum: 0.9
+    nesterov: True
 
 pruning: none # none|random|l1|snip|grasp + shuffle weight|layer|mask
 pruning_config:
     structure: false # true for classic structural pruning | int N for enforcing N groups
     sparsity: 0
-
-optimizer: tf.keras.optimizers.SGD
-optimizer_config:
-    learning_rate: tf.keras.optimizers.schedules.PiecewiseConstantDecay([32000, 48000, 64000], [0.1, 0.02, 0.004, 0.0008])
-    momentum: 0.9
-    nesterov: True
 
 model: lenet
 model_config:
@@ -33,53 +35,15 @@ model_config:
     n_classes: 10
     l2_reg: 1e-4
 
-num_iterations: 200
-steps_per_epoch: 2000
-
 # EXPERIMENTS:
 ---
-name: WRN16_8_2k
-
-model: WRN
-model_config:
-    N: 16
-    K: 8
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l2_reg: 1e-4
-
-num_iterations: 2000
----
-name: WRN16_8_80k
-
-checkpointAP: eval E[-1].checkpoint
-
-model: WRN
-model_config:
-    N: 16
-    K: 8
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l2_reg: 1e-4
-
-num_iterations: 80000
----
-name: WRN16_8_pruned_after_training
-
-checkpointBP: eval E[-1].checkpoint
-checkpointAP: eval E[0].checkpoint
-
-model: WRN
-model_config:
-    N: 16
-    K: 8
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l2_reg: 1e-4
-
-pruning: magnitude
-pruning_config:
-    sparsity: 0.95
-
+name: WRN16_8_full_with_2.5l2_v2
 num_iterations: 80000
 
+model: WRN
+model_config:
+    N: 16
+    K: 8
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l2_reg: 2.5e-4

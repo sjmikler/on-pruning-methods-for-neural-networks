@@ -1,6 +1,7 @@
 import argparse
 import pprint
 import time
+from copy import deepcopy
 
 from tools.utils import cprint, ddict, logging_from_history
 
@@ -27,18 +28,18 @@ if not args.no_memory_growth:
 
 default_config, experiment_queue = parser.load_from_yaml(yaml_path="experiment.yaml",
                                                          unknown_args=unknown_args)
-
 utils.set_precision(default_config.precision)
 
 
 # %%
 
 def get_optimizer(optimizer, optimizer_config):
+    config = deepcopy(optimizer_config)
     optimizer = eval(optimizer, None, {})  # string -> optimizer
 
-    for k, v in optimizer_config.items():
-        optimizer_config[k] = eval(f"{optimizer_config[k]}", None, {})
-    return optimizer(**optimizer_config)
+    for k, v in config.items():
+        config[k] = eval(f"{config[k]}", None, {})
+    return optimizer(**config)
 
 
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
