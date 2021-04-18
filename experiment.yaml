@@ -6,7 +6,7 @@ name: skip # with name=skip, training will be skipped
 precision: 16 # 16 for mixed precision or anything else for default 32 bit
 queue: null # specify path for queue file, if null keeps queue unaccessible in memory
 
-directory: temp/21.04.17_tests
+directory: temp/21.04.19_tests
 full_path: eval f"{directory}/{name}/{RND_IDX}/{REP}" # REP is a value from [0, REPEAT-1] interval
 checkpoint: eval f"{directory}/{name}/{RND_IDX}/{REP}.h5" # RND_IDX is automatically assigned in `run.py`
 yaml_logdir: eval f"{directory}/{name}/{RND_IDX}/{REP}.yaml"
@@ -40,8 +40,27 @@ pruning_config:
 
 # EXPERIMENTS:
 ---
-name: WRN16_8_reg2e-4_symmetric
+name: WRN28_2
+
 num_iterations: 80000
+dataset_config:
+    train_batch_size: 128
+    valid_batch_size: 512
+
+model: WRN
+model_config:
+    N: 28
+    K: 2
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l2_reg: 2e-4
+---
+name: WRN16_8
+
+num_iterations: 80000
+dataset_config:
+    train_batch_size: 128
+    valid_batch_size: 512
 
 model: WRN
 model_config:
@@ -51,17 +70,31 @@ model_config:
     n_classes: 10
     l2_reg: 2e-4
 ---
-name: WRN16_8reg2e-4_reflect
+name: WRN16_10
 
 num_iterations: 80000
 dataset_config:
     train_batch_size: 128
     valid_batch_size: 512
-    padding: reflect
 
 model: WRN
 model_config:
     N: 16
+    K: 10
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l2_reg: 2e-4
+---
+name: WRN22_8
+
+num_iterations: 80000
+dataset_config:
+    train_batch_size: 128
+    valid_batch_size: 512
+
+model: WRN
+model_config:
+    N: 22
     K: 8
     input_shape: [32, 32, 3]
     n_classes: 10
