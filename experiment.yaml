@@ -18,7 +18,7 @@ dataset: cifar10 # mnist|cifar10 available
 dataset_config:
     train_batch_size: 128
     valid_batch_size: 512
-    padding: symmetric
+    padding: reflect
 
 optimizer: tf.optimizers.SGD
 optimizer_config:
