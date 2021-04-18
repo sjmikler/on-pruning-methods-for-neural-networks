@@ -1,17 +1,18 @@
-# DEFAULTS:
-REPEAT: 1
-GLOBAL_REPEAT: 2
+# DEFAULT CONFIG:
+
+REPEAT: 1  # e.g. 1, 1, 2, 2
+GLOBAL_REPEAT: 1  # e.g. 1, 2, 1, 2
 name: skip # with name=skip, training will be skipped
 precision: 16 # 16 for mixed precision or anything else for default 32 bit
-queue: null # specify path for queue file, if null keeps queue in memory
+queue: null # specify path for queue file, if null keeps queue unaccessible in memory
 
 directory: temp/21.04.17_tests
-
-# REP is a value from [0, REPEAT-1] interval
-# RND_IDX is automatically assigned in `run.py`
-full_path: eval f"{directory}/{name}/{RND_IDX}/{REP}"
-checkpoint: eval f"{directory}/{name}/{RND_IDX}/{REP}.h5"
+full_path: eval f"{directory}/{name}/{RND_IDX}/{REP}" # REP is a value from [0, REPEAT-1] interval
+checkpoint: eval f"{directory}/{name}/{RND_IDX}/{REP}.h5" # RND_IDX is automatically assigned in `run.py`
 yaml_logdir: eval f"{directory}/{name}/{RND_IDX}/{REP}.yaml"
+
+num_iterations: 200
+steps_per_epoch: 2000
 
 dataset: cifar10 # mnist|cifar10 available
 dataset_config:
@@ -19,19 +20,11 @@ dataset_config:
     valid_batch_size: 512
     padding: symmetric
 
-num_iterations: 200
-steps_per_epoch: 2000
-
 optimizer: tf.optimizers.SGD
 optimizer_config:
     learning_rate: tf.optimizers.schedules.PiecewiseConstantDecay([32000, 48000, 64000], [0.1, 0.02, 0.004, 0.0008])
     momentum: 0.9
     nesterov: True
-
-pruning: none # none|random|l1|snip|grasp + shuffle weight|layer|mask
-pruning_config:
-    structure: false # true for classic structural pruning | int N for enforcing N groups
-    sparsity: 0
 
 model: lenet
 model_config:
@@ -40,15 +33,36 @@ model_config:
     n_classes: 10
     l2_reg: 1e-4
 
+pruning: none # none|random|l1|snip|grasp
+pruning_config:
+    structure: false # true for classic structural pruning OR int N for enforcing N groups OR false
+    sparsity: 0
+
 # EXPERIMENTS:
 ---
-name: WRN28_10_reg2.5e-4_symmetric
+name: WRN16_8_reg2e-4_symmetric
 num_iterations: 80000
 
 model: WRN
 model_config:
-    N: 28
-    K: 10
+    N: 16
+    K: 8
     input_shape: [32, 32, 3]
     n_classes: 10
-    l2_reg: 2.5e-4
+    l2_reg: 2e-4
+---
+name: WRN16_8reg2e-4_reflect
+
+num_iterations: 80000
+dataset_config:
+    train_batch_size: 128
+    valid_batch_size: 512
+    padding: reflect
+
+model: WRN
+model_config:
+    N: 16
+    K: 8
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l2_reg: 2e-4
