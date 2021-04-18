@@ -7,6 +7,8 @@ from tools.utils import cprint
 
 DENSE_LAYER = MaskedDense
 CONV_LAYER = MaskedConv
+
+
 # DENSE_LAYER = tf.keras.layers.Dense
 # CONV_LAYER = tf.keras.layers.Conv2D
 
@@ -88,8 +90,7 @@ def VGG(input_shape,
         DENSE_LAYER=DENSE_LAYER,
         CONV_LAYER=CONV_LAYER,
         **kwargs):
-    if kwargs:
-        cprint(f"VGG: unknown parameters: {kwargs.keys()}")
+    cprint(f"VGG: unknown parameters: {list(kwargs)}")
     if version:
         if version == 11:
             group_sizes = (1, 1, 2, 2, 2)
@@ -161,7 +162,7 @@ def ResNet(
         activation='tf.nn.relu',
         final_pooling='avgpool',
         dropout=0,
-        bn_ends_block=False,
+        preactivate_blocks=True,
         regularize_bias=True,
         head=(
                 ('conv', 16, 3, 1),
@@ -170,8 +171,7 @@ def ResNet(
 ):
     if version:
         raise KeyError("Versions not defined yet!")
-    if kwargs:
-        cprint(f"ResNet: unknown parameters: {kwargs.keys()}")
+    cprint(f"ResNet: unknown parameters: {list(kwargs)}")
 
     activation = eval(activation)
     regularizer = tf.keras.regularizers.l1_l2(l1_reg,
@@ -214,9 +214,6 @@ def ResNet(
         if dropout:
             flow = tf.keras.layers.Dropout(dropout)(flow)
         flow = conv(filters, 3, strides=1)(flow)
-
-        if bn_ends_block:
-            flow = bn_relu(flow, remove_relu=True)
         return flow
 
     def bootleneck_block(flow, filters, strides, preactivate):
@@ -226,9 +223,6 @@ def ResNet(
         flow = conv(filters // 4, 1)(flow)
         flow = conv(filters // 4, 3, strides=strides)(bn_relu(flow))
         flow = conv(filters, 1)(bn_relu(flow))
-
-        if bn_ends_block:
-            flow = bn_relu(flow, remove_relu=True)
         return flow
 
     if bootleneck:
@@ -254,7 +248,10 @@ def ResNet(
     # BUILD THE RESIDUAL BLOCKS
     for group_size, width, stride in zip(group_sizes, features, strides):
         for _ in range(group_size):
-            residual = block(flow, width, stride, preactivate=True)
+            if not preactivate_blocks:
+                flow = activation(flow)
+
+            residual = block(flow, width, stride, preactivate=preactivate_blocks)
             flow = residual + shortcut(flow, width, stride)
             stride = 1
 
@@ -283,7 +280,6 @@ def WRN(N, K, *args, **kwargs) -> tf.keras.Model:
         * activation='tf.nn.relu',
         * final_pooling='avgpool',
         * dropout=0,
-        * bn_ends_block=False,
         * regularize_bias=True,
         * remove_first_relu=False,  # not tested
         * pyramid=False,  # linear PyramidNet
@@ -305,8 +301,7 @@ def LeNet(input_shape,
           layer_sizes=(300, 100),
           initializer='glorot_uniform',
           **kwargs):
-    if kwargs:
-        cprint(f"LeNet: unknown parameters: {kwargs.keys()}")
+    cprint(f"LeNet: unknown parameters: {list(kwargs)}")
     regularizer = tf.keras.regularizers.l1_l2(l1_reg,
                                               l2_reg) if l2_reg or l1_reg else None
     initializer = initializer
@@ -334,8 +329,7 @@ def LeNetConv(input_shape,
               l2_reg=0,
               initializer='glorot_uniform',
               **kwargs):
-    if kwargs:
-        cprint(f"Unknown parameters: {kwargs}")
+    cprint(f"Unknown parameters: {list(kwargs)}")
     regularizer = tf.keras.regularizers.l1_l2(l1_reg,
                                               l2_reg) if l2_reg or l1_reg else None
     initializer = initializer

@@ -1,6 +1,6 @@
 # DEFAULTS:
 REPEAT: 1
-GLOBAL_REPEAT: 1
+GLOBAL_REPEAT: 2
 name: skip # with name=skip, training will be skipped
 precision: 16 # 16 for mixed precision or anything else for default 32 bit
 queue: null # specify path for queue file, if null keeps queue in memory
@@ -37,7 +37,7 @@ model_config:
 
 # EXPERIMENTS:
 ---
-name: WRN16_8_full_with_2.5l2_v2
+name: WRN16_8_full_with_2.5_preactivateF
 num_iterations: 80000
 
 model: WRN
@@ -47,3 +47,16 @@ model_config:
     input_shape: [32, 32, 3]
     n_classes: 10
     l2_reg: 2.5e-4
+    preactivate_blocks: false
+---
+name: WRN16_8_full_with_2.5_preactivateT
+num_iterations: 80000
+
+model: WRN
+model_config:
+    N: 16
+    K: 8
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l2_reg: 2.5e-4
+    preactivate_blocks: true

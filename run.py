@@ -114,7 +114,7 @@ for exp in experiment_queue:
             model.save_weights(exp.checkpoint, save_format="h5")
 
         except KeyboardInterrupt:
-            cprint("SKIPPING EXPERIMENT, WAITING 2 SECONDS BEFORE RESUMING...")
+            cprint("\n\nSKIPPING EXPERIMENT, WAITING 2 SECONDS BEFORE RESUMING...")
             time.sleep(2)
 
 if isinstance(experiment_queue, parser.YamlExperimentQueue):
