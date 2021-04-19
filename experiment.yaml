@@ -41,11 +41,7 @@ pruning_config:
 # EXPERIMENTS:
 ---
 name: WRN28_2
-
 num_iterations: 80000
-dataset_config:
-    train_batch_size: 128
-    valid_batch_size: 512
 
 model: WRN
 model_config:
@@ -56,11 +52,7 @@ model_config:
     l2_reg: 2e-4
 ---
 name: WRN16_8
-
 num_iterations: 80000
-dataset_config:
-    train_batch_size: 128
-    valid_batch_size: 512
 
 model: WRN
 model_config:
@@ -71,11 +63,7 @@ model_config:
     l2_reg: 2e-4
 ---
 name: WRN16_10
-
 num_iterations: 80000
-dataset_config:
-    train_batch_size: 128
-    valid_batch_size: 512
 
 model: WRN
 model_config:
@@ -86,11 +74,7 @@ model_config:
     l2_reg: 2e-4
 ---
 name: WRN22_8
-
 num_iterations: 80000
-dataset_config:
-    train_batch_size: 128
-    valid_batch_size: 512
 
 model: WRN
 model_config:
