@@ -1,7 +1,8 @@
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from tools import models, pruning_toolkit, utils, datasets, custom_layers, pruning
+from tools import models, utils, datasets, pruning
+from experimental import pruning_toolkit
 
 ds = datasets.cifar10(repeat_train=False, shuffle_train=False)
 # model = models.VGG((32, 32, 3), n_classes=10, version=19)

@@ -53,21 +53,17 @@ def structurize_conv(matrix, n_clusters):
     return new_matrix
 
 
-def reset_weights_to_checkpoint(model, ckp=None, skip_keyword=None):
-    """Reset network in place, has an ability to skip keybword."""
-
-    temp = tf.keras.models.clone_model(model)
-    if ckp:
-        temp.load_weights(ckp)
-    skipped = 0
-    for w1, w2 in zip(model.weights, temp.weights):
-        if skip_keyword in w1.name:
-            skipped += 1
-            continue
-        w1.assign(w2)
-    cprint(
-        f"INFO RESET: Skipped {skipped} layers with keyword {skip_keyword}!")
-    return skipped
+def structurize_anything(structure, saliences):
+    if structure is True:
+        cprint(f"NEURON-WISE STRUCTURING!")
+        saliences = l1_saliences_over_channel(saliences)
+    elif isinstance(structure, int):
+        cprint(f"ENFORCING {structure} GROUPS!")
+        saliences = {
+            key: structurize_matrix(value, structure) for key, value in
+            saliences.items()
+        }
+    return saliences
 
 
 # %%
@@ -237,18 +233,6 @@ def l1_saliences_over_channel(saliences):
 
 # %%
 
-def structurize_anything(structure, saliences):
-    if structure is True:
-        cprint(f"NEURON-WISE STRUCTURING!")
-        saliences = l1_saliences_over_channel(saliences)
-    elif isinstance(structure, int):
-        cprint(f"ENFORCING {structure} GROUPS!")
-        saliences = {
-            key: structurize_matrix(value, structure) for key, value in
-            saliences.items()
-        }
-    return saliences
-
 
 def prune_by_kernel_masks(model, config, silent=False):
     sparsity = config.sparsity
@@ -373,6 +357,9 @@ def prune_IMP_complete(model, config):
     return model
 
 
+# %%
+
+
 def shuffle_masks(model):
     """Keep weights intact, shuffle masks inside layers."""
 
@@ -423,12 +410,7 @@ def shuffle_layers(model):
     return model
 
 
-def apply_pruning_for_model(model):
-    """Set masked weights to 0."""
-
-    for layer in model.layers:
-        if hasattr(layer, "apply_pruning_mask"):
-            layer.apply_pruning_mask()
+# %%
 
 
 def report_density(model, detailed=False):
@@ -515,6 +497,14 @@ def set_pruning_masks(model,
     return model
 
 
+def apply_pruning_for_model(model):
+    """Set masked weights to 0."""
+
+    for layer in model.layers:
+        if hasattr(layer, "apply_pruning_mask"):
+            layer.apply_pruning_mask()
+
+
 def apply_pruning_masks(model, pruning_method):
     """Wrapper for `apply_pruning_for_model`"""
 
@@ -576,4 +566,49 @@ def globally_enable_pruning():
         layer.apply_pruning_mask = apply_pruning_mask
     cprint("PRUNING IS ENABLED GLOBALLY! LAYERS HAVE BEEN REPLACED...")
 
+
 # %%
+
+def reset_weights_to_checkpoint(model, ckp=None, skip_keyword=None):
+    """Reset network in place, has an ability to skip keybword."""
+
+    temp = tf.keras.models.clone_model(model)
+    if ckp:
+        temp.load_weights(ckp)
+    skipped = 0
+    for w1, w2 in zip(model.weights, temp.weights):
+        if skip_keyword in w1.name:
+            skipped += 1
+            continue
+        w1.assign(w2)
+    cprint(
+        f"INFO RESET: Skipped {skipped} layers with keyword {skip_keyword}!")
+    return skipped
+
+
+def get_kernel_masks(model):
+    return [l.kernel_mask for l in model.layers if hasattr(l, 'kernel_mask')]
+
+
+def set_kernel_masks_values_on_model(model, values):
+    for i, kernel in enumerate(get_kernel_masks(model)):
+        if isinstance(values, int) or isinstance(values, float):
+            mask = np.ones_like(kernel.numpy()) * values
+        else:
+            mask = values[i]
+        kernel.assign(mask)
+
+
+def set_kernel_masks_values(masks, values):
+    if isinstance(values, int) or isinstance(values, float):
+        for mask in masks:
+            mask.assign(np.ones_like(mask.numpy()) * values)
+    else:
+        for mask, value in zip(masks, values):
+            mask.assign(value)
+
+
+def set_kernel_masks_object(model, masks):
+    layers = (l for l in model.layers if hasattr(l, 'kernel_mask'))
+    for l, km in zip(layers, masks):
+        l.kernel_mask = km

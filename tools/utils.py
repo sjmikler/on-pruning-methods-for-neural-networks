@@ -22,6 +22,7 @@ class ddict(dict):
 
 
 def unddict(d):
+    """Recursivly transform ddicts into dicts"""
     d = deepcopy(d)
     for k, v in d.items():
         if isinstance(v, dict):
@@ -116,3 +117,59 @@ def get_optimizer(optimizer, optimizer_config):
     for k, v in config.items():
         config[k] = eval(f"{config[k]}")
     return optimizer(**config)
+
+
+def get_kernels(model):
+    return [l.kernel for l in model.layers if hasattr(l, 'kernel')]
+
+
+def set_all_weights_from_model(model, source_model):
+    """Warning if a pair doesn't match."""
+
+    for w1, w2 in zip(model.weights, source_model.weights):
+        if w1.shape == w2.shape:
+            w1.assign(w2)
+        else:
+            print(f"WARNING: Skipping {w1.name}: {w1.shape} != {w2.shape}")
+
+
+def clone_model(model):
+    """tf.keras.models.clone_model + toolkit.set_all_weights_from_model"""
+
+    new_model = tf.keras.models.clone_model(model)
+    set_all_weights_from_model(new_model, model)
+    return new_model
+
+
+def reset_weights_to_checkpoint(model, ckp, skip_keyword=None):
+    """Resets inplace. Skips if `skip_keyboard in weight.name`."""
+
+    temp = tf.keras.models.clone_model(model)
+    temp.load_weights(ckp)
+    for w1, w2 in zip(model.weights, temp.weights):
+        if skip_keyword in w1.name:
+            continue
+        w1.assign(w2)
+
+
+def clip_many(values, clip_at, clip_from=None, inplace=False):
+    """Clips a list of tf or np arrays. Returns tf arrays."""
+    import tensorflow as tf
+
+    if clip_from is None:
+        clip_from = -clip_at
+
+    if inplace:
+        for v in values:
+            v.assign(tf.clip_by_value(v, clip_from, clip_at))
+    else:
+        r = []
+        for v in values:
+            r.append(tf.clip_by_value(v, clip_from, clip_at))
+        return r
+
+
+def concatenate_flattened(arrays):
+    import numpy as np
+    return np.concatenate([x.flatten() if isinstance(x, np.ndarray)
+                           else x.numpy().flatten() for x in arrays], axis=0)

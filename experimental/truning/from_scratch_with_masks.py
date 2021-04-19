@@ -2,7 +2,7 @@
 
 import tqdm
 import time
-from tools.pruning_toolkit import *
+from experimental.pruning_toolkit import *
 import tensorflow as tf
 from tools import models, datasets, utils
 import tensorflow.keras.mixed_precision.experimental as mixed_precision

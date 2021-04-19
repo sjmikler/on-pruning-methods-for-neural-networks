@@ -36,13 +36,18 @@ model_config:
 
 pruning: none # none|random|l1|snip|grasp
 pruning_config:
-    structure: false # true for classic structural pruning OR int N for enforcing N groups OR false
     sparsity: 0
+    structure: false # true for classic structural pruning OR int N for enforcing N groups OR false
 
 # EXPERIMENTS:
 ---
 name: WRN28_2
 steps: 80000
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.9
+    structure: false
 
 model: WRN
 model_config:

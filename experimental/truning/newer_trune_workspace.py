@@ -2,7 +2,7 @@
 
 import tqdm
 import time
-from tools.pruning_toolkit import *
+from experimental.pruning_toolkit import *
 import tensorflow as tf
 from copy import deepcopy
 from tools import models, datasets, utils

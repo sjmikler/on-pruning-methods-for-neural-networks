@@ -13,7 +13,7 @@ from sklearn.utils import shuffle
 from itertools import islice
 from tools.utils import set_memory_growth
 
-from tools import datasets, custom_layers, models, trune
+from tools import datasets, layers, models, trune
 from tools.pruning import apply_pruning_for_model, get_pruning_mask, report_density
 import tensorflow_addons as tfa
 

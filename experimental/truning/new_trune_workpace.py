@@ -192,7 +192,7 @@ def report_average_mask(model, detailed=False, mask_activation=MASK_ACTIVATION):
 #
 #     f1_density = np.mean(m >= thr[idx])
 #     return f1_scores[idx], prc[idx], rec[idx], thr[idx], f1_density
-from tools.pruning_toolkit import compare_masks
+from experimental.pruning_toolkit import compare_masks
 
 
 def get_kernel_masks(model):

@@ -9,7 +9,7 @@ File `experiment.yaml` defines entire experiment. Its first element is always **
 3. `REP`: is added by `run.py` and is a repetition index in range `[0, REPEAT-1]`
 4. `RND_IDX`: is added by `run.py` and can be used to uniquely identify an experiment
 
-Modules should generally use the following arguments:
+Modules should generally use the following parameters:
 
 * `steps`: total number of steps in the training
 * `steps_per_epoch`

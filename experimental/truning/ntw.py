@@ -5,7 +5,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
-from tools import models, datasets, utils, pruning_toolkit
+from tools import models, datasets, utils
+from experimental import pruning_toolkit
 
 utils.set_memory_growth()
 utils.set_precision(16)
