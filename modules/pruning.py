@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from tools import datasets, models, pruning
+from tools import datasets, models
 from tools.utils import contains_any, cprint, get_optimizer, logging_from_history
 
 
@@ -36,8 +36,8 @@ def main(exp):
         model.load_weights(exp.checkpointBP)
         cprint(f"LOADED BEFORE PRUNING {exp.checkpointBP}")
 
-    pruning.globally_enable_pruning()
-    model = pruning.set_pruning_masks(
+    globally_enable_pruning()
+    model = set_pruning_masks(
         model=model,
         pruning_method=exp.pruning,
         pruning_config=exp.pruning_config,
@@ -51,13 +51,13 @@ def main(exp):
             ckp = None
         else:
             ckp = exp.checkpointAP
-        num_masks = pruning.reset_weights_to_checkpoint(model, ckp=ckp,
-                                                        skip_keyword='kernel_mask')
+        num_masks = reset_weights_to_checkpoint(model, ckp=ckp,
+                                                skip_keyword='kernel_mask')
         cprint(
             f"LOADED AFTER PRUNING {exp.checkpointAP}, but keeping {num_masks} masks!")
 
     # apply pruning from previously calculated masks
-    pruning.apply_pruning_masks(model, pruning_method=exp.pruning)
+    apply_pruning_masks(model, pruning_method=exp.pruning)
 
     steps_per_epoch = min(exp.steps, exp.steps_per_epoch)
     history = model.fit(
@@ -67,7 +67,7 @@ def main(exp):
         epochs=int(exp.steps / steps_per_epoch),
     )
     info = exp.copy()
-    info["FINAL_DENSITY"] = pruning.report_density(model)
+    info["FINAL_DENSITY"] = report_density(model)
     cprint("FINAL DENSITY:", info["FINAL_DENSITY"])
     logging_from_history(history.history, info=info)
     model.save_weights(exp.checkpoint, save_format="h5")
