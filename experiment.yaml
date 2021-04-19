@@ -5,13 +5,14 @@ GLOBAL_REPEAT: 1  # e.g. 1, 2, 1, 2
 name: skip # with name=skip, training will be skipped
 precision: 16 # 16 for mixed precision or anything else for default 32 bit
 queue: null # specify path for queue file, if null keeps queue unaccessible in memory
+module: modules.pruning
 
 directory: temp/21.04.19_tests
 full_path: eval f"{directory}/{name}/{RND_IDX}/{REP}" # REP is a value from [0, REPEAT-1] interval
 checkpoint: eval f"{directory}/{name}/{RND_IDX}/{REP}.h5" # RND_IDX is automatically assigned in `run.py`
 yaml_logdir: eval f"{directory}/{name}/{RND_IDX}/{REP}.yaml"
 
-num_iterations: 200
+steps: 200
 steps_per_epoch: 2000
 
 dataset: cifar10 # mnist|cifar10 available
@@ -41,45 +42,12 @@ pruning_config:
 # EXPERIMENTS:
 ---
 name: WRN28_2
-num_iterations: 80000
+steps: 80000
 
 model: WRN
 model_config:
     N: 28
     K: 2
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l2_reg: 2e-4
----
-name: WRN16_8
-num_iterations: 80000
-
-model: WRN
-model_config:
-    N: 16
-    K: 8
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l2_reg: 2e-4
----
-name: WRN16_10
-num_iterations: 80000
-
-model: WRN
-model_config:
-    N: 16
-    K: 10
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l2_reg: 2e-4
----
-name: WRN22_8
-num_iterations: 80000
-
-model: WRN
-model_config:
-    N: 22
-    K: 8
     input_shape: [32, 32, 3]
     n_classes: 10
     l2_reg: 2e-4

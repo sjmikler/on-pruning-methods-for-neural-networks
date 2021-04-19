@@ -1,46 +1,47 @@
-## Defining experiments
+# Defining experiments
 
-File `experiments.yaml` defines experiments. Its first element is always **global
-config** which contains default values for experiments. If a settings repeats between **
-default config** and experiments, experiments have priority.
+File `experiment.yaml` defines entire experiment. Its first element is always **default config** which contains default values for later experiments. If a settings repeats between **default config** and experiments, experiments have the priority.
 
 **Special names**
 
-1. `REPEAT`: copies a single experiment many times before fancy parsing, can be used for
-   iterative trainings
-2. `GLOBAL_REPEAT`: performs all listed experiments many times (can be used to repeat
-   iterative trainings)
+1. `REPEAT`: copies a single experiment many times **before** fancy parsing, can be used for iterative trainings. If used on two experiments: `1, 1, 2, 2`
+2. `GLOBAL_REPEAT`: performs all listed experiments many times. If used on two experiments: `1, 2, 1, 2`
 3. `REP`: is added by `run.py` and is a repetition index in range `[0, REPEAT-1]`
 4. `RND_IDX`: is added by `run.py` and can be used to uniquely identify an experiment
-5. `full_path`: location of `tensorboard` logs
-6. `checkpoint`: is used by `run.py` for `model.save_weights(ckp)` method
-7. `yaml_logdir`: location of shorter `.yaml` logs
 
-## Running experiments
+Modules should generally use the following arguments:
 
-Script `run.py` runs trainings specified in `experiment.yaml`. If `queue` parameter is
-specified as a valid path, the queue of the experiments will be stored on it as
-a `.yaml` file and can be modified when experiments are running. Otherwise, queue is
-stored in RAM memory and cannot be modified.
+* `steps`: total number of steps in the training
+* `steps_per_epoch`
+* `model` and `model_config`
+* `dataset` and `dataset_config`
+* `optimizer` and `optimizer_config`
+* `full_path`: location of `tensorboard` logs
+* `yaml_logdir`: location of simpler `.yaml` logs
+* `checkpoint`: location of tensorflow checkpoints
 
-1. You can use any flag, like `--sparsity=0.5` or `--precision=32` to update **global
-   config** straight from command line. Mainly intended for hardware settings,
-   like `--memory-growth=False`
-2. `steps_per_epoch` should be larger than number of batches in the dataset. Otherwise,
-   you will not use all the samples during the training
-3. `checkpointAP` is **checkpoint After Pruning** and `checkpointBP` is **checkpoint
-   Before Pruning**. You can load full checkpoint before pruning, but after pruning **
-   pruning masks from the checkpoint will be skipped**. This allows for many pruning
-   techniques
-4. If experiment is stopped with `KeyboardInterrupt`, there will be 2 second pause
-   during which `run.py` can be interrupted completely. If not interrupted completely,
-   next experiment in the queue will start instead. Interrupted experiments will not
-   leave any checkpoints
-5. If `name: skip`, training will not be performed, but values (like `sparsity: 0.0`)
-   can be used in fancy parsing. Skipped experiments will not leave any checkpoints
-6. `run.py` has more command line arguments. If an argument does not affect experiment
-   results, it is implemented as command line argument, otherwise it should be placed
-   in `experiments.yaml` file.
+**Minimal experiment**
+
+```
+REPEAT: 1
+GLOBAL_REPEAT: 1
+name: ...
+module: ...
+```
+
+But modules usually require much more parameters, e.g. as listed above.
+
+# Running experiments
+
+Script `run.py` launches trainings specified in `experiment.yaml`. If `queue` parameter is specified as a valid path, the queue of the experiments will be stored as a yaml file and can be modified when experiments are running. Otherwise, queue is stored in RAM memory and cannot be modified.
+
+1. You can use arbitrary flag with `=`, like `--queue=queue.yaml` or `--precision=32` to update **global config** straight from command line.
+
+2. If experiment is stopped with `KeyboardInterrupt`, there will be 2 second pause during which `run.py` can be interrupted completely. If not interrupted completely, next experiment in the queue will start instead. Interrupted experiments will not leave any checkpoints
+
+3. If `name: skip`, training will not be performed, but experiment parameters can be used in fancy parsing. Skipped experiments will not leave any checkpoints
+
+4. `run.py` has command line arguments. If an argument does not affect experimental results, it should be a command line argument, otherwise it should be placed in `experiments.yaml` file. Command line arguments are intended for hardware settings:
    ```
    > python run.py --help
    optional arguments:
@@ -52,38 +53,23 @@ stored in RAM memory and cannot be modified.
                            Run only selected experiments, e.g. 0,1,3 or 1
    ```
 
-7. Overview of `run.py`, what happens in order:
-   ```
-   1. Creating model
-   2. Loading checkpoint Before Pruning
-   3. Applying pruning
-   4. Loading checkpoint After Pruning (skip masks from checkpoint)
-   5. Pruning related procedures After Pruning (like shuffling masks)
-   ```
+# Python `run.py`
 
-Before running the training, experiments will be parsed...
+`run.py` is setting the machine and parsing the experiments. It is a module from `modules` directory that does all the training. Module should be specified with `experiment.yaml/module` as a parameter in **default config**. Before module starts the training, experiments will be parsed...
 
-## Fancy parsing with `eval`
+# Fancy parsing with `eval`
 
-> **WARNING**: `eval` is considered unsafe, be sure only you accessed your `experiment.yaml`
+> **WARNING**: `eval` is considered unsafe, keep your `experiment.yaml` safe
 
-All values for experiments can be specified explicitly, e.g. `sparsity: 0.9`, but there
-are some tricks to simplify longer and more complicated experiment procedures.
+All values for experiments can be specified explicitly in `experiment.yaml`, e.g. `sparsity: 0.9`, but there are some tricks to simplify longer and more complicated experiments.
 
-Fancy parsing allows you to execute python code during parsing. To do this, you need to
-type `eval` in the beginning of a parameter value. With this, you can do super cool
-tricks...
+Fancy parsing allows you to execute python code during parsing. To do this, you need to type `eval` in the beginning of a parameter value. With this, you can do super cool tricks...
 
 #### Tricks:
 
-1. `odd_name: eval '\'.join([directory, name])` will work as in Python, because eval
-   uses variable scope from current experiment and executes the code using `eval`
-   function. Will only work if both `directory` and `name` are specified in current
-   experiment before `odd_name` or are specified in default config.
+1. `odd_name: eval '\'.join([directory, name])` will work as in Python, value will be executed using `eval` function with variable scope from current experiment. Will only work if both `directory` and `name` are specified in current experiment before `odd_name` (or are specified in default config).
 
-2. `sparsity: eval 0.5 * E[-1].sparsity` will be parsed as half of the sparsity of
-   previous experiment in the queue. Before running `eval`, list `E` is added to the
-   scope which allows access to previous experiments.
+2. `sparsity: eval 0.5 * E[-1].sparsity` will be parsed as half of the `sparsity` value from the previous experiment in the queue. Before running `eval`, list `E` is added to the scope which allows access to previous experiments.
 
 3. You can access values from nested dictionaries:
 
@@ -145,14 +131,11 @@ nested:
    test: eval list1 # this won't work as list1 is one level higher
 ```
 
-This is because nested dicts have access only to variables on their level or deeper. If
-you run the code, you will see `NameError: name list1 is not defined`.
+This is because nested dicts only have access to variables on their level or deeper. If you run this experiment, you will see `NameError: name list1 is not defined`.
 
 ## Logs management
 
-Logs in `.yaml` format are saved in location passed as `experiment.yaml/yaml_logdir`.
-These contain experiment formulation and best test accuracy of a network. Following tool
-can recursively collect logs from `.yaml` files in subdirectories of `path`.
+Logs in `.yaml` format should be saved by a module in location passed as `experiment.yaml/yaml_logdir`. These should contain experiment formulation and basic information about the results, e.g. accuracy. Following tool can recursively collect logs from `.yaml` files in subdirectories of `path`.
 
 ```
 collect_logs.py 
@@ -180,6 +163,3 @@ python -m tools.collect_logs.py
 ```
 
 By default, `--dest` sets itself to the same value as `--path`.
-
-Tensorboard logs with training and validation history are saved all at once, **after**
-the training in `experiment.yaml/full_path`. 

@@ -1,17 +1,17 @@
 import tools.datasets as datasets
-import tools.layers as layers
+import tools.custom_layers as layers
 import tools.models as models
 import tools.parser as parser
 import tools.pruning as pruning
-import tools.toolkit as toolkit
+import tools.pruning_toolkit as toolkit
 import tools.utils as utils
 
 __all__ = [
     'datasets',
-    'layers',
+    'custom_layers.py',
     'models',
     'parser',
     'pruning',
-    'toolkit',
+    'pruning_toolkit.py',
     'utils'
 ]

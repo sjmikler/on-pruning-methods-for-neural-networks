@@ -2,15 +2,7 @@ from collections.abc import Iterable
 
 import tensorflow as tf
 
-from tools.layers import MaskedConv, MaskedDense
 from tools.utils import cprint
-
-DENSE_LAYER = MaskedDense
-CONV_LAYER = MaskedConv
-
-
-# DENSE_LAYER = tf.keras.layers.Dense
-# CONV_LAYER = tf.keras.layers.Conv2D
 
 
 class GemPool(tf.keras.layers.Layer):
@@ -48,7 +40,6 @@ def classifier(flow,
                bias_regularizer=None,
                initializer='glorot_uniform',
                pooling='avgpool',
-               DENSE_LAYER=DENSE_LAYER
                ):
     if pooling == 'catpool':
         maxp = tf.keras.layers.GlobalMaxPool2D()(flow)
@@ -64,17 +55,17 @@ def classifier(flow,
     # multiple-head version
     if isinstance(n_classes, Iterable):
         outs = [
-            DENSE_LAYER(n_class,
-                        bias_regularizer=bias_regularizer,
-                        kernel_regularizer=regularizer,
-                        kernel_initializer=initializer)(flow) for n_class in
+            tf.keras.layers.Dense(n_class,
+                                  bias_regularizer=bias_regularizer,
+                                  kernel_regularizer=regularizer,
+                                  kernel_initializer=initializer)(flow) for n_class in
             n_classes
         ]
     else:
-        outs = DENSE_LAYER(n_classes,
-                           bias_regularizer=bias_regularizer,
-                           kernel_regularizer=regularizer,
-                           kernel_initializer=initializer)(flow)
+        outs = tf.keras.layers.Dense(n_classes,
+                                     bias_regularizer=bias_regularizer,
+                                     kernel_regularizer=regularizer,
+                                     kernel_initializer=initializer)(flow)
     return outs
 
 
@@ -87,8 +78,6 @@ def VGG(input_shape,
         features=(64, 128, 256, 512, 512),
         pools=(2, 2, 2, 2, 2),
         regularize_bias=True,
-        DENSE_LAYER=DENSE_LAYER,
-        CONV_LAYER=CONV_LAYER,
         **kwargs):
     cprint(f"VGG: unknown parameters: {list(kwargs)}")
     if version:
@@ -109,7 +98,7 @@ def VGG(input_shape,
 
     def conv3x3(*args, **kwargs):
         # bias is not needed, since batch norm does it
-        return CONV_LAYER(
+        return tf.keras.layers.Conv2D(
             *args,
             **kwargs,
             kernel_size=3,
@@ -142,8 +131,7 @@ def VGG(input_shape,
     outs = classifier(flow,
                       n_classes,
                       regularizer=regularizer,
-                      bias_regularizer=bias_regularizer,
-                      DENSE_LAYER=DENSE_LAYER)
+                      bias_regularizer=bias_regularizer)
     model = tf.keras.Model(inputs=inputs, outputs=outs)
     return model
 
@@ -179,23 +167,23 @@ def ResNet(
     bias_regularizer = regularizer if regularize_bias else None
 
     def conv(filters, kernel_size, use_bias=False, **kwargs):
-        return CONV_LAYER(filters,
-                          kernel_size,
-                          padding='same',
-                          use_bias=use_bias,
-                          kernel_initializer=initializer,
-                          kernel_regularizer=regularizer,
-                          bias_regularizer=bias_regularizer,
-                          **kwargs)
+        return tf.keras.layers.Conv2D(filters,
+                                      kernel_size,
+                                      padding='same',
+                                      use_bias=use_bias,
+                                      kernel_initializer=initializer,
+                                      kernel_regularizer=regularizer,
+                                      bias_regularizer=bias_regularizer,
+                                      **kwargs)
 
     def shortcut(x, filters, strides):
         if x.shape[-1] != filters or strides != 1:
-            return CONV_LAYER(filters,
-                              kernel_size=1,
-                              use_bias=False,
-                              strides=strides,
-                              kernel_initializer=initializer,
-                              kernel_regularizer=regularizer)(x)
+            return tf.keras.layers.Conv2D(filters,
+                                          kernel_size=1,
+                                          use_bias=False,
+                                          strides=strides,
+                                          kernel_initializer=initializer,
+                                          kernel_regularizer=regularizer)(x)
         else:
             return x
 
@@ -307,10 +295,10 @@ def LeNet(input_shape,
     initializer = initializer
 
     def dense(*args, **kwargs):
-        return DENSE_LAYER(*args,
-                           **kwargs,
-                           kernel_initializer=initializer,
-                           kernel_regularizer=regularizer)
+        return tf.keras.layers.Dense(*args,
+                                     **kwargs,
+                                     kernel_initializer=initializer,
+                                     kernel_regularizer=regularizer)
 
     inputs = tf.keras.layers.Input(shape=input_shape)
 
@@ -335,16 +323,16 @@ def LeNetConv(input_shape,
     initializer = initializer
 
     def dense(*args, **kwargs):
-        return DENSE_LAYER(*args,
-                           **kwargs,
-                           kernel_initializer=initializer,
-                           kernel_regularizer=regularizer)
+        return tf.keras.layers.Dense(*args,
+                                     **kwargs,
+                                     kernel_initializer=initializer,
+                                     kernel_regularizer=regularizer)
 
     def conv(*args, **kwargs):
-        return CONV_LAYER(*args,
-                          **kwargs,
-                          kernel_initializer=initializer,
-                          kernel_regularizer=regularizer)
+        return tf.keras.layers.Conv2D(*args,
+                                      **kwargs,
+                                      kernel_initializer=initializer,
+                                      kernel_regularizer=regularizer)
 
     inputs = tf.keras.layers.Input(shape=input_shape)
 

@@ -105,3 +105,14 @@ def parse(code):
     scope = {}
     exec(f'x = {code}', None, scope)
     return scope['x']
+
+
+# noinspection PyUnresolvedReferences
+def get_optimizer(optimizer, optimizer_config):
+    import tensorflow as tf
+    config = deepcopy(optimizer_config)
+    optimizer = eval(optimizer)  # string -> optimizer
+
+    for k, v in config.items():
+        config[k] = eval(f"{config[k]}")
+    return optimizer(**config)

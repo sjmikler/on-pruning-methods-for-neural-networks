@@ -3,6 +3,8 @@ import tensorflow as tf
 
 from tools.utils import contains_any, cprint
 
+prunable_layers = [tf.keras.layers.Conv2D, tf.keras.layers.Dense]
+
 
 def structurize_matrix(matrix, n_clusters):
     shape = matrix.shape
@@ -437,9 +439,10 @@ def report_density(model, detailed=False):
         if 'kernel_mask' in w.name:
             km = w.numpy()
             kernels += km.size
-            nonzero += (km != 0).sum()
+            nonzero_here = (km != 0).sum()
+            nonzero += nonzero_here
             if detailed:
-                cprint(f"density of {w.name:>16}: {km.sum() / km.size:6.4f}")
+                cprint(f"density of {w.name:>16}: {nonzero_here / km.size:6.4f}")
         if 'bias' in w.name or 'beta' in w.name:
             biases += w.shape.num_elements()
     if detailed:
@@ -455,6 +458,19 @@ def set_pruning_masks(model,
                       pruning_method,
                       pruning_config,
                       dataset):
+    nmasks = 0
+    for layer in model.layers:
+        if type(layer) in prunable_layers:
+            layer.kernel_mask = layer.add_weight(
+                name=layer.kernel.name.replace('kernel', 'kernel_mask'),
+                shape=layer.kernel.shape,
+                dtype=layer.kernel.dtype,
+                initializer="ones",
+                trainable=False,
+            )
+            nmasks += layer.kernel.shape.num_elements()
+    cprint(f"ADDED {nmasks} KERNEL MASKS!")
+
     if contains_any(pruning_method.lower(), 'none', 'nothing'):
         cprint('NO PRUNING')
         return model
@@ -495,8 +511,9 @@ def set_pruning_masks(model,
     return model
 
 
-def apply_pruning_masks(model,
-                        pruning_method):
+def apply_pruning_masks(model, pruning_method):
+    """Wrapper for `apply_pruning_for_model`"""
+
     if contains_any(pruning_method.lower(), 'shuffle weight'):
         cprint("SHUFFLING WEIGHTS IN LAYERS!")
         model = shuffle_weights(model=model)
@@ -513,5 +530,50 @@ def apply_pruning_masks(model,
     density = report_density(model, detailed=True)
     cprint(f"REPORTING DENSITY: {density:7.5f}")
     return model
+
+
+# %%
+
+def set_pruning_mask(self, new_mask: np.ndarray):
+    """
+    :param new_mask: mask of the same shape as `layer.kernel`
+    :return: None
+    """
+    tf.assert_equal(new_mask.shape, self.kernel_mask.shape)
+    self.kernel_mask.assign(new_mask)
+    self.sparsity = 1 - np.mean(self.kernel_mask.numpy())
+    self.left_unpruned = np.sum(self.kernel_mask.numpy() == 1)
+
+
+def apply_pruning_mask(self):
+    self.kernel.assign(tf.multiply(self.kernel, self.kernel_mask))
+
+
+def dense_call(self, x):
+    masked_w = tf.multiply(self.kernel, self.kernel_mask)
+    result = tf.matmul(x, masked_w)
+
+    if self.use_bias:
+        result = tf.add(result, self.bias)
+    return self.activation(result)
+
+
+def conv_call(self, x):
+    masked_w = tf.multiply(self.kernel, self.kernel_mask)
+    result = tf.nn.conv2d(x, masked_w, strides=self.strides,
+                          padding=self.padding.upper())
+    if self.use_bias:
+        result = tf.add(result, self.bias)
+    return self.activation(result)
+
+
+def globally_enable_pruning():
+    tf.keras.layers.Conv2D.call = conv_call
+    tf.keras.layers.Dense.call = dense_call
+
+    for layer in prunable_layers:
+        layer.set_pruning_mask = set_pruning_mask
+        layer.apply_pruning_mask = apply_pruning_mask
+    cprint("PRUNING IS ENABLED GLOBALLY! LAYERS HAVE BEEN REPLACED...")
 
 # %%
