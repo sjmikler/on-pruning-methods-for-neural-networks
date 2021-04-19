@@ -75,7 +75,7 @@ for exp_idx, exp in enumerate(experiment_queue):
     model_func = models.get_model(exp.model)
     model_config = exp.model_config
     model = model_func(**model_config)
-    model.summary()
+    # model.summary()
 
     # load checkpointed weights before the pruning
     if hasattr(exp, 'checkpointBP'):
