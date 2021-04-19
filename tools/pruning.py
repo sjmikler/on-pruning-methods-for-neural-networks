@@ -454,10 +454,7 @@ def report_density(model, detailed=False):
 
 # %%
 
-def set_pruning_masks(model,
-                      pruning_method,
-                      pruning_config,
-                      dataset):
+def initialize_kernel_masks(model):
     nmasks = 0
     for layer in model.layers:
         if type(layer) in prunable_layers:
@@ -469,7 +466,14 @@ def set_pruning_masks(model,
                 trainable=False,
             )
             nmasks += layer.kernel.shape.num_elements()
-    cprint(f"ADDED {nmasks} KERNEL MASKS!")
+    cprint(f"CREATED {nmasks} KERNEL MASKS!")
+
+
+def set_pruning_masks(model,
+                      pruning_method,
+                      pruning_config,
+                      dataset):
+    initialize_kernel_masks(model)
 
     if contains_any(pruning_method.lower(), 'none', 'nothing'):
         cprint('NO PRUNING')
@@ -534,40 +538,36 @@ def apply_pruning_masks(model, pruning_method):
 
 # %%
 
-def set_pruning_mask(self, new_mask: np.ndarray):
-    """
-    :param new_mask: mask of the same shape as `layer.kernel`
-    :return: None
-    """
-    tf.assert_equal(new_mask.shape, self.kernel_mask.shape)
-    self.kernel_mask.assign(new_mask)
-    self.sparsity = 1 - np.mean(self.kernel_mask.numpy())
-    self.left_unpruned = np.sum(self.kernel_mask.numpy() == 1)
-
-
-def apply_pruning_mask(self):
-    self.kernel.assign(tf.multiply(self.kernel, self.kernel_mask))
-
-
-def dense_call(self, x):
-    masked_w = tf.multiply(self.kernel, self.kernel_mask)
-    result = tf.matmul(x, masked_w)
-
-    if self.use_bias:
-        result = tf.add(result, self.bias)
-    return self.activation(result)
-
-
-def conv_call(self, x):
-    masked_w = tf.multiply(self.kernel, self.kernel_mask)
-    result = tf.nn.conv2d(x, masked_w, strides=self.strides,
-                          padding=self.padding.upper())
-    if self.use_bias:
-        result = tf.add(result, self.bias)
-    return self.activation(result)
-
-
 def globally_enable_pruning():
+    def set_pruning_mask(self, new_mask: np.ndarray):
+        """
+        :param new_mask: mask of the same shape as `layer.kernel`
+        :return: None
+        """
+        tf.assert_equal(new_mask.shape, self.kernel_mask.shape)
+        self.kernel_mask.assign(new_mask)
+        self.sparsity = 1 - np.mean(self.kernel_mask.numpy())
+        self.left_unpruned = np.sum(self.kernel_mask.numpy() == 1)
+
+    def apply_pruning_mask(self):
+        self.kernel.assign(tf.multiply(self.kernel, self.kernel_mask))
+
+    def dense_call(self, x):
+        masked_w = tf.multiply(self.kernel, self.kernel_mask)
+        result = tf.matmul(x, masked_w)
+
+        if self.use_bias:
+            result = tf.add(result, self.bias)
+        return self.activation(result)
+
+    def conv_call(self, x):
+        masked_w = tf.multiply(self.kernel, self.kernel_mask)
+        result = tf.nn.conv2d(x, masked_w, strides=self.strides,
+                              padding=self.padding.upper())
+        if self.use_bias:
+            result = tf.add(result, self.bias)
+        return self.activation(result)
+
     tf.keras.layers.Conv2D.call = conv_call
     tf.keras.layers.Dense.call = dense_call
 

@@ -25,6 +25,8 @@ Modules should generally use the following arguments:
 ```
 REPEAT: 1
 GLOBAL_REPEAT: 1
+precision: 32
+queue: null
 name: ...
 module: ...
 ```

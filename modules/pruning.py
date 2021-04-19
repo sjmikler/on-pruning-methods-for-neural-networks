@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from tools import datasets, models, pruning, pruning_toolkit
+from tools import datasets, models, pruning
 from tools.utils import cprint, get_optimizer, logging_from_history
 
 
@@ -17,7 +17,7 @@ def main(exp):
     * checkpointBP: not required
     * checkpointAP: not required
     """
-    cprint("RUNNING PRUNING MODULE! TRAINING WILL START...")
+    cprint("RUNNING PRUNING MODULE")
 
     ds = datasets.get_dataset(exp.dataset,
                               precision=exp.precision,
@@ -58,23 +58,15 @@ def main(exp):
     # apply pruning from previously calculated masks
     pruning.apply_pruning_masks(model, pruning_method=exp.pruning)
 
-    kernels = pruning_toolkit.get_kernels(model)
-    kernel_masks = pruning_toolkit.get_kernel_masks(model)
-
-    class Callback(tf.keras.callbacks.Callback):
-        def on_train_batch_begin(self, batch, logs=None):
-            for k, km in zip(kernels, kernel_masks):
-                k.assign(k * km)
-
     steps_per_epoch = min(exp.steps, exp.steps_per_epoch)
     history = model.fit(
         x=ds.train,
         validation_data=ds.valid,
         steps_per_epoch=steps_per_epoch,
         epochs=int(exp.steps / steps_per_epoch),
-        callbacks=[Callback()]
     )
     info = exp.copy()
     info["FINAL_DENSITY"] = pruning.report_density(model)
+    cprint("FINAL DENSITY:", info["FINAL_DENSITY"])
     logging_from_history(history.history, info=info)
     model.save_weights(exp.checkpoint, save_format="h5")

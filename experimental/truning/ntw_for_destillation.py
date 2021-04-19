@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
-from tools import models, datasets, utils, toolkit
+from tools import models, datasets, utils, pruning_toolkit
 
 utils.set_memory_growth()
 utils.set_precision(16)
@@ -15,7 +15,7 @@ def mask_activation(mask):
     return tf.sigmoid(mask)
 
 
-conv, dense = toolkit.create_masked_layers(mask_activation)
+conv, dense = pruning_toolkit.create_masked_layers(mask_activation)
 parent_model = models.VGG((32, 32, 3), n_classes=10, version=19,
                           CONV_LAYER=conv,
                           DENSE_LAYER=dense)
@@ -29,9 +29,9 @@ ckp_lookup = {
 }
 
 parent_model.load_weights(ckp_lookup['full'])
-toolkit.set_kernel_masks_values_on_model(parent_model, 5.)
+pruning_toolkit.set_kernel_masks_values_on_model(parent_model, 5.)
 
-model = toolkit.clone_model(parent_model)
+model = pruning_toolkit.clone_model(parent_model)
 ds = datasets.cifar10()
 reg_rate = tf.Variable(1e-7)
 loss_fn = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
@@ -40,11 +40,11 @@ optimizer = tf.keras.optimizers.SGD(learning_rate=1.,
                                     nesterov=True)
 optimizer = mixed_precision.LossScaleOptimizer(optimizer, loss_scale=4096)
 
-kernel_masks = toolkit.get_kernel_masks(model)
-toolkit.set_kernel_masks_values(kernel_masks, 5.)
-logger = toolkit.Logger(column_width=10)
+kernel_masks = pruning_toolkit.get_kernel_masks(model)
+pruning_toolkit.set_kernel_masks_values(kernel_masks, 5.)
+logger = pruning_toolkit.Logger(column_width=10)
 
-kernels = toolkit.get_kernels(model)
+kernels = pruning_toolkit.get_kernels(model)
 org_kernels = [k.numpy() for k in kernels]
 
 for k, km in zip(kernels, kernel_masks):
@@ -83,9 +83,9 @@ def train_step(x, y):
     for i, kernel in enumerate(kernels):
         grads[i] = grads[i] / tf.abs(kernel)
 
-    grads = toolkit.clip_many(grads, 0.1 / optimizer.lr, inplace=False)
+    grads = pruning_toolkit.clip_many(grads, 0.1 / optimizer.lr, inplace=False)
     optimizer.apply_gradients(zip(grads, kernel_masks))
-    toolkit.clip_many(kernel_masks, 15, inplace=True)
+    pruning_toolkit.clip_many(kernel_masks, 15, inplace=True)
     logger['train_acc'](tf.keras.metrics.sparse_categorical_accuracy(y, outs))
 
 
@@ -118,8 +118,8 @@ for epoch in range(EPOCHS):
     for x, y in ds['valid']:
         valid_step(x, y)
 
-    toolkit.log_mask_info(kernel_masks, mask_activation, logger)
-    toolkit.visualize_masks(kernel_masks, mask_activation)
+    pruning_toolkit.log_mask_info(kernel_masks, mask_activation, logger)
+    pruning_toolkit.visualize_masks(kernel_masks, mask_activation)
     logger.show()
 
 model.save_weights('temp/new_trune_workspace_destillation.h5')

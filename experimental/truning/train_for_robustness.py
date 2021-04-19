@@ -2,9 +2,9 @@
 
 import tqdm
 import time
-from tools.toolkit import *
+from tools.pruning_toolkit import *
 import tensorflow as tf
-from tools import models, datasets, utils, pruning, layers
+from tools import models, datasets, utils, pruning, custom_layers
 import tensorflow.keras.mixed_precision.experimental as mixed_precision
 
 utils.set_memory_growth()
@@ -33,8 +33,8 @@ def regularize(values):
 mask_initial_value = 5.
 mask_sampling = True
 MaskedConv, MaskedDense = create_masked_layers(tf.identity if mask_sampling else mask_activation)
-MaskedConv = layers.MaskedConv
-MaskedDense = layers.MaskedDense
+MaskedConv = custom_layers.MaskedConv
+MaskedDense = custom_layers.MaskedDense
 
 
 def set_kernel_masks_from_distributions(kernel_masks,

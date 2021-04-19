@@ -1,7 +1,7 @@
 # %%
 
 import time
-from tools.toolkit import *
+from tools.pruning_toolkit import *
 import tensorflow as tf
 import numpy as np
 from copy import deepcopy

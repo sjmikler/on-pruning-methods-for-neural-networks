@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from tools import models, toolkit, utils, datasets, layers, pruning
+from tools import models, pruning_toolkit, utils, datasets, custom_layers, pruning
 
 ds = datasets.cifar10(repeat_train=False, shuffle_train=False)
 # model = models.VGG((32, 32, 3), n_classes=10, version=19)
@@ -34,7 +34,7 @@ if method == 'truning':
         if hasattr(layer, 'kernel_mask'):
             v = tf.sigmoid(layer.kernel_mask)
             saliences[layer.kernel.name] = v.numpy()
-    toolkit.set_kernel_masks_values_on_model(model, 1)
+    pruning_toolkit.set_kernel_masks_values_on_model(model, 1)
 
 for sparsity in sp:
     if method == 'magnitude':
@@ -50,7 +50,7 @@ for sparsity in sp:
 
     Acc = tf.keras.metrics.Mean()
     for x, y in ds.train:
-        loss, acc = toolkit.valid_step(x, y, model, loss_fn, training=True)
+        loss, acc = pruning_toolkit.valid_step(x, y, model, loss_fn, training=True)
         Acc(tf.reduce_mean(acc))
     acc = Acc.result()
 

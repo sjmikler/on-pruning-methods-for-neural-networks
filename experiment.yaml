@@ -2,9 +2,9 @@
 
 REPEAT: 1  # e.g. 1, 1, 2, 2
 GLOBAL_REPEAT: 1  # e.g. 1, 2, 1, 2
-name: skip # with name=skip, training will be skipped
 precision: 16 # 16 for mixed precision or anything else for default 32 bit
 queue: null # specify path for queue file, if null keeps queue unaccessible in memory
+name: skip # with name=skip, training will be skipped
 module: modules.pruning
 
 directory: temp/21.04.19_tests
