@@ -30,16 +30,16 @@ default_config, experiment_queue = parser.load_from_yaml(yaml_path=args.exp,
 for exp_idx, exp in enumerate(experiment_queue):
     if args.pick is not None:
         if str(exp_idx) not in args.pick:
-            cprint(f"SKIPPING EXPERIMENT {exp_idx}")
+            cprint(f"SKIPPING EXPERIMENT {exp_idx} BY PICK")
             continue
 
     print()
-    cprint("NEW EXPERIMENT:")
+    cprint(f"NEW EXPERIMENT {exp_idx}:")
     pprint.pprint(exp)
     if args.dry:
         continue
     if exp.name == "skip":
-        cprint("SKIPPING TRAINING")
+        cprint(f"SKIPPING EXPERIMENT {exp_idx} BY NAME")
 
     module = importlib.import_module(exp.module)
     exp.reset_unused_parameters(exclude=['GLOBAL_REPEAT', 'REP', 'REPEAT',
@@ -47,7 +47,8 @@ for exp_idx, exp in enumerate(experiment_queue):
     try:
         module.main(exp)
     except KeyboardInterrupt:
-        cprint("\n\nSKIPPING EXPERIMENT, WAITING 2 SECONDS BEFORE RESUMING...")
+        cprint(f"\n\nSKIPPING EXPERIMENT {exp_idx}, WAITING 2 SECONDS BEFORE "
+               f"RESUMING...")
         time.sleep(2)
 
 if isinstance(experiment_queue, parser.YamlExperimentQueue):
