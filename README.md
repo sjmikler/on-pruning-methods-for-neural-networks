@@ -76,7 +76,6 @@ Fancy parsing allows you to execute python code during parsing. To do this, you 
 3. You can access values from nested dictionaries:
 
 ```
-...
 pruning_config:
    odd_config:
       sparsity: 0.5
@@ -89,7 +88,6 @@ pruning_config:
 4. You can access values from shallower levels:
 
 ```
-...
 abc: 1
 nested:
    abc: 2
@@ -102,7 +100,6 @@ This will work and will reduce to `tested: 2`. Deeper levels have the priority.
 5. Other examples:
 
 ```
-...
 name: test
 ---
 model: VGG
@@ -113,7 +110,6 @@ directory: eval f"{name}/{name[-1]}/{model}"
 > Resulting `directory` value will be `test2/test/VGG`
 
 ```
-...
 list: [1, 2, 3]
 ---
 list: [2, 3, 4]
@@ -124,7 +120,6 @@ number3: eval E[-1].list[2]
 > Resulting `number2` value will be `2` and `number3` value will be `3`.
 
 ```
-...
 nested:
    test: 1
 
@@ -132,6 +127,32 @@ incremented: eval nested.test + 1
 ```
 
 > Resulting `incremented` value will be `2`.
+
+```
+# DEFAULT CONFIG
+test1: eval test3 + 1
+---
+test2: 5
+test3: eval test2 - 1
+```
+
+> Correct. Eval from **default config** is solved at the end - `test3: 4`, `test1: 5`.
+
+Following examples **won't work**
+
+```
+test3: eval test2 - 1  # ERROR: test2 IS UNKNOWN (WRONG ORDER)
+test2: 5
+```
+
+```
+# DEFAULT CONFIG
+test1: 1
+---
+test2: eval test1 # ERROR: test1 IS UNKNOWN (WRONG ORDER)
+```
+
+Order can be important.
 
 ## Logs management
 

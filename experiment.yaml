@@ -70,9 +70,3 @@ model_config:
     n_classes: 10
     l2_reg: 2e-4
 REPEAT: 4
-
-abc: 1
-nested:
-   abc: 2
-   nested2:
-      test: eval abc
