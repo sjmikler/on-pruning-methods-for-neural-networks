@@ -39,9 +39,9 @@ Script `run.py` launches trainings specified in **experiments**. If `queue` para
 
 1. You can use arbitrary flag with `=`, like `--queue=queue.yaml` or `--precision=32` to update **global config** straight from command line.
 
-2. If experiment is stopped with `KeyboardInterrupt`, there will be 2 second pause during which `run.py` can be interrupted completely. If not interrupted completely, next experiment in the queue will start instead. Interrupted experiments will not leave any checkpoints
+2. If experiment is stopped with `KeyboardInterrupt`, there will be 2 second pause during which `run.py` can be interrupted completely. If not interrupted completely, next experiment in the queue will start instead. Interrupted experiments will not leave any checkpoints.
 
-3. If `name: skip`, training will not be performed, but experiment parameters can be used in fancy parsing. Skipped experiments will not leave any checkpoints
+3. If `name: skip`, training will not be performed, but experiment parameters can be used in fancy parsing. Skipped experiments will not leave any checkpoints.
 
 4. `run.py` has command line arguments. If an argument does not affect experimental results, it should be a command line argument, otherwise it should be placed in **experiments** file. Command line arguments are intended for hardware settings. Modules might contain additional command line arguments.
    ```
@@ -56,13 +56,13 @@ Script `run.py` launches trainings specified in **experiments**. If `queue` para
 
 # Modules
 
-They contain code for the experiment. They might define their own command line arguments and experimental parameters.
+They contain code for running the experiment and they use parameters from **experiments** file. They might define their own command line arguments and experiment parameters.
 
 [Available modules](modules/README.md)
 
 # Python `run.py`
 
-`run.py` is setting the machine and parsing the experiments. It is a module from `modules` directory that does all the training. Module should be specified with `experiment.yaml/module` as a parameter in **default config**. Before module starts the training, experiments will be parsed...
+`run.py` is parsing the experiments and running a module. It is the module from `modules` directory that does all the training. Module should be specified as a parameter in **default config**. Before module starts the training, experiments will be parsed...
 
 # Fancy parsing with `eval`
 
