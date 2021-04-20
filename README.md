@@ -1,6 +1,6 @@
 # Defining experiments
 
-File `experiment.yaml` defines entire experiment. Its first element is always **default config** which contains default values for later experiments. If a settings repeats between **default config** and experiments, experiments have the priority.
+There's a single file: **experiments** that defines entire set of experiments. Its first element is always **default config** which contains default values for later experiments. If a settings repeats between **default config** and experiments, experiments have the priority.
 
 **Special names**
 
@@ -35,7 +35,7 @@ But modules usually require much more parameters, e.g. as listed above.
 
 # Running experiments
 
-Script `run.py` launches trainings specified in `experiment.yaml`. If `queue` parameter is specified as a valid path, the queue of the experiments will be stored as a yaml file and can be modified when experiments are running. Otherwise, queue is stored in RAM memory and cannot be modified.
+Script `run.py` launches trainings specified in **experiments**. If `queue` parameter is specified as a valid path, the queue of the experiments will be stored as a yaml file and can be modified when experiments are running. Otherwise, queue is stored in RAM memory and cannot be modified.
 
 1. You can use arbitrary flag with `=`, like `--queue=queue.yaml` or `--precision=32` to update **global config** straight from command line.
 
@@ -43,17 +43,22 @@ Script `run.py` launches trainings specified in `experiment.yaml`. If `queue` pa
 
 3. If `name: skip`, training will not be performed, but experiment parameters can be used in fancy parsing. Skipped experiments will not leave any checkpoints
 
-4. `run.py` has command line arguments. If an argument does not affect experimental results, it should be a command line argument, otherwise it should be placed in `experiments.yaml` file. Command line arguments are intended for hardware settings:
+4. `run.py` has command line arguments. If an argument does not affect experimental results, it should be a command line argument, otherwise it should be placed in **experiments** file. Command line arguments are intended for hardware settings. Modules might contain additional command line arguments.
    ```
    > python run.py --help
-   optional arguments:
-     -h, --help            show this help message and exit
-     --dry                 Skip training but parse experiments to confirm correctness
-     --no-memory-growth    Disables memory growth
-     --gpu GPU             Which GPUs to use during training, e.g. 0,1,3 or 1
-     --pick PICK, --cherrypick-experiments PICK
-                           Run only selected experiments, e.g. 0,1,3 or 1
+    optional arguments:
+      -h, --help            show this help message and exit
+      --exp EXP             Path to .yaml file with experiments
+      --dry                 Skip execution but parse experiments
+      --pick PICK, --cherrypick-experiments PICK
+                            Run only selected experiments, e.g. 0,1,3 or 1
    ```
+
+# Modules
+
+They contain code for the experiment. They might define their own command line arguments and experimental parameters.
+
+[Available modules](modules/README.md)
 
 # Python `run.py`
 

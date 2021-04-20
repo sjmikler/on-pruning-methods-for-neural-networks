@@ -3,14 +3,16 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from tools import datasets, layers, models
-from tools.utils import (
-    contains_any,
-    cprint,
+from modules import tf_utils
+from modules.tf_utils import (
     get_optimizer,
     logging_from_history,
     reset_weights_to_checkpoint,
 )
+from tools import datasets, layers, models
+from tools.utils import contains_any, get_cprint
+
+cprint = get_cprint(color='green')
 
 
 def main(exp):
@@ -27,6 +29,9 @@ def main(exp):
     * checkpointAP: not required
     """
     cprint("RUNNING PRUNING MODULE")
+
+    tf_utils.main(exp)  # RUN INHERITED MODULES
+
     globally_enable_pruning()
 
     ds = datasets.get_dataset(exp.dataset,
@@ -68,8 +73,8 @@ def main(exp):
     steps_per_epoch = min(exp.steps, exp.steps_per_epoch)
 
     if unused := exp.get_unused_parameters():
-        cprint("WARNING! Listing unused parameters:", color='red')
-        cprint(unused, color='red')
+        cprint("WARNING! Listing unused parameters:")
+        cprint(unused)
 
     if exp.steps != 0:
         history = model.fit(x=ds.train,

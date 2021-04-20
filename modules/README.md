@@ -1,5 +1,3 @@
-# General
-
 Use those names if applicable for a module:
 
 * `steps` for total number of steps in the training
@@ -8,9 +6,22 @@ Use those names if applicable for a module:
 * `dataset` and `dataset_config`
 * `optimizer` and `optimizer_config`
 
-# Pruning
+# tf-utils
 
-**Available parameters**
+**Available command line arguments**
+
+```
+optional arguments:
+  -h, --help          show this help message and exit
+  --gpu GPU           Which GPUs to use during training, e.g. 0,1,3 or 1
+  --no-memory-growth  Disables memory growth
+```
+
+# pruning
+
+Inherits from: **tf-utils**. You can use parameters from there.
+
+**Available experiment parameters**
 
 * `checkpointAP` is **checkpoint After Pruning**
 * `checkpointBP` is **checkpoint Before Pruning**. You can load full checkpoint before pruning, but after pruning **pruning masks from the checkpoint will be skipped**. This allows for a few pruning techniques

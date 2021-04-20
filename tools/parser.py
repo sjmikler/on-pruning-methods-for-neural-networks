@@ -5,7 +5,9 @@ from copy import deepcopy
 
 import yaml
 
-from tools.utils import cprint, ddict, unddict
+from tools.utils import ddict, get_cprint, unddict
+
+cprint = get_cprint(color='red')
 
 
 class YamlExperimentQueue:

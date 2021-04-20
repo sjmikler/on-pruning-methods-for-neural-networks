@@ -2,7 +2,9 @@ from collections.abc import Iterable
 
 import tensorflow as tf
 
-from tools.utils import cprint
+from tools.utils import get_cprint
+
+cprint = get_cprint(color='light magenta')
 
 
 class GemPool(tf.keras.layers.Layer):

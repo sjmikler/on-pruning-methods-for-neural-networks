@@ -26,7 +26,8 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--path', type=str, required=True,
                         help='directory from which recursive log gathering will begin')
     parser.add_argument('-d', '--dest', type=str, default=None,
-                        help='where to save gathered yaml logs, by default it is the same as --path')
+                        help='where to save gathered yaml logs, by default it is the '
+                             'same as --path')
     args = parser.parse_args()
     if args.dest is None:
         args.dest = os.path.join(args.path, 'gathered_logs.yaml')

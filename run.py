@@ -4,39 +4,28 @@ import pprint
 import time
 
 from tools import parser, utils
-from tools.utils import cprint
+
+cprint = utils.get_cprint(color='red')
 
 arg_parser = argparse.ArgumentParser()
-arg_parser.add_argument("--dry",
-                        action='store_true',
-                        help="Skip training but parse experiments")
-arg_parser.add_argument("--no-memory-growth",
-                        action='store_true',
-                        help="Disables memory growth")
-arg_parser.add_argument("--gpu",
-                        default=None,
+arg_parser.add_argument("--exp",
+                        default='experiment.yaml',
                         type=str,
-                        help="Which GPUs to use during training, e.g. 0,1,3 or 1")
+                        help="Path to .yaml file with experiments")
+arg_parser.add_argument("--dry",
+                        action="store_true",
+                        help="Skip execution but parse experiments")
 arg_parser.add_argument("--pick",
                         "--cherrypick-experiments",
                         default=None,
                         type=str,
                         help="Run only selected experiments, e.g. 0,1,3 or 1")
 args, unknown_args = arg_parser.parse_known_args()
-import tensorflow as tf
+if unknown_args:
+    cprint(f"UNKNOWN CMD ARGUMENTS: {unknown_args}")
 
-if args.gpu is not None:
-    gpus = tf.config.get_visible_devices('GPU')
-    gpu_indices = [num for num in range(10) if str(num) in args.gpu]
-    gpus = [gpus[idx] for idx in gpu_indices]
-    tf.config.set_visible_devices(gpus, 'GPU')
-
-if not args.no_memory_growth:
-    utils.set_memory_growth()
-
-default_config, experiment_queue = parser.load_from_yaml(yaml_path="experiment.yaml",
+default_config, experiment_queue = parser.load_from_yaml(yaml_path=args.exp,
                                                          unknown_args=unknown_args)
-utils.set_precision(default_config.precision)
 
 for exp_idx, exp in enumerate(experiment_queue):
     if args.pick is not None:

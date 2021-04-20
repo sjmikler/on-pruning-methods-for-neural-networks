@@ -42,6 +42,7 @@ pruning_config:
 # EXPERIMENTS:
 ---
 name: WRN16-4-no-dropout
+steps: 800
 
 model: WRN
 model_config:
@@ -52,6 +53,7 @@ model_config:
     l2_reg: 2e-4
 ---
 name: WRN16-4-dropout
+steps: 800
 
 model: WRN
 model_config:
