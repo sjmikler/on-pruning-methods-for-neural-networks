@@ -23,7 +23,6 @@ arg_parser.add_argument("--pick",
                         type=str,
                         help="Run only selected experiments, e.g. 0,1,3 or 1")
 args, unknown_args = arg_parser.parse_known_args()
-
 import tensorflow as tf
 
 if args.gpu is not None:
@@ -31,6 +30,7 @@ if args.gpu is not None:
     gpu_indices = [num for num in range(10) if str(num) in args.gpu]
     gpus = [gpus[idx] for idx in gpu_indices]
     tf.config.set_visible_devices(gpus, 'GPU')
+
 
 if not args.no_memory_growth:
     utils.set_memory_growth()

@@ -461,7 +461,6 @@ def shuffle_layers(model):
 
 # %%
 
-
 def report_density(model, detailed=False):
     nonzero = 0
     kernels = 0
