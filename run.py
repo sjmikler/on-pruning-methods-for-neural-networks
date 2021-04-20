@@ -31,7 +31,6 @@ if args.gpu is not None:
     gpus = [gpus[idx] for idx in gpu_indices]
     tf.config.set_visible_devices(gpus, 'GPU')
 
-
 if not args.no_memory_growth:
     utils.set_memory_growth()
 
@@ -54,6 +53,8 @@ for exp_idx, exp in enumerate(experiment_queue):
         cprint("SKIPPING TRAINING")
 
     module = importlib.import_module(exp.module)
+    exp.reset_unused_parameters(exclude=['GLOBAL_REPEAT', 'REP', 'REPEAT',
+                                         'RND_IDX', 'queue', 'module'])
     try:
         module.main(exp)
     except KeyboardInterrupt:

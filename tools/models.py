@@ -25,7 +25,7 @@ class GemPool(tf.keras.layers.Layer):
         else:
             flow = tf.keras.layers.GlobalAvgPool2D(dtype='float32')(flow)
 
-        flow = tf.pow(flow, 1. / self.p)
+        flow = tf.pow(flow, tf.divide(1., self.p))
         return tf.cast(flow, input_dtype)
 
     def build(self, *args):
@@ -161,7 +161,7 @@ def ResNet(
         raise KeyError("Versions not defined yet!")
     cprint(f"ResNet: unknown parameters: {list(kwargs)}")
 
-    activation = eval(activation)
+    activation_func = eval(activation)
     regularizer = tf.keras.regularizers.l1_l2(l1_reg,
                                               l2_reg) if l2_reg or l1_reg else None
     bias_regularizer = regularizer if regularize_bias else None
@@ -190,7 +190,7 @@ def ResNet(
     def bn_relu(x, remove_relu=False):
         x = tf.keras.layers.BatchNormalization(beta_regularizer=bias_regularizer,
                                                gamma_regularizer=bias_regularizer)(x)
-        return x if remove_relu else activation(x)
+        return x if remove_relu else activation_func(x)
 
     def simple_block(flow, filters, strides, preactivate):
         if preactivate:
@@ -237,7 +237,7 @@ def ResNet(
     for group_size, width, stride in zip(group_sizes, features, strides):
         for _ in range(group_size):
             if not preactivate_blocks:
-                flow = activation(flow)
+                flow = activation_func(flow)
 
             residual = block(flow, width, stride, preactivate=preactivate_blocks)
             flow = residual + shortcut(flow, width, stride)

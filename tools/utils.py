@@ -4,15 +4,17 @@ from copy import deepcopy
 class ddict(dict):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.__dict__['_unused_parameters'] = set()
+        self.reset_unused_parameters()
 
         for key, value in self.items():
             if isinstance(value, dict):
                 self.__setattr__(key, ddict(value))
-        # self.unused_keys = []
 
     def __getattr__(self, key):
         if key in self:
-            # self.unused_keys.remove(key)
+            if key in self.__dict__['_unused_parameters']:
+                self.__dict__['_unused_parameters'].remove(key)
             return self[key]
         else:
             return getattr(super(), key)
@@ -21,7 +23,18 @@ class ddict(dict):
         if isinstance(val, dict):
             val = ddict(val)
         self[key] = val
-        # self.unused_keys.append(key)
+        self.__dict__['_unused_parameters'].add(key)
+
+    def reset_unused_parameters(self, exclude=()):
+        for k, v in self.items():
+            if k in exclude:
+                if k in self.__dict__['_unused_parameters']:
+                    self.__dict__['_unused_parameters'].remove(k)
+                continue
+            self.__dict__['_unused_parameters'].add(k)
+
+    def get_unused_parameters(self):
+        return tuple(self.__dict__['_unused_parameters'])
 
 
 def unddict(d):

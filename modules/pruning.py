@@ -65,9 +65,13 @@ def main(exp):
 
     # apply pruning from previously calculated masks
     apply_pruning_masks(model, pruning_method=exp.pruning)
+    steps_per_epoch = min(exp.steps, exp.steps_per_epoch)
+
+    if unused := exp.get_unused_parameters():
+        cprint("WARNING! Listing unused parameters:", color='red')
+        cprint(unused, color='red')
 
     if exp.steps != 0:
-        steps_per_epoch = min(exp.steps, exp.steps_per_epoch)
         history = model.fit(x=ds.train,
                             validation_data=ds.valid,
                             steps_per_epoch=steps_per_epoch,
@@ -351,7 +355,7 @@ def prune_SNIP(model, dataset, config, silent=False):
     """Prune by saliences `|W*G|` for W being weights an G being gradients."""
 
     sparsity = config.sparsity
-    n_batches = config.n_batches or 1
+    n_batches = config.get('n_batches') or 1
     structure = config.get('structure')
 
     saliences = snip_saliences(model, dataset, batches=n_batches)
@@ -367,7 +371,6 @@ def prune_pseudo_SNIP(model, dataset, config, silent=False):
     """In SNIP's `W*G` we replace gradients G with a random from [-1, 1]."""
 
     sparsity = config.sparsity
-    n_batches = config.n_batches or 1
     structure = config.get('structure')
 
     saliences = psuedo_snip_saliences(model)
