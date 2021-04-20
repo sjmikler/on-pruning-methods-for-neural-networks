@@ -1,8 +1,16 @@
+import os
+
 import numpy as np
 import tensorflow as tf
 
-from tools import datasets, models
-from tools.utils import contains_any, cprint, get_optimizer, logging_from_history
+from tools import datasets, layers, models
+from tools.utils import (
+    contains_any,
+    cprint,
+    get_optimizer,
+    logging_from_history,
+    reset_weights_to_checkpoint,
+)
 
 
 def main(exp):
@@ -19,6 +27,7 @@ def main(exp):
     * checkpointAP: not required
     """
     cprint("RUNNING PRUNING MODULE")
+    globally_enable_pruning()
 
     ds = datasets.get_dataset(exp.dataset,
                               precision=exp.precision,
@@ -36,13 +45,10 @@ def main(exp):
         model.load_weights(exp.checkpointBP)
         cprint(f"LOADED BEFORE PRUNING {exp.checkpointBP}")
 
-    globally_enable_pruning()
-    model = set_pruning_masks(
-        model=model,
-        pruning_method=exp.pruning,
-        pruning_config=exp.pruning_config,
-        dataset=ds,
-    )
+    model = set_pruning_masks(model=model,
+                              pruning_method=exp.pruning,
+                              pruning_config=exp.pruning_config,
+                              dataset=ds, )
     assert isinstance(model, tf.keras.Model)
 
     # load or reset weights after the pruning, do not change masks
@@ -51,29 +57,39 @@ def main(exp):
             ckp = None
         else:
             ckp = exp.checkpointAP
-        num_masks = reset_weights_to_checkpoint(model, ckp=ckp,
+        num_masks = reset_weights_to_checkpoint(model,
+                                                ckp=ckp,
                                                 skip_keyword='kernel_mask')
-        cprint(
-            f"LOADED AFTER PRUNING {exp.checkpointAP}, but keeping {num_masks} masks!")
+        cprint(f"LOADED AFTER PRUNING {exp.checkpointAP}, but keeping {num_masks} "
+               f"masks!")
 
     # apply pruning from previously calculated masks
     apply_pruning_masks(model, pruning_method=exp.pruning)
 
-    steps_per_epoch = min(exp.steps, exp.steps_per_epoch)
-    history = model.fit(
-        x=ds.train,
-        validation_data=ds.valid,
-        steps_per_epoch=steps_per_epoch,
-        epochs=int(exp.steps / steps_per_epoch),
-    )
-    info = exp.copy()
-    info["FINAL_DENSITY"] = report_density(model)
-    cprint("FINAL DENSITY:", info["FINAL_DENSITY"])
-    logging_from_history(history.history, info=info)
+    if exp.steps != 0:
+        steps_per_epoch = min(exp.steps, exp.steps_per_epoch)
+        history = model.fit(x=ds.train,
+                            validation_data=ds.valid,
+                            steps_per_epoch=steps_per_epoch,
+                            epochs=int(exp.steps / steps_per_epoch), )
+        info = exp.copy()
+        info["FINAL_DENSITY"] = report_density(model)
+        cprint("FINAL DENSITY:", info["FINAL_DENSITY"])
+        logging_from_history(history.history, info=info)
+
+    os.makedirs(os.path.dirname(exp.checkpoint), exist_ok=True)
     model.save_weights(exp.checkpoint, save_format="h5")
 
 
 # %%
+
+# %%
+
+def globally_enable_pruning():
+    tf.keras.layers.Dense = layers.MaskedDense
+    tf.keras.layers.Conv2D = layers.MaskedConv
+    cprint("PRUNING IS ENABLED GLOBALLY! LAYERS HAVE BEEN REPLACED...")
+
 
 # %%
 
@@ -131,15 +147,12 @@ def structurize_anything(structure, saliences):
         saliences = l1_saliences_over_channel(saliences)
     elif isinstance(structure, int):
         cprint(f"ENFORCING {structure} GROUPS!")
-        saliences = {
-            key: structurize_matrix(value, structure) for key, value in
-            saliences.items()
-        }
+        saliences = {key: structurize_matrix(value, structure) for key, value in
+                     saliences.items()}
     return saliences
 
 
 # %%
-
 
 def snip_saliences(model, loader, batches=1):
     """
@@ -158,10 +171,8 @@ def snip_saliences(model, loader, batches=1):
             loss = loss_fn(y, outs)
         grads = tape.gradient(loss, model.trainable_weights)
         cumulative_grads = [c + g for c, g in zip(cumulative_grads, grads)]
-    saliences = {
-        w.name: tf.abs(w * g).numpy()
-        for w, g in zip(model.trainable_weights, cumulative_grads)
-    }
+    saliences = {w.name: tf.abs(w * g).numpy() for w, g in
+                 zip(model.trainable_weights, cumulative_grads)}
     return saliences
 
 
@@ -170,12 +181,10 @@ def psuedo_snip_saliences(model, *args, **kwargs):
     :param model: callable model with trainable_weights
     :return: dict, keys are Variable name, values are saliences from SNIP
     """
-    cumulative_grads = [tf.random.uniform(shape=w.shape, minval=-1, maxval=1)
-                        for w in model.trainable_weights]
-    saliences = {
-        w.name: tf.abs(w * g).numpy()
-        for w, g in zip(model.trainable_weights, cumulative_grads)
-    }
+    cumulative_grads = [tf.random.uniform(shape=w.shape, minval=-1, maxval=1) for w in
+                        model.trainable_weights]
+    saliences = {w.name: tf.abs(w * g).numpy() for w, g in
+                 zip(model.trainable_weights, cumulative_grads)}
     return saliences
 
 
@@ -201,8 +210,8 @@ def grasp_saliences(model, loader, batches=1):
         g2 = tape.gradient(g1, model.trainable_weights)
         cumulative_grads = [c + g for c, g in zip(cumulative_grads, g2)]
 
-    saliences = {w.name: -(w * g).numpy()
-                 for w, g in zip(model.trainable_weights, cumulative_grads)}
+    saliences = {w.name: -(w * g).numpy() for w, g in
+                 zip(model.trainable_weights, cumulative_grads)}
     return saliences
 
 
@@ -228,8 +237,8 @@ def minus_grasp_saliences(model, loader, batches=1):
         g2 = tape.gradient(g1, model.trainable_weights)
         cumulative_grads = [c + g for c, g in zip(cumulative_grads, g2)]
 
-    saliences = {w.name: (w * g).numpy()
-                 for w, g in zip(model.trainable_weights, cumulative_grads)}
+    saliences = {w.name: (w * g).numpy() for w, g in
+                 zip(model.trainable_weights, cumulative_grads)}
     return saliences
 
 
@@ -271,7 +280,6 @@ def extract_kernels(dictionary):
 
 # %%
 
-
 def set_kernel_masks_for_model(model, masks_dict, silent=False):
     for mask in masks_dict:
         for layer in model.layers:
@@ -305,10 +313,9 @@ def l1_saliences_over_channel(saliences):
 
 # %%
 
-
 def prune_by_kernel_masks(model, config, silent=False):
     sparsity = config.sparsity
-    structure = config.structure
+    structure = config.get('structure')
     saliences = {}
     for layer in model.layers:
         if hasattr(layer, 'kernel_mask'):
@@ -329,7 +336,7 @@ def prune_GraSP(model, dataset, config, silent=False):
 
     sparsity = config.sparsity
     n_batches = config.n_batches or 1
-    structure = config.structure
+    structure = config.get('structure')
 
     saliences = grasp_saliences(model, dataset, batches=n_batches)
     saliences = extract_kernels(saliences)
@@ -345,7 +352,7 @@ def prune_SNIP(model, dataset, config, silent=False):
 
     sparsity = config.sparsity
     n_batches = config.n_batches or 1
-    structure = config.structure
+    structure = config.get('structure')
 
     saliences = snip_saliences(model, dataset, batches=n_batches)
     saliences = extract_kernels(saliences)
@@ -361,7 +368,7 @@ def prune_pseudo_SNIP(model, dataset, config, silent=False):
 
     sparsity = config.sparsity
     n_batches = config.n_batches or 1
-    structure = config.structure
+    structure = config.get('structure')
 
     saliences = psuedo_snip_saliences(model)
     saliences = extract_kernels(saliences)
@@ -376,7 +383,7 @@ def prune_random(model, config, silent=False):
     """Random, non-uniform pruning."""
 
     sparsity = config.sparsity
-    structure = config.structure
+    structure = config.get('structure')
     saliences = {w.name: np.random.rand(*w.shape) for w in model.trainable_weights}
     saliences = extract_kernels(saliences)
     if structure:
@@ -390,7 +397,7 @@ def prune_l1(model, config, silent=False):
     """Prune smallest magnitudes."""
 
     sparsity = config.sparsity
-    structure = config.structure
+    structure = config.get('structure')
     saliences = {w.name: np.abs(w.numpy()) for w in model.trainable_weights}
     saliences = extract_kernels(saliences)
     if structure:
@@ -400,37 +407,7 @@ def prune_l1(model, config, silent=False):
     return model
 
 
-def prune_IMP_complete(model, config):
-    """Like l1 pruning, but contains checkpointAP step with additional options.
-
-    Deprecated
-    """
-
-    saliences = {w.name: np.abs(w.numpy()) for w in model.trainable_weights}
-    saliences = extract_kernels(saliences)
-    if config.structure:
-        saliences = structurize_anything(config.structure, saliences)
-    masks = saliences2masks(saliences, percentage=config.sparsity)
-    set_kernel_masks_for_model(model, masks)
-
-    if config.get('checkpointAP'):
-        signs = []
-        for w in model.weights:
-            sign = w.numpy()
-            sign[sign >= 0] = 1
-            sign[sign < 0] = -1
-            signs.append(sign)
-
-        reset_weights_to_checkpoint(model, config.checkpointBP,
-                                    skip_keyword="kernel_mask")
-        if config.get('preserve_BP_sign'):
-            for w1, sign in zip(model.weights, signs):
-                w1.assign(np.abs(w1.numpy()) * sign)
-    return model
-
-
 # %%
-
 
 def shuffle_masks(model):
     """Keep weights intact, shuffle masks inside layers."""
@@ -508,37 +485,28 @@ def report_density(model, detailed=False):
 
 # %%
 
-prunable_layers = [tf.keras.layers.Conv2D, tf.keras.layers.Dense]
-
-
 def initialize_kernel_masks(model):
     nmasks = 0
     for layer in model.layers:
-        if type(layer) in prunable_layers:
-            layer.kernel_mask = layer.add_weight(
-                name=layer.kernel.name.replace('kernel', 'kernel_mask'),
+        if type(layer) in [tf.keras.layers.Conv2D, tf.keras.layers.Dense]:
+            layer.kernel_mask = layer.add_weight(name=layer.kernel.name.replace(
+                'kernel',
+                'kernel_mask'),
                 shape=layer.kernel.shape,
                 dtype=layer.kernel.dtype,
                 initializer="ones",
-                trainable=False,
-            )
+                trainable=False, )
             nmasks += layer.kernel.shape.num_elements()
     cprint(f"CREATED {nmasks} KERNEL MASKS!")
 
 
-def set_pruning_masks(model,
-                      pruning_method,
-                      pruning_config,
-                      dataset):
-    initialize_kernel_masks(model)
-
+def set_pruning_masks(model, pruning_method, pruning_config, dataset):
     if contains_any(pruning_method.lower(), 'none', 'nothing'):
         cprint('NO PRUNING')
         return model
     elif contains_any(pruning_method.lower(), 'random'):
         cprint('RANDOM PRUNING')
-        model = prune_random(model=model,
-                             config=pruning_config)
+        model = prune_random(model=model, config=pruning_config)
     elif contains_any(pruning_method.lower(), 'snip'):
         if contains_any(pruning_method.lower(), 'pseudo'):
             cprint('PSUEDO SNIP PRUNING')
@@ -552,21 +520,16 @@ def set_pruning_masks(model,
                                dataset=dataset.train)
     elif contains_any(pruning_method.lower(), 'grasp'):
         cprint('GRASP PRUNING')
-        model = prune_GraSP(model=model,
-                            config=pruning_config,
-                            dataset=dataset.train)
+        model = prune_GraSP(model=model, config=pruning_config, dataset=dataset.train)
     elif contains_any(pruning_method.lower(), 'l1', 'magnitude'):
         cprint('WEIGHT MAGNITUDE PRUNING')
-        model = prune_l1(model=model,
-                         config=pruning_config)
+        model = prune_l1(model=model, config=pruning_config)
     elif contains_any(pruning_method.lower(), 'imp_complete'):
         cprint('IMP COMPLETE PRUNING')
-        model = prune_IMP_complete(model=model,
-                                   config=pruning_config)
+        model = prune_IMP_complete(model=model, config=pruning_config)
     elif contains_any(pruning_method.lower(), 'kernel mask'):
         cprint("PRUNING BY KERNEL MASK VALUES")
-        model = prune_by_kernel_masks(model=model,
-                                      config=pruning_config)
+        model = prune_by_kernel_masks(model=model, config=pruning_config)
     else:
         raise KeyError(f"PRUNING {pruning_method} is unknown!")
     return model
@@ -602,64 +565,6 @@ def apply_pruning_masks(model, pruning_method):
 
 
 # %%
-
-def globally_enable_pruning():
-    def set_pruning_mask(self, new_mask: np.ndarray):
-        """
-        :param new_mask: mask of the same shape as `layer.kernel`
-        :return: None
-        """
-        tf.assert_equal(new_mask.shape, self.kernel_mask.shape)
-        self.kernel_mask.assign(new_mask)
-        self.sparsity = 1 - np.mean(self.kernel_mask.numpy())
-        self.left_unpruned = np.sum(self.kernel_mask.numpy() == 1)
-
-    def apply_pruning_mask(self):
-        self.kernel.assign(tf.multiply(self.kernel, self.kernel_mask))
-
-    def dense_call(self, x):
-        masked_w = tf.multiply(self.kernel, self.kernel_mask)
-        result = tf.matmul(x, masked_w)
-
-        if self.use_bias:
-            result = tf.add(result, self.bias)
-        return self.activation(result)
-
-    def conv_call(self, x):
-        masked_w = tf.multiply(self.kernel, self.kernel_mask)
-        result = tf.nn.conv2d(x, masked_w, strides=self.strides,
-                              padding=self.padding.upper())
-        if self.use_bias:
-            result = tf.add(result, self.bias)
-        return self.activation(result)
-
-    tf.keras.layers.Conv2D.call = conv_call
-    tf.keras.layers.Dense.call = dense_call
-
-    for layer in prunable_layers:
-        layer.set_pruning_mask = set_pruning_mask
-        layer.apply_pruning_mask = apply_pruning_mask
-    cprint("PRUNING IS ENABLED GLOBALLY! LAYERS HAVE BEEN REPLACED...")
-
-
-# %%
-
-def reset_weights_to_checkpoint(model, ckp=None, skip_keyword=None):
-    """Reset network in place, has an ability to skip keybword."""
-
-    temp = tf.keras.models.clone_model(model)
-    if ckp:
-        temp.load_weights(ckp)
-    skipped = 0
-    for w1, w2 in zip(model.weights, temp.weights):
-        if skip_keyword in w1.name:
-            skipped += 1
-            continue
-        w1.assign(w2)
-    cprint(
-        f"INFO RESET: Skipped {skipped} layers with keyword {skip_keyword}!")
-    return skipped
-
 
 def get_kernel_masks(model):
     return [l.kernel_mask for l in model.layers if hasattr(l, 'kernel_mask')]

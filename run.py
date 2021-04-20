@@ -3,21 +3,28 @@ import importlib
 import pprint
 import time
 
+from tools import parser, utils
 from tools.utils import cprint
 
 arg_parser = argparse.ArgumentParser()
-arg_parser.add_argument("--dry", action='store_true',
+arg_parser.add_argument("--dry",
+                        action='store_true',
                         help="Skip training but parse experiments")
-arg_parser.add_argument("--no-memory-growth", action='store_true',
+arg_parser.add_argument("--no-memory-growth",
+                        action='store_true',
                         help="Disables memory growth")
-arg_parser.add_argument("--gpu", default=None, type=str,
+arg_parser.add_argument("--gpu",
+                        default=None,
+                        type=str,
                         help="Which GPUs to use during training, e.g. 0,1,3 or 1")
-arg_parser.add_argument("--pick", "--cherrypick-experiments", default=None, type=str,
+arg_parser.add_argument("--pick",
+                        "--cherrypick-experiments",
+                        default=None,
+                        type=str,
                         help="Run only selected experiments, e.g. 0,1,3 or 1")
 args, unknown_args = arg_parser.parse_known_args()
 
 import tensorflow as tf
-from tools import parser, utils
 
 if args.gpu is not None:
     gpus = tf.config.get_visible_devices('GPU')

@@ -8,9 +8,11 @@ class ddict(dict):
         for key, value in self.items():
             if isinstance(value, dict):
                 self.__setattr__(key, ddict(value))
+        # self.unused_keys = []
 
     def __getattr__(self, key):
         if key in self:
+            # self.unused_keys.remove(key)
             return self[key]
         else:
             return getattr(super(), key)
@@ -19,6 +21,7 @@ class ddict(dict):
         if isinstance(val, dict):
             val = ddict(val)
         self[key] = val
+        # self.unused_keys.append(key)
 
 
 def unddict(d):
@@ -141,15 +144,21 @@ def clone_model(model):
     return new_model
 
 
-def reset_weights_to_checkpoint(model, ckp, skip_keyword=None):
-    """Resets inplace. Skips if `skip_keyboard in weight.name`."""
+def reset_weights_to_checkpoint(model, ckp=None, skip_keyword=None):
+    """Reset network in place, has an ability to skip keybword."""
+    import tensorflow as tf
 
     temp = tf.keras.models.clone_model(model)
-    temp.load_weights(ckp)
+    if ckp:
+        temp.load_weights(ckp)
+    skipped = 0
     for w1, w2 in zip(model.weights, temp.weights):
         if skip_keyword in w1.name:
+            skipped += 1
             continue
         w1.assign(w2)
+    cprint(f"INFO RESET: Skipped {skipped} layers with keyword {skip_keyword}!")
+    return skipped
 
 
 def clip_many(values, clip_at, clip_from=None, inplace=False):
@@ -171,5 +180,6 @@ def clip_many(values, clip_at, clip_from=None, inplace=False):
 
 def concatenate_flattened(arrays):
     import numpy as np
-    return np.concatenate([x.flatten() if isinstance(x, np.ndarray)
-                           else x.numpy().flatten() for x in arrays], axis=0)
+    return np.concatenate([x.flatten() if isinstance(x, np.ndarray) else x.numpy(
+
+    ).flatten() for x in arrays], axis=0)

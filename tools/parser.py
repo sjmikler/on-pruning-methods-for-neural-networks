@@ -73,6 +73,7 @@ def cool_parse_exp(exp, E):
             v = v[4:].strip()
             scope = deepcopy(exp)
             scope['E'] = E
+
             v = eval(v, {}, scope)
             cprint(f"RECOGNIZED FANCY PARSING {k}: {org_expr} --> {v}")
 
@@ -110,7 +111,11 @@ def load_from_yaml(yaml_path, unknown_args):
             nexp = deepcopy(default)
             nexp.update(exp)
 
-            rnd_idx = random.randint(100000, 999999)
+            if 'RND_IDX' in nexp:
+                rnd_idx = nexp['RND_IDX']
+            else:
+                rnd_idx = random.randint(100000, 999999)
+
             for rep in range(exp.get("REPEAT") or 1):
                 nexp_rep = deepcopy(nexp)
                 nexp_rep['RND_IDX'] = rnd_idx

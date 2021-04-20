@@ -7,7 +7,7 @@ queue: null # specify path for queue file, if null keeps queue unaccessible in m
 name: skip # with name=skip, training will be skipped
 module: modules.pruning
 
-directory: temp/21.04.19_tests
+directory: temp/21.04.20_tests
 full_path: eval f"{directory}/{name}/{RND_IDX}/{REP}" # REP is a value from [0, REPEAT-1] interval
 checkpoint: eval f"{directory}/{name}/{RND_IDX}/{REP}.h5" # RND_IDX is automatically assigned in `run.py`
 yaml_logdir: eval f"{directory}/{name}/{RND_IDX}/{REP}.yaml"
@@ -41,18 +41,82 @@ pruning_config:
 
 # EXPERIMENTS:
 ---
-name: WRN28_2
+directory: data/starters
+name: WRN16-8-starter
+steps: 0
+
+model: WRN
+model_config:
+    N: 16
+    K: 8
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l2_reg: 2e-4
+---
 steps: 80000
+
+checkpointBP: eval E[0].checkpoint
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.5
+name: eval f"WRN16-8-prL1-sp{pruning_config.sparsity}"
+
+model: WRN
+model_config:
+    N: 16
+    K: 8
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l2_reg: 2e-4
+---
+steps: 80000
+
+checkpointBP: eval E[0].checkpoint
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.8
+name: eval f"WRN16-8-prL1-sp{pruning_config.sparsity}"
+
+model: WRN
+model_config:
+    N: 16
+    K: 8
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l2_reg: 2e-4
+---
+steps: 80000
+
+checkpointBP: eval E[0].checkpoint
 
 pruning: magnitude
 pruning_config:
     sparsity: 0.9
-    structure: false
+name: eval f"WRN16-8-prL1-sp{pruning_config.sparsity}"
 
 model: WRN
 model_config:
-    N: 28
-    K: 2
+    N: 16
+    K: 8
+    input_shape: [32, 32, 3]
+    n_classes: 10
+    l2_reg: 2e-4
+---
+steps: 80000
+
+checkpointBP: eval E[0].checkpoint
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.95
+name: eval f"WRN16-8-prL1-sp{pruning_config.sparsity}"
+
+model: WRN
+model_config:
+    N: 16
+    K: 8
     input_shape: [32, 32, 3]
     n_classes: 10
     l2_reg: 2e-4
