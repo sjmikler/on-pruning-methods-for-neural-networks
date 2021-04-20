@@ -53,13 +53,13 @@ model_config:
     n_classes: 10
     l2_reg: 2e-4
 ---
-steps: 80000
+steps: 800
 
 checkpointBP: eval E[0].checkpoint
 
 pruning: magnitude
 pruning_config:
-    sparsity: 0.5
+    sparsity: eval [0.5, 0.8, 0.9, 0.95][REP]
 name: eval f"WRN16-8-prL1-sp{pruning_config.sparsity}"
 
 model: WRN
@@ -69,54 +69,10 @@ model_config:
     input_shape: [32, 32, 3]
     n_classes: 10
     l2_reg: 2e-4
----
-steps: 80000
+REPEAT: 4
 
-checkpointBP: eval E[0].checkpoint
-
-pruning: magnitude
-pruning_config:
-    sparsity: 0.8
-name: eval f"WRN16-8-prL1-sp{pruning_config.sparsity}"
-
-model: WRN
-model_config:
-    N: 16
-    K: 8
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l2_reg: 2e-4
----
-steps: 80000
-
-checkpointBP: eval E[0].checkpoint
-
-pruning: magnitude
-pruning_config:
-    sparsity: 0.9
-name: eval f"WRN16-8-prL1-sp{pruning_config.sparsity}"
-
-model: WRN
-model_config:
-    N: 16
-    K: 8
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l2_reg: 2e-4
----
-steps: 80000
-
-checkpointBP: eval E[0].checkpoint
-
-pruning: magnitude
-pruning_config:
-    sparsity: 0.95
-name: eval f"WRN16-8-prL1-sp{pruning_config.sparsity}"
-
-model: WRN
-model_config:
-    N: 16
-    K: 8
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l2_reg: 2e-4
+abc: 1
+nested:
+   abc: 2
+   nested2:
+      test: eval abc

@@ -25,7 +25,7 @@ class YamlExperimentQueue:
         assert isinstance(exps, Iterable)
         with open(self.path, 'w') as f:
             nexps = map(unddict, exps)  # because cannot dump ddict
-            yaml.safe_dump_all(nexps, stream=f)
+            yaml.safe_dump_all(nexps, stream=f, sort_keys=False)
 
     def append_content(self, exps):
         existing_content = self.read_content()
@@ -55,7 +55,7 @@ class YamlExperimentQueue:
         os.remove(self.path)
 
 
-def cool_parse_exp(exp, E):
+def cool_parse_exp(exp, E, scopes=[]):
     keys = list(exp.keys())
     assert 'temp' not in keys
     assert 'E' not in keys
@@ -64,15 +64,21 @@ def cool_parse_exp(exp, E):
         v = exp[k]
 
         if isinstance(v, dict):
-            parsed_v = cool_parse_exp(v, E)
+            nscopes = deepcopy(scopes)
+            nscopes.append(exp)
+            parsed_v = cool_parse_exp(v, E, nscopes)
             exp[k] = parsed_v
             continue
 
         if isinstance(v, str) and v.startswith('eval'):
             org_expr = v
             v = v[4:].strip()
-            scope = deepcopy(exp)
-            scope['E'] = E
+
+            scope = {}  # populating the scope for eval
+            for new_scope in scopes:  # for each parent scope
+                scope.update(new_scope)  # update current
+            scope.update(deepcopy(exp))  # top it with this level scope
+            scope['E'] = E  # and add experiment history
 
             v = eval(v, {}, scope)
             cprint(f"RECOGNIZED FANCY PARSING {k}: {org_expr} --> {v}")
@@ -108,10 +114,17 @@ def load_from_yaml(yaml_path, unknown_args):
     for global_rep in range(default.get("GLOBAL_REPEAT") or 1):
         unpacked_experiments = []
         for exp in experiments:
-            nexp = deepcopy(default)
-            nexp.update(exp)
+            # ORDER IS DEFINED HERE (important for fancy parsing)
+            # 1. experiment
+            # 2. defaults
+            nexp = deepcopy(exp)
+            defcpy = deepcopy(default)
+            for key in nexp:
+                if key in defcpy:
+                    defcpy.pop(key)  # necessary to preserve order in dict
+            nexp.update(defcpy)
 
-            if 'RND_IDX' in nexp:
+            if 'RND_IDX' in nexp:  # allow inserting RND_IDX
                 rnd_idx = nexp['RND_IDX']
             else:
                 rnd_idx = random.randint(100000, 999999)

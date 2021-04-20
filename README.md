@@ -7,7 +7,7 @@ File `experiment.yaml` defines entire experiment. Its first element is always **
 1. `REPEAT`: copies a single experiment many times **before** fancy parsing, can be used for iterative trainings. If used on two experiments: `1, 1, 2, 2`
 2. `GLOBAL_REPEAT`: performs all listed experiments many times. If used on two experiments: `1, 2, 1, 2`
 3. `REP`: is added by `run.py` and is a repetition index in range `[0, REPEAT-1]`
-4. `RND_IDX`: is added by `run.py` and can be used to uniquely identify an experiment
+4. `RND_IDX`: is added by `run.py` and can be used to uniquely identify an experiment. If already present in experiment, won't overwrite with random value
 
 Modules should generally use the following parameters:
 
@@ -69,7 +69,7 @@ Fancy parsing allows you to execute python code during parsing. To do this, you 
 
 #### Tricks:
 
-1. `odd_name: eval '\'.join([directory, name])` will work as in Python, value will be executed using `eval` function with variable scope from current experiment. Will only work if both `directory` and `name` are specified in current experiment before `odd_name` (or are specified in default config).
+1. `odd_name: eval '\'.join([directory, name])` will work as in Python, value will be executed using `eval` function with variable scope from current experiment. In special cases, if `directory` value starts with `eval` too, `directory` should be resolved before `odd_name`. **Default config** is resolved at the end.
 
 2. `sparsity: eval 0.5 * E[-1].sparsity` will be parsed as half of the `sparsity` value from the previous experiment in the queue. Before running `eval`, list `E` is added to the scope which allows access to previous experiments.
 
@@ -86,7 +86,20 @@ pruning_config:
    sparsity: eval E[-1].pruning_config.odd_config.sparsity
 ```
 
-4. Other examples:
+4. You can access values from shallower levels:
+
+```
+...
+abc: 1
+nested:
+   abc: 2
+   nested2:
+      test: eval abc
+```
+
+This will work and will reduce to `tested: 2`. Deeper levels have the priority.
+
+5. Other examples:
 
 ```
 ...
@@ -119,21 +132,6 @@ incremented: eval nested.test + 1
 ```
 
 > Resulting `incremented` value will be `2`.
-
-5. What won't work
-
-```
-...
-list1: [2, 3, 4]
-test: eval list1 # this will work
-
-nested:
-   list2: [2, 3, 4]
-   test1: eval list2 # this will work as list2 is on the same level
-   test: eval list1 # this won't work as list1 is one level higher
-```
-
-This is because nested dicts only have access to variables on their level or deeper. If you run this experiment, you will see `NameError: name list1 is not defined`.
 
 ## Logs management
 
