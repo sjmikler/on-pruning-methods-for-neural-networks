@@ -5,6 +5,7 @@ import tensorflow as tf
 
 from modules import tf_utils
 from modules.tf_utils import (
+    concatenate_flattened,
     get_optimizer,
     logging_from_history,
     reset_weights_to_checkpoint,
@@ -264,7 +265,7 @@ def get_pruning_mask(saliences, percentage):
     sizes = [w.size for w in saliences]
     shapes = [w.shape for w in saliences]
 
-    flatten = np.concatenate([w.reshape(-1) for w in saliences])
+    flatten = concatenate_flattened(saliences)
     flat_mask = np.ones_like(flatten)
 
     threshold = np.percentile(flatten, percentage * 100)
@@ -572,7 +573,7 @@ def apply_pruning_masks(model, pruning_method):
 
     apply_pruning_for_model(model)
     density = report_density(model, silent=True)
-    cprint(f"REPORTING DENSITY: {density:7.5f}")
+    cprint(f"REPORTING KERNELS DENSITY: {density:7.5f}")
     return model
 
 

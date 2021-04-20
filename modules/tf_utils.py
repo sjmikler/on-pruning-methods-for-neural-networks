@@ -157,9 +157,8 @@ def clip_many(values, clip_at, clip_from=None, inplace=False):
 
 def concatenate_flattened(arrays):
     import numpy as np
-    return np.concatenate([x.flatten() if isinstance(x, np.ndarray) else x.numpy(
-
-    ).flatten() for x in arrays], axis=0)
+    return np.concatenate([x.flatten() if isinstance(x, np.ndarray)
+                           else x.numpy().flatten() for x in arrays], axis=0)
 
 
 def describe_model(model):
