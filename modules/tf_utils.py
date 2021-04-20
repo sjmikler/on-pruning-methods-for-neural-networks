@@ -184,13 +184,13 @@ def describe_model(model):
         trainable_w += n
 
     for layer in model.layers:
-        if hasattr(layer, 'beta'):
+        if hasattr(layer, 'beta') and layer.beta is not None:
             bn += layer.beta.shape.num_elements()
 
-        if hasattr(layer, 'gamma'):
+        if hasattr(layer, 'gamma') and layer.gamma is not None:
             bn += layer.gamma.shape.num_elements()
 
-        if hasattr(layer, 'bias') and layer.bias:
+        if hasattr(layer, 'bias') and layer.bias is not None:
             biases += layer.bias.shape.num_elements()
 
         if hasattr(layer, 'kernel'):

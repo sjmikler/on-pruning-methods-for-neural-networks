@@ -15,7 +15,7 @@ yaml_logdir: eval f"{directory}/{name}/{RND_IDX}/{REP}.yaml"
 steps: 80000
 steps_per_epoch: 2000
 
-dataset: cifar10 # mnist|cifar10 available
+dataset: cifar10 # mnist|cifar10|cifar100 available
 dataset_config:
     train_batch_size: 128
     valid_batch_size: 512
@@ -42,7 +42,7 @@ pruning_config:
 # EXPERIMENTS:
 ---
 directory: data/starters
-name: WRN16-8-starter2000
+name: WRN16-8-starter
 steps: 2000
 
 model: WRN
@@ -53,6 +53,7 @@ model_config:
     n_classes: 10
     l2_reg: 2e-4
 ---
+steps: 2000
 checkpointBP: eval E[-1].checkpoint
 
 pruning: magnitude
