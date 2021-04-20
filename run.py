@@ -33,9 +33,9 @@ for exp_idx, exp in enumerate(experiment_queue):
             cprint(f"SKIPPING EXPERIMENT {exp_idx}")
             continue
 
-    cprint("EXPERIMENT:")
-    pprint.pprint(exp)
     print()
+    cprint("NEW EXPERIMENT:")
+    pprint.pprint(exp)
     if args.dry:
         continue
     if exp.name == "skip":

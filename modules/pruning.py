@@ -18,15 +18,18 @@ cprint = get_cprint(color='green')
 def main(exp):
     """
     PROCEDURES IN ORDER:
-    1. Creating model
-    2. Loading checkpoint Before Pruning
-    3. Applying pruning
-    4. Loading checkpoint After Pruning
-    5. Pruning related procedures After Pruning
+    1. Loading inherited module - tf_utils
+    2. Creating dataset, model, optimizer
+    3. Loading checkpoint Before Pruning
+    4. Applying pruning
+    5. Loading checkpoint After Pruning
+    6. Pruning related procedures After Pruning
+    7. Training
 
     EXPERIMENT KEYS:
     * checkpointBP: not required
     * checkpointAP: not required
+    * ...
     """
     cprint("RUNNING PRUNING MODULE")
 
@@ -44,6 +47,7 @@ def main(exp):
 
     optimizer = get_optimizer(exp.optimizer, exp.optimizer_config)
     model.compile(optimizer, loss_fn, metrics=["accuracy"])
+    tf_utils.describe_model(model)
 
     # load checkpointed weights before the pruning
     if hasattr(exp, 'checkpointBP'):
@@ -296,8 +300,9 @@ def set_kernel_masks_for_model(model, masks_dict, silent=False):
                 if mask == weight.name:
                     layer.set_pruning_mask(masks_dict[mask])
                     if not silent:
-                        cprint(f"pruning {weight.name} to {layer.sparsity * 100:.2f}%")
-                        cprint(f"left in {weight.name} : {layer.left_unpruned}")
+                        cprint(f"{weight.name:<32} pruning to "
+                               f"{layer.sparsity * 100:6.2f}%"
+                               f" (left {layer.left_unpruned})")
 
 
 def l1_saliences_over_channel(saliences):
@@ -469,7 +474,7 @@ def shuffle_layers(model):
 
 # %%
 
-def report_density(model, detailed=False):
+def report_density(model, silent=True):
     nonzero = 0
     kernels = 0
     biases = 0
@@ -479,11 +484,11 @@ def report_density(model, detailed=False):
             kernels += km.size
             nonzero_here = (km != 0).sum()
             nonzero += nonzero_here
-            if detailed:
-                cprint(f"density of {w.name:>16}: {nonzero_here / km.size:6.4f}")
+            if not silent:
+                cprint(f"{w.name:<32} density is {nonzero_here / km.size:6.4f}")
         if 'bias' in w.name or 'beta' in w.name:
             biases += w.shape.num_elements()
-    if detailed:
+    if not silent:
         cprint(f"Biases make {biases / (kernels + biases) * 100:6.3f}% of weights!")
     if kernels == 0:
         return 1.0
@@ -566,7 +571,7 @@ def apply_pruning_masks(model, pruning_method):
         model = shuffle_masks(model=model)
 
     apply_pruning_for_model(model)
-    density = report_density(model, detailed=True)
+    density = report_density(model, silent=True)
     cprint(f"REPORTING DENSITY: {density:7.5f}")
     return model
 

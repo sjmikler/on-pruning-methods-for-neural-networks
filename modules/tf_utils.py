@@ -1,4 +1,5 @@
 import argparse
+from collections import Counter
 from collections.abc import Iterable
 from copy import deepcopy
 
@@ -6,28 +7,42 @@ import tensorflow as tf
 
 from tools.utils import get_cprint
 
-if __name__ == '__main__':
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--gpu",
-                            default=None,
-                            type=str,
-                            help="Which GPUs to use during training, e.g. 0,1,3 or 1")
-    arg_parser.add_argument("--no-memory-growth",
-                            action="store_true",
-                            help="Disables memory growth")
-    args, unknown_args = arg_parser.parse_known_args()
-    if unknown_args:
-        cprint(f"UNKNOWN CMD ARGUMENTS: {unknown_args}")
-
-    if args.gpu is not None:
-        gpus = tf.config.get_visible_devices("GPU")
-        gpu_indices = [num for num in range(10) if str(num) in args.gpu]
-        set_visible_gpu([gpus[idx] for idx in gpu_indices])
-
-    if not args.no_memory_growth:
-        set_memory_growth()
-
 cprint = get_cprint(color='light blue')
+
+
+def set_memory_growth():
+    cprint("SETTING MEMORY GROWTH!")
+    for gpu in tf.config.get_visible_devices('GPU'):
+        tf.config.experimental.set_memory_growth(gpu, True)
+
+
+def set_visible_gpu(gpus=[]):
+    if isinstance(gpus, Iterable):
+        tf.config.set_visible_devices(gpus, 'GPU')
+    else:
+        tf.config.set_visible_devices([gpus], 'GPU')
+
+
+arg_parser = argparse.ArgumentParser()
+arg_parser.add_argument("--gpu",
+                        default=None,
+                        type=str,
+                        help="Which GPUs to use during training, e.g. 0,1,3 or 1")
+arg_parser.add_argument("--no-memory-growth",
+                        action="store_true",
+                        help="Disables memory growth")
+args, unknown_args = arg_parser.parse_known_args()
+if unknown_args:
+    cprint(f"UNKNOWN CMD ARGUMENTS: {unknown_args}")
+
+if args.gpu is not None:
+    gpus = tf.config.get_visible_devices("GPU")
+    gpu_indices = [num for num in range(10) if str(num) in args.gpu]
+    cprint(f"SETTING VISIBLE GPUS TO {gpu_indices}")
+    set_visible_gpu([gpus[idx] for idx in gpu_indices])
+
+if not args.no_memory_growth:
+    set_memory_growth()
 
 
 def main(exp):
@@ -40,21 +55,10 @@ def main(exp):
 # %%
 
 
-def set_memory_growth():
-    for gpu in tf.config.get_visible_devices('GPU'):
-        tf.config.experimental.set_memory_growth(gpu, True)
-
-
-def set_visible_gpu(gpus=[]):
-    if isinstance(gpus, Iterable):
-        tf.config.set_visible_devices(gpus, 'GPU')
-    else:
-        tf.config.set_visible_devices([gpus], 'GPU')
-
-
 def set_precision(precision):
     import tensorflow.keras.mixed_precision.experimental as mixed_precision
 
+    cprint(f"SETTING PRECISION TO {precision}")
     if precision == 16:
         policy = mixed_precision.Policy("mixed_float16")
         mixed_precision.set_policy(policy)
@@ -156,3 +160,44 @@ def concatenate_flattened(arrays):
     return np.concatenate([x.flatten() if isinstance(x, np.ndarray) else x.numpy(
 
     ).flatten() for x in arrays], axis=0)
+
+
+def describe_model(model):
+    cprint(f"MODEL INFO")
+    layer_counts = Counter()
+    for layer in model.layers:
+        if isinstance(layer, tf.keras.layers.Dense):
+            layer_counts['Dense'] += 1
+        if isinstance(layer, tf.keras.layers.Conv2D):
+            layer_counts['Conv2D'] += 1
+        if isinstance(layer, tf.keras.layers.BatchNormalization):
+            layer_counts['BatchNorm'] += 1
+        if isinstance(layer, tf.keras.layers.Dropout):
+            layer_counts['Dropout'] += 1
+    cprint(f"LAYER COUNTS: {dict(layer_counts)}")
+
+    bn = 0
+    biases = 0
+    kernels = 0
+    trainable_w = 0
+    for w in model.trainable_weights:
+        n = w.shape.num_elements()
+        trainable_w += n
+
+    for layer in model.layers:
+        if hasattr(layer, 'beta'):
+            bn += layer.beta.shape.num_elements()
+
+        if hasattr(layer, 'gamma'):
+            bn += layer.gamma.shape.num_elements()
+
+        if hasattr(layer, 'bias') and layer.bias:
+            biases += layer.bias.shape.num_elements()
+
+        if hasattr(layer, 'kernel'):
+            kernels += layer.kernel.shape.num_elements()
+
+    cprint(f"TRAINABLE WEIGHTS: {trainable_w}")
+    cprint(f"KERNELS: {kernels} ({kernels / trainable_w * 100:^6.2f}%), "
+           f"BIASES: {biases} ({biases / trainable_w * 100:^6.2f}%), "
+           f"BN: {bn} ({bn / trainable_w * 100:^6.2f}%)")
