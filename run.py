@@ -23,6 +23,8 @@ arg_parser.add_argument("--pick",
 args, unknown_args = arg_parser.parse_known_args()
 if unknown_args:
     cprint(f"UNKNOWN CMD ARGUMENTS: {unknown_args}")
+else:
+    cprint(f"CMD ARGUMENTS RECOGNIZED!")
 
 default_config, experiment_queue = parser.load_from_yaml(yaml_path=args.exp,
                                                          unknown_args=unknown_args)
@@ -42,8 +44,8 @@ for exp_idx, exp in enumerate(experiment_queue):
         cprint(f"SKIPPING EXPERIMENT {exp_idx} BY NAME")
 
     module = importlib.import_module(exp.module)
-    exp.reset_unused_parameters(exclude=['GLOBAL_REPEAT', 'REP', 'REPEAT',
-                                         'RND_IDX', 'queue', 'module'])
+    exp.reset_unused_parameters(exclude=['REP', 'RND_IDX', 'global_repeat', 'repeat',
+                                         'queue', 'module'])
     try:
         module.main(exp)
     except KeyboardInterrupt:

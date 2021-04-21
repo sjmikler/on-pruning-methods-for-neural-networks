@@ -4,10 +4,12 @@ There's a single file: **experiments** that defines entire set of experiments. I
 
 **Special names**
 
-1. `REPEAT`: copies a single experiment many times **before** fancy parsing, can be used for iterative trainings. If used on two experiments: `1, 1, 2, 2`
-2. `GLOBAL_REPEAT`: performs all listed experiments many times. If used on two experiments: `1, 2, 1, 2`
+1. `repeat`: copies a single experiment many times **before** fancy parsing, can be used for iterative trainings. If used on two experiments: `1, 1, 2, 2`
+2. `global_repeat`: performs all listed experiments many times. If used on two experiments: `1, 2, 1, 2`
 3. `REP`: is added by `run.py` and is a repetition index in range `[0, REPEAT-1]`
 4. `RND_IDX`: is added by `run.py` and can be used to uniquely identify an experiment. If already present in experiment, won't overwrite with random value
+
+In general, big letters are reserved for internal or logging purposes. They should added by scripts and should not be in **experiments**.
 
 Modules should generally use the following parameters:
 
@@ -23,8 +25,8 @@ Modules should generally use the following parameters:
 **Minimal experiment**
 
 ```
-REPEAT: 1
-GLOBAL_REPEAT: 1
+repeat: 1
+global_repeat: 1
 precision: 32
 queue: null
 name: ...

@@ -1,7 +1,7 @@
 # DEFAULT CONFIG:
 
-REPEAT: 1  # e.g. 1, 1, 2, 2
-GLOBAL_REPEAT: 1  # e.g. 1, 2, 1, 2
+repeat: 1  # e.g. 1, 1, 2, 2
+global_repeat: 1  # e.g. 1, 2, 1, 2
 precision: 16 # 16 for mixed precision or anything else for default 32 bit
 queue: null # specify path for queue file, if null keeps queue unaccessible in memory
 name: skip # with name=skip, training will be skipped
@@ -70,4 +70,4 @@ model_config:
     input_shape: [32, 32, 3]
     n_classes: 10
     l2_reg: 2e-4
-REPEAT: 6
+repeat: 6

@@ -98,9 +98,9 @@ def load_from_yaml(yaml_path, unknown_args):
     cmd_arguments = ddict()
     for arg in unknown_args:
         cprint(f"COMMAND LINE ARGUMENT: {arg}")
-        if '--' in arg and '=' in arg:
-            key, value = arg.split('=', 1)
-            key = key.lstrip('-')
+        if "--" in arg and "=" in arg:
+            key, value = arg.split("=", 1)
+            key = key.lstrip("-")
 
             try:  # for parsing integers etc
                 cmd_arguments[key] = eval(value, {}, {})
@@ -113,7 +113,7 @@ def load_from_yaml(yaml_path, unknown_args):
     default.update(cmd_arguments)
 
     all_unpacked_experiments = []
-    for global_rep in range(default.get("GLOBAL_REPEAT") or 1):
+    for global_rep in range(default.get("global_repeat") or 1):
         unpacked_experiments = []
         for exp in experiments:
             # ORDER IS DEFINED HERE (important for fancy parsing)
@@ -126,15 +126,15 @@ def load_from_yaml(yaml_path, unknown_args):
                     defcpy.pop(key)  # necessary to preserve order in dict
             nexp.update(defcpy)
 
-            if 'RND_IDX' in nexp:  # allow inserting RND_IDX
-                rnd_idx = nexp['RND_IDX']
+            if "RND_IDX" in nexp:  # allow inserting RND_IDX
+                rnd_idx = nexp["RND_IDX"]
             else:
                 rnd_idx = random.randint(100000, 999999)
 
-            for rep in range(exp.get("REPEAT") or 1):
+            for rep in range(exp.get("repeat") or 1):
                 nexp_rep = deepcopy(nexp)
-                nexp_rep['RND_IDX'] = rnd_idx
-                nexp_rep['REP'] = rep
+                nexp_rep["RND_IDX"] = rnd_idx
+                nexp_rep["REP"] = rep
 
                 nexp_rep = cool_parse_exp(nexp_rep, unpacked_experiments)
                 unpacked_experiments.append(nexp_rep)
@@ -144,5 +144,5 @@ def load_from_yaml(yaml_path, unknown_args):
         queue = YamlExperimentQueue(all_unpacked_experiments, path=path)
     else:
         queue = iter(all_unpacked_experiments)
-    cprint(f'QUEUE TYPE: {type(queue)}')
+    cprint(f"QUEUE TYPE: {type(queue)}")
     return default, queue
