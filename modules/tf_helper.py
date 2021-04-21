@@ -66,27 +66,27 @@ def set_precision(precision):
         mixed_precision.set_policy(policy)
 
 
-def logging_from_history(history, info):
+def logging_from_history(history, exp):
     import tensorflow as tf
     import datetime
 
-    full_path = info["full_path"]
+    full_path = exp.full_path
     writer = tf.summary.create_file_writer(full_path)
     cprint(f"FULL PATH: {full_path}")
 
     maxi_acc = max(history["val_accuracy"])
     date = datetime.datetime.now()
-    info["TIME"] = f"{date.year}.{date.month}.{date.day} {date.hour}:{date.minute}"
-    info["ACC"] = maxi_acc
+    exp.TIME = f"{date.year}.{date.month}.{date.day} {date.hour}:{date.minute}"
+    exp.ACC = maxi_acc
 
     with writer.as_default():
         for key in history:
             for idx, value in enumerate(history[key]):
                 tf.summary.scalar(key, value, idx + 1)
-        tf.summary.text("experiment", data=str(info), step=0)
+        tf.summary.text("experiment", data=str(exp), step=0)
 
-    with open(f"{info['yaml_logdir']}", "a") as f:
-        for k, v in info.items():
+    with open(f"{exp.yaml_logdir}", "a") as f:
+        for k, v in exp.items():
             print(f"{k}: {v}", file=f)
         print("---", file=f)
     cprint(f"BEST ACCURACY: {maxi_acc}")

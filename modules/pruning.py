@@ -58,7 +58,7 @@ def main(exp):
     model = set_pruning_masks(model=model,
                               pruning_method=exp.pruning,
                               pruning_config=exp.pruning_config,
-                              dataset=ds, )
+                              dataset=ds)
     assert isinstance(model, tf.keras.Model)
 
     # load or reset weights after the pruning, do not change masks
@@ -85,11 +85,10 @@ def main(exp):
         history = model.fit(x=ds.train,
                             validation_data=ds.valid,
                             steps_per_epoch=steps_per_epoch,
-                            epochs=int(exp.steps / steps_per_epoch), )
-        info = exp.copy()
-        info["FINAL_DENSITY"] = report_density(model)
-        cprint("FINAL DENSITY:", info["FINAL_DENSITY"])
-        logging_from_history(history.history, info=info)
+                            epochs=int(exp.steps / steps_per_epoch))
+        exp.FINAL_DENSITY = report_density(model)
+        cprint("FINAL DENSITY:", exp.FINAL_DENSITY)
+        logging_from_history(history.history, exp=exp)
 
     os.makedirs(os.path.dirname(exp.checkpoint), exist_ok=True)
     model.save_weights(exp.checkpoint, save_format="h5")

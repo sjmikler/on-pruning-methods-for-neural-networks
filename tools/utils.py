@@ -22,7 +22,7 @@ def get_cprint(color):
     }
 
     def cprint(*args, **kwargs):
-        print(*(color2code[color], *args, color2code['reset']), **kwargs)
+        print('#', color2code[color], *args, color2code['reset'], **kwargs)
 
     return cprint
 
