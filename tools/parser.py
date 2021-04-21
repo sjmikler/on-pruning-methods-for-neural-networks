@@ -7,7 +7,7 @@ import yaml
 
 from tools.utils import ddict, get_cprint, unddict
 
-cprint = get_cprint(color='red')
+cprint = get_cprint(color='yellow')
 
 
 class YamlExperimentQueue:
@@ -83,7 +83,7 @@ def cool_parse_exp(exp, E, scopes=[]):
             scope['E'] = E  # and add experiment history
 
             v = eval(v, {}, scope)
-            cprint(f"RECOGNIZED FANCY PARSING {k}: {org_expr} --> {v}")
+            cprint(f"FANCY PARSING {k}: {org_expr} --> {v}")
 
         if isinstance(v, str):
             try:

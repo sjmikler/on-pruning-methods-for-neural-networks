@@ -3,8 +3,8 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from modules import tf_utils
-from modules.tf_utils import (
+from modules import tf_helper
+from modules.tf_helper import (
     concatenate_flattened,
     get_optimizer,
     logging_from_history,
@@ -34,7 +34,7 @@ def main(exp):
     """
     cprint("RUNNING PRUNING MODULE")
 
-    tf_utils.main(exp)  # RUN INHERITED MODULES
+    tf_helper.main(exp)  # RUN INHERITED MODULES
 
     globally_enable_pruning()
 
@@ -48,7 +48,7 @@ def main(exp):
 
     optimizer = get_optimizer(exp.optimizer, exp.optimizer_config)
     model.compile(optimizer, loss_fn, metrics=["accuracy"])
-    tf_utils.describe_model(model)
+    tf_helper.describe_model(model)
 
     # load checkpointed weights before the pruning
     if hasattr(exp, 'checkpointBP'):

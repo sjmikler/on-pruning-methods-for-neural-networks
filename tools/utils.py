@@ -22,14 +22,9 @@ def get_cprint(color):
     }
 
     def cprint(*args, **kwargs):
-        print(color2code[color], end='')
-        print(*args, **kwargs)
-        print(color2code['reset'], end='')
+        print(*(color2code[color], *args, color2code['reset']), **kwargs)
 
     return cprint
-
-
-cprint = get_cprint(color='black')
 
 
 class ddict(dict):
