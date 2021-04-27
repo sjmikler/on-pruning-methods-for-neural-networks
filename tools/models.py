@@ -2,9 +2,9 @@ from collections.abc import Iterable
 
 import tensorflow as tf
 
-from tools.utils import get_cprint
+from tools import utils
 
-cprint = get_cprint(color='light magenta')
+cprint = utils.get_cprint(color='light magenta')
 
 
 class GemPool(tf.keras.layers.Layer):
@@ -139,25 +139,25 @@ def VGG(input_shape,
 
 
 def ResNet(
-        input_shape,
-        n_classes,
-        version=None,
-        l1_reg=0,
-        l2_reg=0,
-        bootleneck=False,
-        strides=(1, 2, 2),
-        group_sizes=(2, 2, 2),
-        features=(16, 32, 64),
-        initializer='he_uniform',
-        activation='tf.nn.relu',
-        final_pooling='avgpool',
-        dropout=0,
-        preactivate_blocks=True,
-        regularize_bias=True,
-        head=(
-                ('conv', 16, 3, 1),
-        ),
-        **kwargs
+    input_shape,
+    n_classes,
+    version=None,
+    l1_reg=0,
+    l2_reg=0,
+    bootleneck=False,
+    strides=(1, 2, 2),
+    group_sizes=(2, 2, 2),
+    features=(16, 32, 64),
+    initializer='he_uniform',
+    activation='tf.nn.relu',
+    final_pooling='avgpool',
+    dropout=0,
+    preactivate_blocks=True,
+    regularize_bias=True,
+    head=(
+            ('conv', 16, 3, 1),
+    ),
+    **kwargs
 ):
     if version:
         raise KeyError("Versions not defined yet!")

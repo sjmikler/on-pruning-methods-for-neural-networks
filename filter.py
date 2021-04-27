@@ -4,10 +4,9 @@ import os
 
 import yaml
 
-import tools.constants as C
-from tools.utils import get_cprint
+from tools import constants as C, utils
 
-cprint = get_cprint('green')
+cprint = utils.get_cprint('green')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Filtering and sorting of .yaml "

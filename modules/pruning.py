@@ -4,16 +4,9 @@ import numpy as np
 import tensorflow as tf
 
 from modules import tf_helper
-from modules.tf_helper import (
-    concatenate_flattened,
-    get_optimizer,
-    logging_from_history,
-    reset_weights_to_checkpoint,
-)
-from tools import datasets, layers, models
-from tools.utils import contains_any, get_cprint
+from tools import datasets, layers, models, utils
 
-cprint = get_cprint(color='green')
+cprint = utils.get_cprint(color='green')
 
 
 def main(exp):
@@ -46,7 +39,7 @@ def main(exp):
     model_config = exp.model_config
     model = model_func(**model_config)
 
-    optimizer = get_optimizer(exp.optimizer, exp.optimizer_config)
+    optimizer = tf_helper.get_optimizer(exp.optimizer, exp.optimizer_config)
     model.compile(optimizer, loss_fn, metrics=["accuracy"])
     tf_helper.describe_model(model)
 
@@ -67,9 +60,9 @@ def main(exp):
             ckp = None
         else:
             ckp = exp.checkpointAP
-        num_masks = reset_weights_to_checkpoint(model,
-                                                ckp=ckp,
-                                                skip_keyword='kernel_mask')
+        num_masks = tf_helper.reset_weights_to_checkpoint(model,
+                                                          ckp=ckp,
+                                                          skip_keyword='kernel_mask')
         cprint(f"LOADED AFTER PRUNING {exp.checkpointAP}, but keeping {num_masks} "
                f"masks!")
 
@@ -88,7 +81,7 @@ def main(exp):
                             epochs=int(exp.steps / steps_per_epoch))
         exp.FINAL_DENSITY = report_density(model)
         cprint("FINAL DENSITY:", exp.FINAL_DENSITY)
-        logging_from_history(history.history, exp=exp)
+        tf_helper.logging_from_history(history.history, exp=exp)
 
     os.makedirs(os.path.dirname(exp.checkpoint), exist_ok=True)
     model.save_weights(exp.checkpoint, save_format="h5")
@@ -264,7 +257,7 @@ def get_pruning_mask(saliences, percentage):
     sizes = [w.size for w in saliences]
     shapes = [w.shape for w in saliences]
 
-    flatten = concatenate_flattened(saliences)
+    flatten = tf_helper.concatenate_flattened(saliences)
     flat_mask = np.ones_like(flatten)
 
     threshold = np.percentile(flatten, percentage * 100)
@@ -513,14 +506,14 @@ def initialize_kernel_masks(model):
 
 
 def set_pruning_masks(model, pruning_method, pruning_config, dataset):
-    if contains_any(pruning_method.lower(), 'none', 'nothing'):
+    if utils.contains_any(pruning_method.lower(), 'none', 'nothing'):
         cprint('NO PRUNING')
         return model
-    elif contains_any(pruning_method.lower(), 'random'):
+    elif utils.contains_any(pruning_method.lower(), 'random'):
         cprint('RANDOM PRUNING')
         model = prune_random(model=model, config=pruning_config)
-    elif contains_any(pruning_method.lower(), 'snip'):
-        if contains_any(pruning_method.lower(), 'pseudo'):
+    elif utils.contains_any(pruning_method.lower(), 'snip'):
+        if utils.contains_any(pruning_method.lower(), 'pseudo'):
             cprint('PSUEDO SNIP PRUNING')
             model = prune_pseudo_SNIP(model=model,
                                       config=pruning_config,
@@ -530,16 +523,16 @@ def set_pruning_masks(model, pruning_method, pruning_config, dataset):
             model = prune_SNIP(model=model,
                                config=pruning_config,
                                dataset=dataset.train)
-    elif contains_any(pruning_method.lower(), 'grasp'):
+    elif utils.contains_any(pruning_method.lower(), 'grasp'):
         cprint('GRASP PRUNING')
         model = prune_GraSP(model=model, config=pruning_config, dataset=dataset.train)
-    elif contains_any(pruning_method.lower(), 'l1', 'magnitude'):
+    elif utils.contains_any(pruning_method.lower(), 'l1', 'magnitude'):
         cprint('WEIGHT MAGNITUDE PRUNING')
         model = prune_l1(model=model, config=pruning_config)
-    elif contains_any(pruning_method.lower(), 'imp_complete'):
+    elif utils.contains_any(pruning_method.lower(), 'imp_complete'):
         cprint('IMP COMPLETE PRUNING')
         model = prune_IMP_complete(model=model, config=pruning_config)
-    elif contains_any(pruning_method.lower(), 'kernel mask'):
+    elif utils.contains_any(pruning_method.lower(), 'kernel mask'):
         cprint("PRUNING BY KERNEL MASK VALUES")
         model = prune_by_kernel_masks(model=model, config=pruning_config)
     else:
@@ -558,15 +551,15 @@ def apply_pruning_for_model(model):
 def apply_pruning_masks(model, pruning_method):
     """Wrapper for `apply_pruning_for_model`"""
 
-    if contains_any(pruning_method.lower(), 'shuffle weight'):
+    if utils.contains_any(pruning_method.lower(), 'shuffle weight'):
         cprint("SHUFFLING WEIGHTS IN LAYERS!")
         model = shuffle_weights(model=model)
 
-    if contains_any(pruning_method.lower(), 'shuffle layer'):
+    if utils.contains_any(pruning_method.lower(), 'shuffle layer'):
         cprint("SHUFFLING WEIGHTS WITH MASKS IN LAYERS!")
         model = shuffle_layers(model=model)
 
-    if contains_any(pruning_method.lower(), 'shuffle mask'):
+    if utils.contains_any(pruning_method.lower(), 'shuffle mask'):
         cprint("SHUFFLING MASKS IN LAYERS!")
         model = shuffle_masks(model=model)
 

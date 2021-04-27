@@ -6,10 +6,9 @@ from copy import deepcopy
 
 import tensorflow as tf
 
-from tools.utils import get_cprint
-import tools.constants as C
+from tools import constants as C, utils
 
-cprint = get_cprint(color='light blue')
+cprint = utils.get_cprint(color='light blue')
 
 
 def set_memory_growth():

@@ -1,7 +1,7 @@
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
-from tools.utils import ddict
+from tools import utils
 
 
 def cifar(train_batch_size=128,
@@ -34,7 +34,7 @@ def cifar(train_batch_size=128,
     else:
         raise exception(f"version = {version}, but should be from (10, 100)!")
 
-    ds = ddict(ds)
+    ds = utils.ddict(ds)
     if repeat_train:
         ds.train = ds.train.repeat()
     if shuffle_train:
@@ -58,7 +58,7 @@ def mnist(train_batch_size=100,
         return x, y
 
     ds = tfds.load(name='mnist', as_supervised=True)
-    ds = ddict(ds)
+    ds = utils.ddict(ds)
     ds.train = ds.train.repeat()
     ds.train = ds.train.shuffle(shuffle_train)
     ds.train = ds.train.map(preprocess)

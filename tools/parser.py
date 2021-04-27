@@ -1,14 +1,14 @@
+import argparse
 import os
 import random
 from collections.abc import Iterable
 from copy import deepcopy
-import argparse
 
 import yaml
 
-from tools.utils import ddict, get_cprint, unddict
+from tools import utils
 
-cprint = get_cprint(color='yellow')
+cprint = utils.get_cprint(color='yellow')
 
 
 class YamlExperimentQueue:
@@ -23,12 +23,12 @@ class YamlExperimentQueue:
     def read_content(self):
         with open(self.path, 'r') as f:
             z = list(yaml.safe_load_all(f))
-        return [ddict(exp) for exp in z]
+        return [utils.ddict(exp) for exp in z]
 
     def write_content(self, exps):
         assert isinstance(exps, Iterable)
         with open(self.path, 'w') as f:
-            nexps = map(unddict, exps)  # because cannot dump ddict
+            nexps = map(utils.unddict, exps)  # because cannot dump ddict
             yaml.safe_dump_all(nexps, stream=f, sort_keys=False)
 
     def append_content(self, exps):
@@ -104,7 +104,7 @@ def load_from_yaml(yaml_path, cmd_parameters):
                 arg = arg[:arg.index('=')]  # for usage with +arg=V
             parser.add_argument(arg)
 
-    cmd_arguments = ddict()
+    cmd_arguments = utils.ddict()
     args = parser.parse_args(cmd_parameters)
     for key, value in args.__dict__.items():
         cprint(f"COMMAND LINE PARAMETER: {key}")
@@ -114,7 +114,7 @@ def load_from_yaml(yaml_path, cmd_parameters):
             cmd_arguments[key] = value
 
     experiments = yaml.safe_load_all(open(yaml_path, "r"))
-    experiments = [ddict(exp) for exp in experiments]
+    experiments = [utils.ddict(exp) for exp in experiments]
     default = experiments.pop(0)
     default.update(cmd_arguments)
 

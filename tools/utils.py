@@ -1,7 +1,7 @@
 import datetime
 from copy import deepcopy
 
-import tools.constants as C
+from tools import constants as C
 
 
 def get_cprint(color):

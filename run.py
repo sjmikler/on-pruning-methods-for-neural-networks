@@ -30,7 +30,7 @@ else:
 
 parameters = utils.filter_argv(unknown_args, include=['+'], exclude=['-'])
 for p in parameters:
-    sys.argv.remove(p)  # filter out parameters, leave only arguments
+    sys.argv.remove(p)  # filter out parameters, leave only real arguments
 
 default_config, experiment_queue = parser.load_from_yaml(yaml_path=args.exp,
                                                          cmd_parameters=parameters)

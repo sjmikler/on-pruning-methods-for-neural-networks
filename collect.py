@@ -4,10 +4,9 @@ import os
 
 import yaml
 
-import tools.constants as C
-from tools.utils import get_cprint
+from tools import constants as C, utils
 
-cprint = get_cprint('green')
+cprint = utils.get_cprint('green')
 
 
 def recursive_collect_logs(path, exclude, verbose=False, level=0):
@@ -40,7 +39,7 @@ if __name__ == '__main__':
                         help='starting directories for recursive log collecting')
     parser.add_argument('--exclude', type=str, default=[], nargs='*',
                         help='skip directories or files')
-    parser.add_argument('--dest', type=str, default='yaml_logs',
+    parser.add_argument('--dest', type=str, default='yaml_collect',
                         help='directory of new .yaml file')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='print visited directories during recursive collecting')
