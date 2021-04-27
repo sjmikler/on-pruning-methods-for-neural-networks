@@ -10,18 +10,26 @@ from tools.utils import get_cprint
 cprint = get_cprint('green')
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Filtering and sorting of .yaml logs.",
+    parser = argparse.ArgumentParser(description="Filtering and sorting of .yaml "
+                                                 "logs. Use %FILENAME to load "
+                                                 "arguments from file.",
                                      fromfile_prefix_chars='%')
     parser.add_argument('path', type=str, nargs='*',
-                        help='Path to .yaml file containing logs')
-    parser.add_argument('-d', '--dest', type=str, default='yaml_logs',
-                        help='Directory of new .yaml file')
-    parser.add_argument('-f', '--filter', type=str, action='append',
-                        help='Python lambda function accepting experiment dict and '
+                        help='path to .yaml file containing logs')
+    parser.add_argument('--dest', type=str, default='yaml_logs',
+                        help='directory of new .yaml file')
+    parser.add_argument('--filter', type=str, action='append',
+                        help='python lambda function accepting experiment dict and '
                              'returning boolean')
-    parser.add_argument('-s', '--sort', type=str, action='append',
-                        help='Python lambda function accepting experiment dict and '
+    parser.add_argument('--sort', type=str, action='append',
+                        help='python lambda function accepting experiment dict and '
                              'returning sorting values')
+    parser.add_argument('--reverse', action='store_true',
+                        help='reverse sorting order')
+    parser.add_argument('--keep-keys',
+                        type=str,
+                        nargs='*',
+                        help='keys in the experiment dict that should be kept')
     args = parser.parse_args()
 
     logs = []
@@ -39,11 +47,18 @@ if __name__ == '__main__':
 
     if args.sort:
         for f in args.sort:
-            logs = sorted(logs, key=eval(f))
+            logs = sorted(logs, key=eval(f), reverse=args.reverse)
+
+    if args.keep_keys:
+        nlogs = []
+        for log in logs:
+            log = {k: log[k] for k in args.keep_keys if k in log}
+            nlogs.append(log)
+        logs = nlogs
 
     os.makedirs(args.dest, exist_ok=True)
     now = datetime.datetime.now().strftime(C.time_formats[1])
     dest = os.path.join(args.dest, f'flogs_{now}.yaml')
     with open(dest, 'w') as f:
-        yaml.safe_dump_all(logs, f)
+        yaml.safe_dump_all(logs, f, sort_keys=False)
     cprint(f"SAVED: {dest}")
