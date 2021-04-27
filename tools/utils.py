@@ -1,7 +1,7 @@
 import datetime
 from copy import deepcopy
 
-from tools import constants as C
+import tools.constants as C
 
 
 def get_cprint(color):
@@ -65,7 +65,7 @@ def contains_any(t, *opts):
 
 
 def parse_time(strtime):
-    for format in C.legal_time_formats:
+    for format in C.time_formats:
         try:
             return datetime.datetime.strptime(strtime, format)
         except ValueError:

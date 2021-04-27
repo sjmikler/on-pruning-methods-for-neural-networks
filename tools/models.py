@@ -260,7 +260,7 @@ def ResNet(
 
 
 def WRN(N, K, *args, **kwargs) -> tf.keras.Model:
-    """args, kwargs parameters:
+    """filter, kwargs parameters:
         * input_shape,
         * n_classes,
         * l2_reg=0,

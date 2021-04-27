@@ -7,6 +7,7 @@ from copy import deepcopy
 import tensorflow as tf
 
 from tools.utils import get_cprint
+import tools.constants as C
 
 cprint = get_cprint(color='light blue')
 
@@ -76,8 +77,7 @@ def logging_from_history(history, exp):
     cprint(f"FULL PATH: {full_path}")
 
     maxi_acc = max(history["val_accuracy"])
-    date = datetime.datetime.now()
-    exp.TIME = f"{date.year}.{date.month}.{date.day} {date.hour}:{date.minute}"
+    exp.TIME = datetime.datetime.now().strftime(C.time_formats[0])
     exp.ACC = maxi_acc
 
     with writer.as_default():

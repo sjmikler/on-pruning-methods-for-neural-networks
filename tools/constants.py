@@ -1,4 +1,5 @@
-legal_time_formats = ["%Y.%m.%d %H:%M"]
+time_formats = ["%Y.%m.%d %H:%M",
+                "%Y-%m-%d_%H-%M-%S"]
 
 color2code = {
     'black': '\x1b[30m',
