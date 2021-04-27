@@ -79,4 +79,4 @@ def get_date_from_exp(exp):
     if 'TIME' in exp:
         return parse_time(exp['TIME'])
     else:
-        return datetime.datetime.min
+        raise KeyError

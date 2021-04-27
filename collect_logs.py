@@ -31,20 +31,23 @@ if __name__ == '__main__':
                              'same as --path')
     parser.add_argument('-s', '--sort-by', type=str, default='TIME',
                         help='which key from the dictionary to use to sort entries')
-    parser.add_argument('--reverse', action="store_false")
+    # parser.add_argument('--filter', type=str)
+    parser.add_argument('--reverse', action="store_false", help='reverse sorting order')
     args = parser.parse_args()
+
     if args.dest is None:
         args.dest = os.path.join(args.path, 'gathered_logs.yaml')
 
     logs = recursive_collect_logs(args.path)
 
+    sort_by = args.sort_by.lower()
+
     if args.sort_by.lower() == 'time':
-        logs = sorted(logs, key=lambda x: get_date_from_exp(x), reverse=parser.reverse)
+        logs = sorted(logs, key=lambda x: get_date_from_exp(x), reverse=args.reverse)
     else:
-        key = args.sort_by
-        logs = sorted(logs, key=lambda x: x[key], reverse=parser.reverse)
+        raise NotImplementedError
+        # key = args.sort_by
+        # logs = sorted(logs, key=lambda x: x[key], reverse=args.reverse)
 
     with open(args.dest, 'w') as f:
         yaml.safe_dump_all(logs, f)
-
-datetime.datetime.strptime('2021.03.12 5:3', "%Y.%m.%d %H:%M")
