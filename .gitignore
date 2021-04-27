@@ -1,5 +1,9 @@
 __pycache__/
+
 temp/
 data/
 yaml*/
+
 *.h5
+
+queue.yaml
