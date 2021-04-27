@@ -1,4 +1,4 @@
-Experiments running orchestra that manages definition and results of experiments.
+Experiments running orchestra that manages definitions and results of experiments.
 
 # Defining experiments
 

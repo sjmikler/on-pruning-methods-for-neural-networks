@@ -46,7 +46,7 @@ if not args.no_memory_growth:
 
 
 def main(exp):
-    cprint("RUNNING TENSORFLOW MODULE")
+    cprint("RUNNING TF-HELPER MODULE")
     set_precision(exp.precision)
 
 
