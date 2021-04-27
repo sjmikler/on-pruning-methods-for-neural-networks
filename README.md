@@ -42,22 +42,23 @@ Script `run.py` launches experiments specified in **experiment definition**.
 
 * If `queue` parameter is specified as a valid path, the queue of the experiments will be stored as a `.yaml` file and can be modified when experiments are running. Otherwise, queue is stored in RAM memory and cannot be modified.
 
-* update **global config** straight from command line???
 
 * If experiment is stopped with `KeyboardInterrupt`, there will be 2 second pause during which `run.py` can be interrupted completely by a second `KeyboardInterrupt`. If not interrupted completely, next experiment in the queue will start.
 
 * If `name: skip`, training will not be performed, but experiment parameters can be used in fancy parsing. Skipped experiments will not launch the module.
 
-4. `run.py` has its command line arguments. Modules might contain their own command line arguments and they should be passed to `run.py` as well. If argument name overlaps between `run.py` and a module, it will be used by both.
+* `run.py` has its own command line arguments. Modules might contain their own command line arguments and to use them, you should pass them to `run.py` and it will pass them further down to the module. If argument name is used by both `run.py` and the module, it will be used by both.
    ```
    > python run.py --help
-    optional arguments:
-      -h, --help            show this help message and exit
-      --exp EXP             Path to .yaml file with experiments
-      --dry                 Skip execution but parse experiments
-      --pick PICK, --cherrypick-experiments PICK
-                            Run only selected experiments, e.g. 0,1,3 or 1
+   optional arguments:
+     -h, --help            show this help message and exit
+     --dry                 Skip execution but parse experiments
+     --exp EXP             Path to .yaml file with experiments
+     --pick PICK, --cherrypick-experiments PICK
+                           Run only selected experiments, e.g. 0,1,3 or 1
    ```
+
+* You can update **global config** straight from command line by passing arguments with `+` prefix instead of `-`, e.g. `python run.py +queue queue.yaml`.
 
 # Modules
 

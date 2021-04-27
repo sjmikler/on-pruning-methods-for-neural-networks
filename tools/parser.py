@@ -2,6 +2,7 @@ import os
 import random
 from collections.abc import Iterable
 from copy import deepcopy
+import argparse
 
 import yaml
 
@@ -94,18 +95,22 @@ def cool_parse_exp(exp, E, scopes=[]):
     return exp
 
 
-def load_from_yaml(yaml_path, unknown_args):
-    cmd_arguments = ddict()
-    for arg in unknown_args:
-        cprint(f"COMMAND LINE ARGUMENT: {arg}")
-        if "--" in arg and "=" in arg:
-            key, value = arg.split("=", 1)
-            key = key.lstrip("-")
+def load_from_yaml(yaml_path, cmd_parameters):
+    parser = argparse.ArgumentParser(prefix_chars='+')
+    for arg in cmd_parameters:
+        if arg[0] == '+':
+            if '=' in arg:
+                arg = arg[:arg.index('=')]  # for usage with +arg=V
+            parser.add_argument(arg)
 
-            try:  # for parsing integers etc
-                cmd_arguments[key] = eval(value, {}, {})
-            except (NameError, SyntaxError):  # for parsing strings
-                cmd_arguments[key] = value
+    cmd_arguments = ddict()
+    args = parser.parse_args(cmd_parameters)
+    for key, value in args.__dict__.items():
+        cprint(f"COMMAND LINE PARAMETER: {key}")
+        try:  # for parsing integers etc
+            cmd_arguments[key] = eval(value, {}, {})
+        except (NameError, SyntaxError):  # for parsing strings
+            cmd_arguments[key] = value
 
     experiments = yaml.safe_load_all(open(yaml_path, "r"))
     experiments = [ddict(exp) for exp in experiments]

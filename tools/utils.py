@@ -17,9 +17,10 @@ def get_cprint(color):
 
 class ddict(dict):
     def __init__(self, *args, **kwargs):
+        """Dict with dot syntax. Keeps track of unused keys."""
         super().__init__(*args, **kwargs)
         self.__dict__['_unused_parameters'] = set()
-        self.reset_unused_parameters()
+        self.reset_unused_parameters()  # set everything as unused
 
         for key, value in self.items():
             if isinstance(value, dict):
@@ -80,3 +81,17 @@ def get_date_from_exp(exp):
         return parse_time(exp['TIME'])
     else:
         return datetime.datetime.min
+
+
+def filter_argv(argv: list, include: list, exclude: list):
+    filtered = []
+    adding = False
+    for arg in argv:
+        if arg[0] in include:
+            adding = True
+        if arg[0] in exclude:
+            adding = False
+
+        if adding:
+            filtered.append(arg)
+    return filtered

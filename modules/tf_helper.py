@@ -27,9 +27,9 @@ def set_visible_gpu(gpus=[]):
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--gpu",
-                        default=None,
-                        type=str,
-                        help="Which GPUs to use during training, e.g. 0,1,3 or 1")
+                        type=int,
+                        nargs='*',
+                        help="Which GPUs to use during training, e.g. 0 1 3 or just 1")
 arg_parser.add_argument("--no-memory-growth",
                         action="store_true",
                         help="Disables memory growth")
@@ -37,13 +37,12 @@ args, unknown_args = arg_parser.parse_known_args()
 if unknown_args:
     cprint(f"UNKNOWN CMD ARGUMENTS: {unknown_args}")
 else:
-    cprint(f"ALL CMD ARGUMENTS RECOGNIZED! (len(argv) = {len(sys.argv)})")
+    cprint(f"ALL CMD ARGUMENTS RECOGNIZED! (len(sys.argv) = {len(sys.argv)})")
 
-if args.gpu is not None:
+if args.gpu:
     gpus = tf.config.get_visible_devices("GPU")
-    gpu_indices = [num for num in range(10) if str(num) in args.gpu]
-    cprint(f"SETTING VISIBLE GPUS TO {gpu_indices}")
-    set_visible_gpu([gpus[idx] for idx in gpu_indices])
+    cprint(f"SETTING VISIBLE GPUS TO {args.gpu}")
+    set_visible_gpu([gpus[idx] for idx in args.gpu])
 
 if not args.no_memory_growth:
     set_memory_growth()
