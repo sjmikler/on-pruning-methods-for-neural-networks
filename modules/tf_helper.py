@@ -67,8 +67,8 @@ def set_precision(precision):
 
 
 def logging_from_history(history, exp):
-    import tensorflow as tf
     import datetime
+    import socket
 
     full_path = exp.full_path
     writer = tf.summary.create_file_writer(full_path)
@@ -76,6 +76,7 @@ def logging_from_history(history, exp):
 
     maxi_acc = max(history["val_accuracy"])
     exp.TIME = datetime.datetime.now().strftime(C.time_formats[0])
+    exp.HOST = socket.gethostname()
     exp.ACC = maxi_acc
 
     with writer.as_default():

@@ -54,5 +54,5 @@ if __name__ == '__main__':
     now = datetime.datetime.now().strftime(C.time_formats[1])
     dest = os.path.join(args.dest, f'logs_{now}.yaml')
     with open(dest, 'w') as f:
-        yaml.safe_dump_all(logs, f)
+        yaml.safe_dump_all(logs, f, sort_keys=False)
     cprint(f"SAVED: {dest}")
