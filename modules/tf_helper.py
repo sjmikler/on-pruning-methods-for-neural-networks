@@ -33,10 +33,8 @@ arg_parser.add_argument("--no-memory-growth",
                         action="store_true",
                         help="Disables memory growth")
 args, unknown_args = arg_parser.parse_known_args()
-if unknown_args:
-    cprint(f"UNKNOWN CMD ARGUMENTS: {unknown_args}")
-else:
-    cprint(f"ALL CMD ARGUMENTS RECOGNIZED! (len(sys.argv) = {len(sys.argv)})")
+cprint(f"UNKNOWN CMD ARGUMENTS: {unknown_args}")
+cprint(f"  KNOWN CMD ARGUMENTS: {args.__dict__}")
 
 if args.gpu:
     gpus = tf.config.get_visible_devices("GPU")

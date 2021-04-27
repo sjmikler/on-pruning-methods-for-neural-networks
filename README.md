@@ -1,3 +1,5 @@
+Experiments running orchestra that manages definition and results of experiments.
+
 # Defining experiments
 
 There's a single file that contains your **experiment definition** (by default `experiment.yaml`). Its first element is always **default config** which contains default values for experiments that come after it. If a settings repeats between default config and experiments, experiments have the priority.

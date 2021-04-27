@@ -22,11 +22,8 @@ arg_parser.add_argument("--pick",
                         nargs='*',
                         help="Run only selected experiments, e.g. 0 1 3 or just 1")
 args, unknown_args = arg_parser.parse_known_args()
-
-if unknown_args:
-    cprint(f"UNKNOWN CMD ARGUMENTS: {unknown_args}")
-else:
-    cprint(f"ALL CMD ARGUMENTS RECOGNIZED! (len(sys.argv) = {len(sys.argv)})")
+cprint(f"UNKNOWN CMD ARGUMENTS: {unknown_args}")
+cprint(f"  KNOWN CMD ARGUMENTS: {args.__dict__}")
 
 parameters = utils.filter_argv(unknown_args, include=['+'], exclude=['-'])
 for p in parameters:

@@ -104,19 +104,20 @@ def load_from_yaml(yaml_path, cmd_parameters):
                 arg = arg[:arg.index('=')]  # for usage with +arg=V
             parser.add_argument(arg)
 
-    cmd_arguments = utils.ddict()
     args = parser.parse_args(cmd_parameters)
+    new_cmd_parameters = utils.ddict()
+
     for key, value in args.__dict__.items():
-        cprint(f"COMMAND LINE PARAMETER: {key}")
         try:  # for parsing integers etc
-            cmd_arguments[key] = eval(value, {}, {})
+            new_cmd_parameters[key] = eval(value, {}, {})
         except (NameError, SyntaxError):  # for parsing strings
-            cmd_arguments[key] = value
+            new_cmd_parameters[key] = value
+    cprint(f"CMD PARAMETERS: {new_cmd_parameters}")
 
     experiments = yaml.safe_load_all(open(yaml_path, "r"))
     experiments = [utils.ddict(exp) for exp in experiments]
     default = experiments.pop(0)
-    default.update(cmd_arguments)
+    default.update(new_cmd_parameters)
 
     all_unpacked_experiments = []
     for global_rep in range(default.get("global_repeat") or 1):
