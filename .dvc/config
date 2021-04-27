@@ -1,7 +1,0 @@
-[core]
-    remote = test
-['remote "gdrive"']
-    url = gdrive://1whLTuX_eaFWSAsauxR5ikoLULYtRRksw
-['remote "test"']
-    url = gdrive://1H763CSiu-U6CJ37vW4BcT8nLMR0L3H-7
-    gdrive_user_credentials_file = tmp/myremote-credentials.json

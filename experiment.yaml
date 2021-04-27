@@ -7,7 +7,7 @@ queue: null # specify path for queue file, if null keeps queue unaccessible in m
 name: skip # with name=skip, training will be skipped
 module: modules.pruning
 
-directory: temp/21.04.20_tests
+directory: temp/dummy_tests
 full_path: eval f"{directory}/{name}/{RND_IDX}/{REP}" # REP is a value from [0, REPEAT-1] interval
 checkpoint: eval f"{directory}/{name}/{RND_IDX}/{REP}.h5" # RND_IDX is automatically assigned in `run.py`
 yaml_logdir: eval f"{directory}/{name}/{RND_IDX}/{REP}.yaml"
@@ -23,17 +23,17 @@ dataset_config:
 
 optimizer: tf.optimizers.SGD
 optimizer_config:
-    learning_rate: tf.optimizers.schedules.PiecewiseConstantDecay(
-        [32000, 48000, 64000], [0.1, 0.02, 0.004, 0.0008])
+    learning_rate: tf.optimizers.schedules.PiecewiseConstantDecay([32000, 48000, 64000], [0.1, 0.02, 0.004, 0.0008])
     momentum: 0.9
     nesterov: True
 
-model: lenet
+model: WRN
 model_config:
+    N: 16
+    K: 4
     input_shape: [32, 32, 3]
-    layer_sizes: [400, 400, 400]
     n_classes: 10
-    l2_reg: 1e-4
+    l2_reg: 2e-4
 
 pruning: none # none|random|l1|snip|grasp
 pruning_config:
@@ -42,32 +42,7 @@ pruning_config:
 
 # EXPERIMENTS:
 ---
-steps: 16000
-name: WRN16-8-starter16k
-
-model: WRN
-model_config:
-    N: 16
-    K: 8
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l2_reg: 2e-4
+name: WRN16-4-short-training
+steps: 2000
 ---
-steps: 80000
-
-checkpointBP: eval E[0].checkpoint
-# checkpointAP: random
-
-pruning: l1
-pruning_config:
-    sparsity: eval [0.0, 0.25, 0.5, 0.8, 0.9, 0.95][REP]
-name: eval f"WRN16-8-prL1-16000-sp{pruning_config.sparsity}"
-
-model: WRN
-model_config:
-    N: 16
-    K: 8
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l2_reg: 2e-4
-repeat: 6
+name: WRN16-4
