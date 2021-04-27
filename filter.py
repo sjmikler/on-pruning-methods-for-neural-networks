@@ -16,7 +16,7 @@ if __name__ == '__main__':
                                      fromfile_prefix_chars='%')
     parser.add_argument('path', type=str, nargs='*',
                         help='path to .yaml file containing logs')
-    parser.add_argument('--dest', type=str, default='yaml_logs',
+    parser.add_argument('--dest', type=str, default='yaml_filter',
                         help='directory of new .yaml file')
     parser.add_argument('--filter', type=str, action='append',
                         help='python lambda function accepting experiment dict and '
@@ -29,7 +29,8 @@ if __name__ == '__main__':
     parser.add_argument('--keep-keys',
                         type=str,
                         nargs='*',
-                        help='keys in the experiment dict that should be kept')
+                        help='keys in the experiment dict that should be kept, '
+                             'skip to keep everything')
     args = parser.parse_args()
 
     logs = []

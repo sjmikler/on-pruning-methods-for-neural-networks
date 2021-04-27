@@ -37,12 +37,13 @@ def recursive_collect_logs(path, exclude, verbose=False, level=0):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Recursive gathering of .yaml logs.")
     parser.add_argument('path', type=str, default=['.'], nargs='*',
-                        help='directory from which recursive log gathering will begin')
-    parser.add_argument('--exclude', type=str, default=[], nargs='*')
+                        help='starting directories for recursive log collecting')
+    parser.add_argument('--exclude', type=str, default=[], nargs='*',
+                        help='skip directories or files')
     parser.add_argument('--dest', type=str, default='yaml_logs',
                         help='directory of new .yaml file')
     parser.add_argument('-v', '--verbose', action='store_true',
-                        help='print directories during recursive search')
+                        help='print visited directories during recursive collecting')
     args = parser.parse_args()
 
     logs = []
