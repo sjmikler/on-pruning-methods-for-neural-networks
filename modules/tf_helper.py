@@ -1,4 +1,5 @@
 import argparse
+import sys
 from collections import Counter
 from collections.abc import Iterable
 from copy import deepcopy
@@ -35,7 +36,7 @@ args, unknown_args = arg_parser.parse_known_args()
 if unknown_args:
     cprint(f"UNKNOWN CMD ARGUMENTS: {unknown_args}")
 else:
-    cprint(f"CMD ARGUMENTS RECOGNIZED!")
+    cprint(f"ALL CMD ARGUMENTS RECOGNIZED! (len(argv) = {len(sys.argv)})")
 
 if args.gpu is not None:
     gpus = tf.config.get_visible_devices("GPU")

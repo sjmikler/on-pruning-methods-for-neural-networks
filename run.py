@@ -1,6 +1,7 @@
 import argparse
 import importlib
 import pprint
+import sys
 import time
 
 from tools import parser, utils
@@ -24,7 +25,7 @@ args, unknown_args = arg_parser.parse_known_args()
 if unknown_args:
     cprint(f"UNKNOWN CMD ARGUMENTS: {unknown_args}")
 else:
-    cprint(f"CMD ARGUMENTS RECOGNIZED!")
+    cprint(f"ALL CMD ARGUMENTS RECOGNIZED! (len(argv) = {len(sys.argv)})")
 
 default_config, experiment_queue = parser.load_from_yaml(yaml_path=args.exp,
                                                          unknown_args=unknown_args)
