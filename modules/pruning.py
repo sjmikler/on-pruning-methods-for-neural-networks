@@ -78,7 +78,7 @@ def main(exp):
     steps_per_epoch = min(exp.steps, exp.steps_per_epoch)
 
     if unused := exp.get_unused_parameters():
-        cprint("WARNING! Listing unused parameters:")
+        cprint("WARNING! Unused parameters:")
         cprint(unused)
 
     if exp.steps != 0:

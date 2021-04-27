@@ -10,9 +10,12 @@ from tools.utils import get_cprint
 cprint = get_cprint('green')
 
 
-def recursive_collect_logs(path, verbose=False, level=0):
+def recursive_collect_logs(path, exclude, verbose=False, level=0):
     logs = []
     for x in os.listdir(path):
+        if x in exclude:
+            continue
+
         if x.endswith('.yaml'):
             full_path = os.path.join(path, x)
             with open(full_path, 'r') as f:
@@ -20,7 +23,10 @@ def recursive_collect_logs(path, verbose=False, level=0):
                     if exp and exp not in logs:
                         logs.append(exp)
         if os.path.isdir(npath := os.path.join(path, x)):
-            for exp in recursive_collect_logs(npath, verbose=verbose, level=level + 1):
+            for exp in recursive_collect_logs(npath,
+                                              exclude=exclude,
+                                              verbose=verbose,
+                                              level=level + 1):
                 if exp not in logs:
                     logs.append(exp)
     if len(logs) and (verbose or level == 0):
@@ -29,9 +35,10 @@ def recursive_collect_logs(path, verbose=False, level=0):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="recursive gathering of .yaml logs.")
-    parser.add_argument('path', type=str, default='.', nargs='*',
+    parser = argparse.ArgumentParser(description="Recursive gathering of .yaml logs.")
+    parser.add_argument('path', type=str, default=['.'], nargs='*',
                         help='directory from which recursive log gathering will begin')
+    parser.add_argument('--exclude', type=str, default=[], nargs='*')
     parser.add_argument('--dest', type=str, default='yaml_logs',
                         help='directory of new .yaml file')
     parser.add_argument('-v', '--verbose', action='store_true',
@@ -40,7 +47,7 @@ if __name__ == '__main__':
 
     logs = []
     for path in args.path:
-        log = recursive_collect_logs(path, verbose=args.verbose)
+        log = recursive_collect_logs(path, exclude=args.exclude, verbose=args.verbose)
         logs.extend(log)
 
     os.makedirs(args.dest, exist_ok=True)

@@ -62,7 +62,7 @@ They contain code for running the experiment and they use parameters from **expe
 
 [Available modules](modules/README.md)
 
-# Python `run.py`
+# python run.py
 
 `run.py` is parsing the experiments and running a module. It is the module from `modules` directory that does all the training. Module should be specified as a parameter in **default config**. Before module starts the training, experiments will be parsed...
 
@@ -159,35 +159,79 @@ test1: 1
 test2: eval test1 # ERROR: test1 IS UNKNOWN (WRONG ORDER)
 ```
 
-Order can be important.
+Order is important for fancy parsing.
 
 ## Logs management
 
-Logs in `.yaml` format should be saved by a module in location passed as `experiment.yaml/yaml_logdir`. These should contain experiment formulation and basic information about the results, e.g. accuracy. Following tool can recursively collect logs from `.yaml` files in subdirectories of `path`.
+Logs in `.yaml` format should be saved by a module in location passed as `experiment.yaml/yaml_logdir`. These should contain experiment formulation and basic information about the results, e.g. final accuracy. There are tools that can make it easier to cope with large number of experiments.
+
+### python collect.py
+
+Can recursively collect logs from `.yaml` files in subdirectories of `path`.
 
 ```
-collect_logs.py 
-   --path=[will be recursively serached for .yaml logs] 
-   --dest=[where cumulative log will be saved, end it with .yaml]
+Recursive gathering of .yaml logs.
+
+positional arguments:
+  path                  directory from which recursive log gathering will begin
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --exclude [EXCLUDE [EXCLUDE ...]]
+  --dest DEST           directory of new .yaml file
+  -v, --verbose         print directories during recursive search
 ```
 
-Examples:
+**Examples:**
+
+`python collect.py data/ --dest collected_logs --exclude unwanted_directory`
+
+`python collect.py temp/ -v` will collect logs from `temp` directory and will be verbose.
+
+### python filter.py
+
+Can be used to get smaller `.yaml` file of experiments meeting passed criteria.
 
 ```
-python -m tools.collect_logs.py 
-   --path=data/VGG19_IMP03_ticket 
-   --dest=data/VGG19_IMP03_ticket/collected_logs.yaml
+Filtering and sorting of .yaml logs. Use %FILENAME to load arguments from file.
+
+positional arguments:
+  path                  path to .yaml file containing logs
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --dest DEST           directory of new .yaml file
+  --filter FILTER       python lambda function accepting experiment dict and returning boolean
+  --sort SORT           python lambda function accepting experiment dict and returning sorting values
+  --reverse             reverse sorting order
+  --keep-keys [KEEP_KEYS [KEEP_KEYS ...]]
+                        keys in the experiment dict that should be kept
 ```
 
-```
-python -m tools.collect_logs.py 
-   -p=data/VGG19_IMP03_ticket 
-   -d=collected_logs.yaml
-```
+**Examples:**
+
+`python filter.py logs_2021-01-01_12-00-00.yaml logs_2021-01-01_12-05-30.yaml %args`
+
+where `args` is:
 
 ```
-python -m tools.collect_logs.py 
-   -p=data/VGG19_IMP03_ticket 
+--filter=lambda exp: 'TIME' in exp
+--filter=lambda exp: 'ACC' in exp and exp['ACC'] > 0.9
+--sort=lambda exp: exp['TIME']
+--sort=lambda exp: exp['name']
+--reverse
+--keep-keys
+ACC
+RND_IDX
+name
+model
+TIME
 ```
 
-By default, `--dest` sets itself to the same value as `--path`.
+As a result, all returned logs:
+
+* contained 'TIME' info
+* that contained 'ACC' info with values larger than 0.9
+* are sorted by 'TIME' values in reverse order
+* then are sorted by 'name' values in reverse order
+* contain only 'ACC', 'RND_IDX', 'name', 'model', 'TIME' info
