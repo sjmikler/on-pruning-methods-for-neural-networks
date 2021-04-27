@@ -6,11 +6,10 @@ import tools.constants as C
 
 def get_cprint(color):
     def cprint(*args, **kwargs):
-        print('#',
-              C.color2code[color],
-              *args,
-              C.color2code['reset'],
-              **kwargs)
+        args = list(args)
+        args[0] = C.color2code[color] + '# ' + str(args[0])
+        args[-1] = str(args[-1]) + C.color2code['reset']
+        print(*args, **kwargs)
 
     return cprint
 

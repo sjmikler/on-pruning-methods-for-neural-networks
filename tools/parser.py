@@ -18,6 +18,7 @@ class YamlExperimentQueue:
             self.write_content(experiments)
         else:
             assert os.path.exists(path), "Neither experiments or queue were given!"
+            raise NotImplementedError("UNTESTED!")
 
     def read_content(self):
         with open(self.path, 'r') as f:
