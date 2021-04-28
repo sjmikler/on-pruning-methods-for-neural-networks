@@ -11,16 +11,16 @@ cprint = utils.get_cprint(color='red')
 arg_parser = argparse.ArgumentParser(prefix_chars='-+')
 arg_parser.add_argument("--dry",
                         action="store_true",
-                        help="Skip execution but parse experiments")
+                        help="skip execution but parse experiments")
 arg_parser.add_argument("--exp",
                         default='experiment.yaml',
                         type=str,
-                        help="Path to .yaml file with experiments")
+                        help="path to .yaml file with experiments")
 arg_parser.add_argument("--pick",
                         "--cherrypick-experiments",
                         type=int,
                         nargs='*',
-                        help="Run only selected experiments, e.g. 0 1 3 or just 1")
+                        help="run only selected experiments, e.g. 0 1 3 or just 1")
 args, unknown_args = arg_parser.parse_known_args()
 cprint(f"UNKNOWN CMD ARGUMENTS: {unknown_args}")
 cprint(f"  KNOWN CMD ARGUMENTS: {args.__dict__}")
