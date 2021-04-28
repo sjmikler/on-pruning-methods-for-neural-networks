@@ -8,7 +8,7 @@ import yaml
 
 from tools import utils
 
-cprint = utils.get_cprint(color='yellow')
+print = utils.get_cprint(color='yellow')
 
 
 class YamlExperimentQueue:
@@ -50,7 +50,7 @@ class YamlExperimentQueue:
         return exp
 
     def __iter__(self):
-        cprint(f"LOADING EXPERIMENT FROM {self.path}")
+        print(f"LOADING EXPERIMENT FROM {self.path}")
         while self:
             exp = self.pop()
             yield exp
@@ -85,7 +85,7 @@ def cool_parse_exp(exp, E, scopes=[]):
             scope['E'] = E  # and add experiment history
 
             v = eval(v, {}, scope)
-            cprint(f"FANCY PARSING {k}: {org_expr} --> {v}")
+            print(f"FANCY PARSING {k}: {org_expr} --> {v}")
 
         if isinstance(v, str):
             try:
@@ -112,7 +112,7 @@ def load_from_yaml(yaml_path, cmd_parameters):
             new_cmd_parameters[key] = eval(value, {}, {})
         except (NameError, SyntaxError):  # for parsing strings
             new_cmd_parameters[key] = value
-    cprint(f"CMD PARAMETERS: {new_cmd_parameters}")
+    print(f"CMD PARAMETERS: {new_cmd_parameters}")
 
     experiments = yaml.safe_load_all(open(yaml_path, "r"))
     experiments = [utils.ddict(exp) for exp in experiments]
@@ -151,5 +151,5 @@ def load_from_yaml(yaml_path, cmd_parameters):
         queue = YamlExperimentQueue(all_unpacked_experiments, path=path)
     else:
         queue = iter(all_unpacked_experiments)
-    cprint(f"QUEUE TYPE: {type(queue)}")
+    print(f"QUEUE TYPE: {type(queue)}")
     return default, queue

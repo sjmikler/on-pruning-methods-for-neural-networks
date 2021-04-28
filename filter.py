@@ -6,7 +6,7 @@ import yaml
 
 from tools import constants as C, utils
 
-cprint = utils.get_cprint('green')
+print = utils.get_cprint('green')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Filtering and sorting of .yaml "
@@ -37,13 +37,13 @@ if __name__ == '__main__':
         with open(path, 'r') as f:
             log = yaml.safe_load_all(f)
             logs.extend(log)
-    cprint(f"Loaded {len(logs):^5} logs!")
+    print(f"Loaded {len(logs):^5} logs!")
 
     if args.filter:
         for f in args.filter:
             logs = filter(eval(f), logs)
             logs = list(logs)
-    cprint(f"Filter {len(logs):^5} logs!")
+    print(f"Filter {len(logs):^5} logs!")
 
     if args.sort:
         for f in args.sort:
@@ -61,4 +61,4 @@ if __name__ == '__main__':
     dest = os.path.join(args.dest, f'flogs_{now}.yaml')
     with open(dest, 'w') as f:
         yaml.safe_dump_all(logs, f, sort_keys=False)
-    cprint(f"SAVED: {dest}")
+    print(f"SAVED: {dest}")

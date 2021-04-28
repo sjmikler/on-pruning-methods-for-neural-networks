@@ -4,7 +4,7 @@ import tensorflow as tf
 
 from tools import utils
 
-cprint = utils.get_cprint(color='light magenta')
+print = utils.get_cprint(color='light magenta')
 
 
 class GemPool(tf.keras.layers.Layer):
@@ -81,7 +81,7 @@ def VGG(input_shape,
         pools=(2, 2, 2, 2, 2),
         regularize_bias=True,
         **kwargs):
-    cprint(f"VGG: unknown parameters: {list(kwargs)}")
+    print(f"VGG: unknown parameters: {list(kwargs)}")
     if version:
         if version == 11:
             group_sizes = (1, 1, 2, 2, 2)
@@ -161,7 +161,7 @@ def ResNet(
 ):
     if version:
         raise KeyError("Versions not defined yet!")
-    cprint(f"ResNet: unknown parameters: {list(kwargs)}")
+    print(f"ResNet: unknown parameters: {list(kwargs)}")
 
     activation_func = eval(activation)
     regularizer = tf.keras.regularizers.l1_l2(l1_reg,
@@ -291,7 +291,7 @@ def LeNet(input_shape,
           layer_sizes=(300, 100),
           initializer='glorot_uniform',
           **kwargs):
-    cprint(f"LeNet: unknown parameters: {list(kwargs)}")
+    print(f"LeNet: unknown parameters: {list(kwargs)}")
     regularizer = tf.keras.regularizers.l1_l2(l1_reg,
                                               l2_reg) if l2_reg or l1_reg else None
     initializer = initializer
@@ -319,7 +319,7 @@ def LeNetConv(input_shape,
               l2_reg=0,
               initializer='glorot_uniform',
               **kwargs):
-    cprint(f"Unknown parameters: {list(kwargs)}")
+    print(f"Unknown parameters: {list(kwargs)}")
     regularizer = tf.keras.regularizers.l1_l2(l1_reg,
                                               l2_reg) if l2_reg or l1_reg else None
     initializer = initializer

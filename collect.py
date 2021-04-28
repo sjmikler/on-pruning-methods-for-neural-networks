@@ -6,7 +6,7 @@ import yaml
 
 from tools import constants as C, utils
 
-cprint = utils.get_cprint('green')
+print = utils.get_cprint(color='green')
 
 
 def recursive_collect_logs(path, exclude, verbose=False, level=0):
@@ -29,7 +29,7 @@ def recursive_collect_logs(path, exclude, verbose=False, level=0):
                 if exp not in logs:
                     logs.append(exp)
     if len(logs) and (verbose or level == 0):
-        cprint(f"{'  ' * level}Found {len(logs):^5} logs under {path}")
+        print(f"{'  ' * level}Found {len(logs):^5} logs under {path}")
     return logs
 
 
@@ -55,4 +55,4 @@ if __name__ == '__main__':
     dest = os.path.join(args.dest, f'logs_{now}.yaml')
     with open(dest, 'w') as f:
         yaml.safe_dump_all(logs, f, sort_keys=False)
-    cprint(f"SAVED: {dest}")
+    print(f"SAVED: {dest}")
