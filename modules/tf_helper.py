@@ -1,5 +1,4 @@
 import argparse
-import sys
 from collections import Counter
 from collections.abc import Iterable
 from copy import deepcopy
