@@ -342,10 +342,10 @@ def prune_GraSP(model, dataset, config, silent=False):
     raise NotImplementedError("Check if the implementation is correct!")
 
     sparsity = config.sparsity
-    n_batches = config.n_batches or 1
+    batches = config.get('batches') or 1
     structure = config.get('structure')
 
-    saliences = grasp_saliences(model, dataset, batches=n_batches)
+    saliences = grasp_saliences(model, dataset, batches=batches)
     saliences = extract_kernels(saliences)
     if structure:
         saliences = structurize_anything(structure, saliences)
@@ -358,10 +358,10 @@ def prune_SNIP(model, dataset, config, silent=False):
     """Prune by saliences `|W*G|` for W being weights an G being gradients."""
 
     sparsity = config.sparsity
-    n_batches = config.get('n_batches') or 1
+    batches = config.get('batches') or 1
     structure = config.get('structure')
 
-    saliences = snip_saliences(model, dataset, batches=n_batches)
+    saliences = snip_saliences(model, dataset, batches=batches)
     saliences = extract_kernels(saliences)
     if structure:
         saliences = structurize_anything(structure, saliences)
