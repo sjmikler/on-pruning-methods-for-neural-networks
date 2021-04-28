@@ -34,7 +34,7 @@ default_config, experiment_queue = parser.load_from_yaml(yaml_path=args.exp,
 
 for exp_idx, exp in enumerate(experiment_queue):
     if args.pick and exp_idx not in args.pick:
-        cprint(f"SKIPPING EXPERIMENT {exp_idx} BY PICK")
+        cprint(f"SKIPPING EXPERIMENT {exp_idx} (not picked)")
         continue
 
     print()
@@ -43,7 +43,8 @@ for exp_idx, exp in enumerate(experiment_queue):
     if args.dry:
         continue
     if exp.name == "skip":
-        cprint(f"SKIPPING EXPERIMENT {exp_idx} BY NAME")
+        cprint(f"SKIPPING EXPERIMENT {exp_idx} (name == skip)")
+        continue
 
     module = importlib.import_module(exp.module)
     exp.reset_unused_parameters(exclude=['REP', 'RND_IDX', 'global_repeat', 'repeat',
