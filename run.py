@@ -1,7 +1,6 @@
 import argparse
 import importlib
 import os
-import pprint
 import sys
 import time
 
@@ -50,10 +49,11 @@ for exp_idx, exp in enumerate(experiment_queue):
         print(f"SKIPPING EXPERIMENT {exp_idx} (Name == skip)")
         continue
 
-    exp.ignore_counts_for_keys(
-        keys=['REP', 'RND_IDX', 'HOST',
-              'GlobalRepeat', 'GlobalQueue', 'Repeat', 'Module', 'YamlLog']
-    )
+    exp._reset_usage_counts(
+        ignore_keys=[
+            'REP', 'RND_IDX', 'HOST',
+            'GlobalRepeat', 'GlobalQueue', 'Repeat', 'Name', 'Module', 'YamlLog'
+        ])
 
     try:
         t0 = time.time()
@@ -63,7 +63,6 @@ for exp_idx, exp in enumerate(experiment_queue):
 
         if dirpath := os.path.dirname(exp.YamlLog):
             os.makedirs(dirpath, exist_ok=True)
-
         with open(f"{exp.YamlLog}", "a") as f:
             yaml.safe_dump(exp.todict(), stream=f, explicit_start=True, sort_keys=False)
         print(f"SAVED {exp['YamlLog']}")

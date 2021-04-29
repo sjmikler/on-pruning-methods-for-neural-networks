@@ -44,7 +44,6 @@ def logging_from_history(history, exp):
     min_tr_loss = min(history["loss"])
     max_tr_acc = max(history["accuracy"])
 
-    print(f"FULL PATH: {exp.full_path}")
     print(f"BEST ACCURACY: {max_acc}")
 
     exp.TIME = datetime.datetime.now().strftime("%Y.%m.%d %H:%M")
@@ -55,8 +54,8 @@ def logging_from_history(history, exp):
     exp.TRAIN_ACCU = max_tr_acc
     exp.TRAIN_LOSS = min_tr_loss
 
-    if exp.full_path:
-        writer = tf.summary.create_file_writer(exp.full_path)
+    if exp.tensorboard_log:
+        writer = tf.summary.create_file_writer(exp.tensorboard_log)
         with writer.as_default():
             for key in history:
                 for idx, value in enumerate(history[key]):
@@ -66,6 +65,7 @@ def logging_from_history(history, exp):
 
 
 def get_optimizer(optimizer, optimizer_config):
+    schedules = tf.optimizers.schedules
     config = deepcopy(optimizer_config)
     optimizer = eval(optimizer)  # string -> optimizer
 

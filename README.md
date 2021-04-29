@@ -31,11 +31,13 @@ Module: modules.example      # location of the module that will be run by run.py
 
 There are conventions for parameter names:
 
-* `Parameter` is used in `run.py`
-* `PARAMETER` is added by scripts, not by user
-* `parameter` is not used by `run.py` but should be used by modules
+* `parameter` is used in modules
+* `Parameter` is used in `run.py` for experiment parsing and saving logs
+* `PARAMETER` is added by scripts, not by user, and should be used to write results, e.g. `ACCURACY`
 
-Custom modules will require custom parameters. It is advised to write flexible module with many parameters. If in need, use following parameter names for consistency:
+Custom modules will require custom parameters. It is advised to write flexible module with many parameters.
+
+If in need, use following parameter names for consistency:
 
 * `steps`: total number of steps in the training
 * `steps_per_epoch`
@@ -43,7 +45,7 @@ Custom modules will require custom parameters. It is advised to write flexible m
 * `dataset` with `dataset_config`
 * `optimizer` with `optimizer_config`
 * `full_path`: location of `tensorboard` logs
-* `checkpoint`: location of tensorflow checkpoints
+* `checkpoint`: location of model checkpoints
 
 # Running experiments
 

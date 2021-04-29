@@ -19,10 +19,14 @@ Inherits from: **tf-helper**. You can use arguments and parameters from there.
 
 **Available experiment parameters**
 
-* `checkpointAP` is **checkpoint After Pruning**. You can load almost full checkpoint here: kernel masks from the checkpoints will be skipped. This allows for a few pruning techniques.
 * `checkpointBP` is **checkpoint Before Pruning**. You can load full checkpoint here.
+* `checkpointAP` is **checkpoint After Pruning**. Kernel masks from the checkpoint will be skipped. This is used for some pruning methods.
 * `pruning` and `pruning_config` settings
+* `dataset` and `dataset_config` settings
+* `model` and `model_config` settings
+* `tensorboard_log`
+* `weight_checkpoint`
 
 **Fun Facts**
 
-* Tensorboard logs with training and validation history are saved all at once, **after** the training in `experiment.yaml/full_path`. Nothing will be saved if training is interrupted.
+* Tensorboard logs with training and validation history are saved all at once, after the training in `experiment.yaml/tensorboard_log`. Nothing will be saved if training is interrupted.

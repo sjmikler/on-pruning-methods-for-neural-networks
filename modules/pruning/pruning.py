@@ -25,7 +25,6 @@ def main(exp):
     * ...
     """
     print("RUNNING PRUNING MODULE")
-
     tf_helper.main(exp)  # RUN INHERITED MODULES
 
     pruning_utils.globally_enable_pruning()
@@ -83,18 +82,18 @@ def main(exp):
         print("FINAL DENSITY:", exp.FINAL_DENSITY)
         tf_utils.logging_from_history(history.history, exp=exp)
 
-    if exp.checkpoint:
-        if dirpath := os.path.dirname(exp.checkpoint):
+    if exp.weight_checkpoint:
+        if dirpath := os.path.dirname(exp.weight_checkpoint):
             os.makedirs(dirpath, exist_ok=True)
-        model.save_weights(exp.checkpoint, save_format="h5")
+        model.save_weights(exp.weight_checkpoint, save_format="h5")
 
 
 if __name__ == '__main__':
     class exp:
         precision = 16
         name = 'temp'
-        full_path = None
-        checkpoint = None
+        tensorboard_log = None
+        weight_checkpoint = None
         steps = 200
         steps_per_epoch = 20
         dataset = 'cifar10'

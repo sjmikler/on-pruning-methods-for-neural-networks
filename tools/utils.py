@@ -66,13 +66,14 @@ class Experiment:
     def __contains__(self, item):
         return self.dict.__contains__(item)
 
+    def _reset_usage_counts(self, ignore_keys):
+        self._usage_counts = {key: 0 for key in self.dict}
+        self._ignored_counts = set(ignore_keys)
+
     def update(self, other):
         for key in other.keys():
             self._usage_counts[key] = 0
         self.dict.update(other)
-
-    def ignore_counts_for_keys(self, keys):
-        self._ignored_counts = set(keys)
 
     def get_unused_parameters(self):
         unused_keys = []
