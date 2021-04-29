@@ -4,7 +4,7 @@ GlobalRepeat: 1  # e.g. 1, 2, 1, 2
 GlobalQueue: null # specify path for queue file, if null keeps queue unaccessible in memory
 Repeat: 1  # e.g. 1, 1, 2, 2
 Name: skip # with name=skip, training will be skipped
-Nodule: modules.pruning
+Module: modules.pruning
 YamlLog: eval f"{directory}/{Name}/{RND_IDX}/{REP}.yaml"
 
 precision: 16 # 16 for mixed precision or anything else for default 32 bit
