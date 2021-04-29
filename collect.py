@@ -39,7 +39,7 @@ if __name__ == '__main__':
                         help='starting directories for recursive log collecting')
     parser.add_argument('--exclude', type=str, default=[], nargs='*',
                         help='skip directories or files')
-    parser.add_argument('--dest', type=str, default='data/yaml_collect',
+    parser.add_argument('--dest', type=str, default='yaml_collect',
                         help='directory of new .yaml file')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='print visited directories during recursive collecting')
