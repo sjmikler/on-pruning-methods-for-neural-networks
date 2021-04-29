@@ -37,16 +37,25 @@ def logging_from_history(history, exp):
     import datetime
     import socket
 
-    writer = tf.summary.create_file_writer(exp.full_path)
-    print(f"FULL PATH: {exp.full_path}")
+    min_loss = min(history["val_loss"])
+    max_acc = max(history["val_accuracy"])
+    final_acc = history["val_accuracy"][-1]
 
-    maxi_acc = max(history["val_accuracy"])
-    print(f"BEST ACCURACY: {maxi_acc}")
+    min_tr_loss = min(history["loss"])
+    max_tr_acc = max(history["accuracy"])
+
+    print(f"FULL PATH: {exp.full_path}")
+    print(f"BEST ACCURACY: {max_acc}")
 
     exp.TIME = datetime.datetime.now().strftime("%Y.%m.%d %H:%M")
     exp.HOST = socket.gethostname()
-    exp.ACC = maxi_acc
+    exp.ACC = max_acc
+    exp.FINAL_ACCU = final_acc
+    exp.VALID_LOSS = min_loss
+    exp.TRAIN_ACCU = max_tr_acc
+    exp.TRAIN_LOSS = min_tr_loss
 
+    writer = tf.summary.create_file_writer(exp.full_path)
     with writer.as_default():
         for key in history:
             for idx, value in enumerate(history[key]):

@@ -51,7 +51,8 @@ for exp_idx, exp in enumerate(experiment_queue):
         continue
 
     exp.ignore_counts_for_keys(
-        keys=['REP', 'RND_IDX', 'GlobalRepeat', 'Repeat', 'Queue', 'Module', 'YamlLog']
+        keys=['REP', 'RND_IDX', 'HOST',
+              'GlobalRepeat', 'GlobalQueue', 'Repeat', 'Module', 'YamlLog']
     )
 
     try:
