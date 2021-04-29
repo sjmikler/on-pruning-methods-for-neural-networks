@@ -1,15 +1,26 @@
 import random
 import time
 
-from ._initialize import *
-
 
 def main(exp):
-    print(f"I am an example of an experiment!")
-    print(f"I will show you random keys from your experiment definition!")
+    print("RUNNING EXAMPLE MODULE")
+    print(f"I will teach you how to multiply numbers!")
 
-    keys = list(exp.keys())
-    for i in range(3):
-        time.sleep(1)
-        key = random.choice(keys)
-        print(f"{i+1}/3:\n{key}: {exp[key]}")
+    for i in range(5):
+        a = random.randint(exp.min_number, exp.max_number)
+        b = random.randint(exp.min_number, exp.max_number)
+        print(f"{a:<2} * {b:<2} is ", end='')
+
+        for _ in range(3):
+            time.sleep(0.5)
+            print('.', end='')
+        print(f"{a * b}!")
+
+
+if __name__ == '__main__':
+    class exp:
+        min_number = 1
+        max_number = 10
+
+
+    main(exp)
