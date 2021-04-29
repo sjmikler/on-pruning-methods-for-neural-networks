@@ -1,8 +1,11 @@
 import argparse
 import importlib
+import os
 import pprint
 import sys
 import time
+
+import yaml
 
 from tools import parser, utils
 
@@ -33,27 +36,40 @@ default_config, experiment_queue = parser.load_from_yaml(yaml_path=args.exp,
                                                          cmd_parameters=parameters)
 
 for exp_idx, exp in enumerate(experiment_queue):
+    assert isinstance(exp, utils.Experiment)
+
     if args.pick and exp_idx not in args.pick:
         print(f"SKIPPING EXPERIMENT {exp_idx} (not picked)")
         continue
 
     print()
-    print(f"NEW EXPERIMENT {exp_idx}:")
-    pprint.pprint(exp)
+    print(f"NEW EXPERIMENT {exp_idx}:\n{exp}")
     if args.dry:
         continue
-    if exp.name == "skip":
-        print(f"SKIPPING EXPERIMENT {exp_idx} (name == skip)")
+    if exp.Name == "skip":
+        print(f"SKIPPING EXPERIMENT {exp_idx} (Name == skip)")
         continue
 
-    module = importlib.import_module(exp.module)
-    exp.reset_unused_parameters(exclude=['REP', 'RND_IDX', 'global_repeat', 'repeat',
-                                         'queue', 'module'])
+    exp.ignore_counts_for_keys(
+        keys=['REP', 'RND_IDX', 'GlobalRepeat', 'Repeat', 'Queue', 'Module', 'YamlLog']
+    )
+
     try:
-        module.main(exp)
+        t0 = time.time()
+        module = importlib.import_module(exp.Module)
+        module.main(exp)  # RUN MODULE
+        exp.TIME_ELAPSED = time.time() - t0
+
+        if dirpath := os.path.dirname(exp.YamlLog):
+            os.makedirs(dirpath, exist_ok=True)
+
+        with open(f"{exp.YamlLog}", "a") as f:
+            yaml.safe_dump(exp.todict(), stream=f, explicit_start=True, sort_keys=False)
+        print(f"SAVED {exp['YamlLog']}")
+
     except KeyboardInterrupt:
         print(f"\n\nSKIPPING EXPERIMENT {exp_idx}, WAITING 2 SECONDS BEFORE "
-               f"RESUMING...")
+              f"RESUMING...")
         time.sleep(2)
 
 if isinstance(experiment_queue, parser.YamlExperimentQueue):

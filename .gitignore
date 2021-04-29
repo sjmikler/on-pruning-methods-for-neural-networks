@@ -1,8 +1,6 @@
 __pycache__/
 
-temp/
 data/
-yaml*/
 
 *.h5
 

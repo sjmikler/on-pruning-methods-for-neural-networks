@@ -39,7 +39,7 @@ if __name__ == '__main__':
                         help='starting directories for recursive log collecting')
     parser.add_argument('--exclude', type=str, default=[], nargs='*',
                         help='skip directories or files')
-    parser.add_argument('--dest', type=str, default='yaml_collect',
+    parser.add_argument('--dest', type=str, default='data/yaml_collect',
                         help='directory of new .yaml file')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='print visited directories during recursive collecting')
@@ -54,5 +54,5 @@ if __name__ == '__main__':
     now = datetime.datetime.now().strftime(C.time_formats[1])
     dest = os.path.join(args.dest, f'logs_{now}.yaml')
     with open(dest, 'w') as f:
-        yaml.safe_dump_all(logs, f, sort_keys=False)
+        yaml.safe_dump_all(logs, f, explicit_start=True, sort_keys=False)
     print(f"SAVED: {dest}")

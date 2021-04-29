@@ -23,13 +23,15 @@ class YamlExperimentQueue:
     def read_content(self):
         with open(self.path, 'r') as f:
             z = list(yaml.safe_load_all(f))
-        return [utils.ddict(exp) for exp in z]
+        return [utils.Experiment(exp) for exp in z]
 
     def write_content(self, exps):
         assert isinstance(exps, Iterable)
         with open(self.path, 'w') as f:
-            nexps = map(utils.unddict, exps)  # because cannot dump ddict
-            yaml.safe_dump_all(nexps, stream=f, sort_keys=False)
+            yaml.safe_dump_all((exp.todict() for exp in exps),
+                               stream=f,
+                               explicit_start=True,
+                               sort_keys=False)
 
     def append_content(self, exps):
         existing_content = self.read_content()
@@ -67,7 +69,7 @@ def cool_parse_exp(exp, E, scopes=[]):
     for k in keys:
         v = exp[k]
 
-        if isinstance(v, dict):
+        if isinstance(v, utils.Experiment):
             nscopes = deepcopy(scopes)
             nscopes.append(exp)
             parsed_v = cool_parse_exp(v, E, nscopes)
@@ -87,10 +89,10 @@ def cool_parse_exp(exp, E, scopes=[]):
             v = eval(v, {}, scope)
             print(f"FANCY PARSING {k}: {org_expr} --> {v}")
 
-        if isinstance(v, str):
+        if isinstance(v, str):  # e.g. for parsing float in scientific notation
             try:
                 v = float(v)
-            except (ValueError, TypeError):
+            except ValueError:
                 pass
         exp[k] = v
     return exp
@@ -105,49 +107,47 @@ def load_from_yaml(yaml_path, cmd_parameters):
             parser.add_argument(arg)
 
     args = parser.parse_args(cmd_parameters)
-    new_cmd_parameters = utils.ddict()
+    new_cmd_parameters = utils.Experiment()
 
     for key, value in args.__dict__.items():
-        try:  # for parsing integers etc
-            new_cmd_parameters[key] = eval(value, {}, {})
-        except (NameError, SyntaxError):  # for parsing strings
-            new_cmd_parameters[key] = value
+        try:
+            value = float(value)
+        except ValueError:
+            pass
+        new_cmd_parameters[key] = value
+
     print(f"CMD PARAMETERS: {new_cmd_parameters}")
 
     experiments = yaml.safe_load_all(open(yaml_path, "r"))
-    experiments = [utils.ddict(exp) for exp in experiments]
+    experiments = [utils.Experiment(exp) for exp in experiments]
     default = experiments.pop(0)
     default.update(new_cmd_parameters)
 
     all_unpacked_experiments = []
-    for global_rep in range(default.get("global_repeat") or 1):
+    for global_rep in range(default.GlobalRepeat):
         unpacked_experiments = []
         for exp in experiments:
-            # ORDER IS DEFINED HERE (important for fancy parsing)
-            # 1. experiment
-            # 2. defaults
             nexp = deepcopy(exp)
-            defcpy = deepcopy(default)
+            default_cpy = deepcopy(default)
             for key in nexp:
-                if key in defcpy:
-                    defcpy.pop(key)  # necessary to preserve order in dict
-            nexp.update(defcpy)
+                if key in default_cpy:
+                    default_cpy.pop(key)  # necessary to preserve order in dict
+            nexp.update(default_cpy)
 
-            if "RND_IDX" in nexp:  # allow inserting RND_IDX
+            if "RND_IDX" in nexp:  # allow custom RND_IDX
                 rnd_idx = nexp["RND_IDX"]
             else:
                 rnd_idx = random.randint(100000, 999999)
 
-            for rep in range(exp.get("repeat") or 1):
+            for rep in range(nexp.Repeat):
                 nexp_rep = deepcopy(nexp)
                 nexp_rep["RND_IDX"] = rnd_idx
                 nexp_rep["REP"] = rep
-
                 nexp_rep = cool_parse_exp(nexp_rep, unpacked_experiments)
                 unpacked_experiments.append(nexp_rep)
         all_unpacked_experiments.extend(unpacked_experiments)
 
-    if path := default.queue:
+    if path := default.GlobalQueue:
         queue = YamlExperimentQueue(all_unpacked_experiments, path=path)
     else:
         queue = iter(all_unpacked_experiments)

@@ -1,19 +1,41 @@
 Experiments running orchestra that manages definitions and results of experiments.
 
+```
+Requirements:
+- python>=3.8
+- pyyaml>=5.1
+```
+
 # Defining experiments
 
 There's a single file that contains your **experiment definition** (by default `experiment.yaml`). Its first element is always **default config** which contains default values for experiments that come after it. If a settings repeats between default config and experiments, experiments have the priority.
 
-**Special names**
+**Names added by `run.py`**
 
-1. `repeat`: copies a single experiment many times **before** fancy parsing, can be used for iterative trainings. If used on two experiments: `1, 1, 2, 2`
-2. `global_repeat`: performs all listed experiments many times. If used on two experiments: `1, 2, 1, 2`
-3. `REP`: is added by `run.py` and is a repetition index in range `[0, REPEAT-1]`
-4. `RND_IDX`: is added by `run.py` and can be used to uniquely identify an experiment. If already present in experiment, won't overwrite with random value
+1. `REP`: repetition index in range `[0, REPEAT-1]`
+2. `RND_IDX`: used to uniquely identify an experiment. Can be set manually
+3. `TIME_ELAPSED`: time it took to run the module, in seconds
 
-In general, big text is reserved for internal and logging purposes. User can access them but they should added by scripts and should not be defined in **experiment definition**.
+**Minimal experiment**
 
-One can write custom modules that require custom parameters. If in need, use following parameter names for consistency:
+Following parameters are required by `run.py`:
+
+```
+GlobalRepeat: 1     # performs all listed experiments many times. Resulting order: `1, 2, 1, 2`
+GlobalQueue: null   # if valid path, create an experiment queue available to modify on the hard drive
+Repeat: 1           # copies a single experiment many times **before** fancy parsing. Resulting order: `1, 1, 2, 2`
+Name: test          # if Name==skip, experiment will be skipped. Besides that, it is not used by `run.py`
+YamlLog: log.yaml   # experiment definition with additional information (if added by a Module) will be saved there
+Module: modules.example      # location of the module that will be run by run.py
+```
+
+There are conventions for parameter names:
+
+* `Parameter` is used in `run.py`
+* `PARAMETER` is added by scripts, not by user
+* `parameter` is not used by `run.py` but should be used by modules
+
+Custom modules will require custom parameters. It is advised to write flexible module with many parameters. If in need, use following parameter names for consistency:
 
 * `steps`: total number of steps in the training
 * `steps_per_epoch`
@@ -21,35 +43,20 @@ One can write custom modules that require custom parameters. If in need, use fol
 * `dataset` with `dataset_config`
 * `optimizer` with `optimizer_config`
 * `full_path`: location of `tensorboard` logs
-* `yaml_logdir`: location of simpler `.yaml` logs
 * `checkpoint`: location of tensorflow checkpoints
-
-**Minimal experiment**
-
-Following parameters are required:
-
-```
-repeat: 1
-global_repeat: 1
-queue: null
-name: ...
-module: ...
-```
-
-Modules usually require a lot of custom parameters, e.g. as listed above.
 
 # Running experiments
 
 Script `run.py` launches experiments specified in **experiment definition**.
 
-* If `queue` parameter is specified as a valid path, the queue of the experiments will be stored as a `.yaml` file and can be modified when experiments are running. Otherwise, queue is stored in RAM memory and cannot be modified.
+* If `Queue` parameter is specified as a valid path, the Queue of the experiments will be stored as a `.yaml` file and can be modified when experiments are running. Otherwise, Queue is stored in RAM memory and cannot be modified.
 
 
-* If experiment is stopped with `KeyboardInterrupt`, there will be 2 second pause during which `run.py` can be interrupted completely by a second `KeyboardInterrupt`. If not interrupted completely, next experiment in the queue will start.
+* If experiment is stopped with `KeyboardInterrupt`, there will be 2 second pause during which `run.py` can be interrupted completely by a second `KeyboardInterrupt`. If not interrupted completely, next experiment in the Queue will start.
 
-* If `name: skip`, training will not be performed, but experiment parameters can be used in fancy parsing. Skipped experiments will not launch the module.
+* If `Name: skip`, training will not be performed, but experiment parameters can be used in fancy parsing. Skipped experiments will not launch the Module.
 
-* `run.py` has its own command line arguments. Modules might contain their own command line arguments and to use them, you should pass them to `run.py` and it will pass them further down to the module. If argument name is used by both `run.py` and the module, it will be used by both.
+* `run.py` has its own command line arguments. Modules might contain their own command line arguments and to use them, you should pass them to `run.py` and it will pass them further down to the Module. If argument Name is used by both `run.py` and the Module, it will be used by both.
    ```
    > python run.py --help
    optional arguments:
@@ -60,7 +67,7 @@ Script `run.py` launches experiments specified in **experiment definition**.
                            Run only selected experiments, e.g. 0,1,3 or 1
    ```
 
-* You can update **global config** straight from command line by passing arguments with `+` prefix instead of `-`, e.g. `python run.py +queue queue.yaml`.
+* You can update **global config** straight from command line by passing arguments with `+` prefix instead of `-`, e.g. `python run.py +Queue Queue.yaml`.
 
 # Modules
 
@@ -70,7 +77,7 @@ Module is a function that accepts one argument `exp` which is a dictionary with 
 
 # python run.py
 
-`run.py` is parsing the experiments and launching a module to do its work. Specific module which `run.py` should be specified as a parameter `module` in **default config** of **experiment definition**. Before module starts the training, experiments will be parsed and there are a few tricks to it.
+`run.py` is parsing the experiments and launching a Module to do its work. Specific Module which `run.py` should be specified as a parameter `Module` in **default config** of **experiment definition**. Before Module starts the training, experiments will be parsed and there are a few tricks to it.
 
 ## Fancy parsing with `eval`
 
@@ -80,9 +87,9 @@ All values for experiments can be specified explicitly in `experiment.yaml` as a
 
 #### Tricks:
 
-1. `odd_name: eval '\'.join([directory, name])` will run real Python code and the result will be saved as `odd_name`. Code will be executed using `eval` function with variable scope from current experiment. In special case, if `directory` is fancy-parsed too, `directory` should be resolved before `odd_name`. **Default config** values can be fancy-parsed too, but they are resolved at the end.
+1. `odd_name: eval '\'.join([directory, Name])` will run real Python code and the result will be saved as `odd_name`. Code will be executed using `eval` function with variable scope from current experiment. In special case, if `directory` is fancy-parsed too, `directory` should be resolved before `odd_name`. **Default config** values can be fancy-parsed too, but they are resolved at the end.
 
-2. `sparsity: eval 0.5 * E[-1].sparsity` will be parsed as half of the `sparsity` value from the previous experiment in the experiment queue. This works, because before running `eval`, list `E` is added to the scope and this allows access to previous experiments.
+2. `sparsity: eval 0.5 * E[-1].sparsity` will be parsed as half of the `sparsity` value from the previous experiment in the experiment Queue. This works, because before running `eval`, list `E` is added to the scope and this allows access to previous experiments.
 
 3. You can access values from nested dictionaries using `.` or standard indexing:
 
@@ -111,11 +118,11 @@ This will work and will resolve to `test: 2`. Deeper levels have priority in thi
 5. Other examples:
 
 ```
-name: test
+Name: test
 ---
 model: VGG
-name: test2
-directory: eval f"{name}/{E[-1].name}/{model}"
+Name: test2
+directory: eval f"{Name}/{E[-1].Name}/{model}"
 ```
 
 > Resulting `directory` value will be `test2/test/VGG`.
@@ -221,12 +228,12 @@ where `args` is:
 --filter=lambda exp: 'TIME' in exp
 --filter=lambda exp: 'ACC' in exp and exp['ACC'] > 0.9
 --sort=lambda exp: exp['TIME']
---sort=lambda exp: exp['name']
+--sort=lambda exp: exp['Name']
 --reverse
 --keep-keys
 ACC
 RND_IDX
-name
+Name
 model
 TIME
 ```
@@ -236,5 +243,5 @@ As a result, all returned logs:
 * contained `TIME` key
 * contained `ACC` key with value larger than 0.9
 * will be sorted by `TIME` values in reverse order
-* then will be (stable) sorted by `name` values in reverse order
-* each experiment will contain only `ACC`, `RND_IDX`, `name`, `model`, `TIME` keys
+* then will be (stable) sorted by `Name` values in reverse order
+* each experiment will contain only `ACC`, `RND_IDX`, `Name`, `model`, `TIME` keys

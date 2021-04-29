@@ -3,11 +3,9 @@ import os
 import tensorflow as tf
 
 from modules import tf_helper
-from modules.pruning import pruning_utils
 from modules.tf_helper import datasets, models, tf_utils
-from tools import utils
-
-print = utils.get_cprint(color='light green')
+from . import pruning_utils
+from ._initialize import *
 
 
 def main(exp):
@@ -76,8 +74,8 @@ def main(exp):
         print(unused)
 
     if exp.steps != 0:
-        history = model.fit(x=ds.train,
-                            validation_data=ds.valid,
+        history = model.fit(x=ds['train'],
+                            validation_data=ds['valid'],
                             steps_per_epoch=steps_per_epoch,
                             epochs=int(exp.steps / steps_per_epoch))
         exp.FINAL_DENSITY = pruning_utils.report_density(model)
@@ -119,5 +117,5 @@ if __name__ == '__main__':
             'l2_reg': 1e-5,
         }
     }
-    exp = utils.ddict(exp)
-    main(exp)
+    # exp = utils.ddict(exp)
+    # main(exp)

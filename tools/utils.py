@@ -1,5 +1,5 @@
 import datetime
-from copy import deepcopy
+import pprint
 
 from tools import constants as C
 
@@ -18,72 +18,82 @@ def get_cprint(color):
     return cprint
 
 
-class ddict(dict):
-    def __init__(self, *args, **kwargs):
-        """Dict with dot syntax. Keeps track of unused keys."""
-        super().__init__(*args, **kwargs)
-        self.__dict__['_unused_parameters'] = set()
-        self.reset_unused_parameters()  # set everything as unused
+class Experiment:
+    """Dict like structure that allows for dot indexing."""
+    _internal_names = ['dict', '_usage_counts', '_ignored_counts']
 
-        for key, value in self.items():
-            if isinstance(value, dict):
-                self.__setattr__(key, ddict(value))
+    def __init__(self, from_dict={}):
+        self._usage_counts = {key: 0 for key in from_dict}
+        self._ignored_counts = set()
+
+        self.dict = {k: Experiment(v) if isinstance(v, dict) else v for k, v in
+                     from_dict.items()}
+
+    def __setattr__(self, key, value):
+        if key in self._internal_names:
+            super().__setattr__(key, value)
+        else:
+            self.dict[key] = value
+            self._usage_counts[key] = 0
 
     def __getattr__(self, key):
-        if key in self:
-            if key in self.__dict__['_unused_parameters']:
-                self.__dict__['_unused_parameters'].remove(key)
-            return self[key]
+        # complicated for `deepcopy` to work
+        # fallbacks to normal dictionary
+        if key in super().__getattribute__('dict'):
+            self._usage_counts[key] += 1
+            return self.dict[key]
         else:
-            return getattr(super(), key)
+            return self.dict.__getattribute__(key)
 
-    def __setattr__(self, key, val):
-        if isinstance(val, dict):
-            val = ddict(val)
-        self[key] = val
-        self.__dict__['_unused_parameters'].add(key)
+    def __getitem__(self, item):
+        if item in self.dict:
+            self._usage_counts[item] += 1
+            return self.dict[item]
+        else:
+            raise KeyError(item)
 
-    def reset_unused_parameters(self, exclude=()):
-        for k, v in self.items():
-            if k in exclude:
-                if k in self.__dict__['_unused_parameters']:
-                    self.__dict__['_unused_parameters'].remove(k)
-                continue
-            self.__dict__['_unused_parameters'].add(k)
+    def __setitem__(self, key, value):
+        self.dict[key] = value
+        self._usage_counts[key] = 0
+
+    def __iter__(self):
+        for key in self.dict.keys():
+            yield key
+
+    def __str__(self):
+        return pprint.pformat(self.todict(), sort_dicts=False)
+
+    def __contains__(self, item):
+        return self.dict.__contains__(item)
+
+    def update(self, other):
+        for key in other.keys():
+            self._usage_counts[key] = 0
+        self.dict.update(other)
+
+    def ignore_counts_for_keys(self, keys):
+        self._ignored_counts = set(keys)
 
     def get_unused_parameters(self):
-        return tuple(self.__dict__['_unused_parameters'])
+        unused_keys = []
+        for key in self.dict.keys():
+            if key in self._ignored_counts:
+                continue
 
+            counts = self._usage_counts[key]
+            if counts == 0:
+                unused_keys.append(key)
+        return unused_keys
 
-def unddict(d):
-    """Recursivly transform ddicts into dicts"""
-    d = deepcopy(d)
-    for k, v in d.items():
-        if isinstance(v, dict):
-            d[k] = unddict(v)
-    return dict(d)
-
-
-def contains_any(t, *opts):
-    return any([x in t for x in opts])
-
-
-def parse_time(strtime):
-    for format in C.time_formats:
-        try:
-            return datetime.datetime.strptime(strtime, format)
-        except ValueError:
-            continue
-    raise Exception("UNKNOWN TIME FORMAT!")
-
-
-def get_date_from_exp(exp):
-    if 'time' in exp:
-        return parse_time(exp['time'])
-    if 'TIME' in exp:
-        return parse_time(exp['TIME'])
-    else:
-        return datetime.datetime.min
+    def todict(self):
+        new_dict = {}
+        for key, value in self.dict.items():
+            if isinstance(value, Experiment):
+                value = value.todict()
+            if hasattr(value, 'tolist'):  # for numpy objects
+                value = value.tolist()
+            new_dict[key] = value
+        return new_dict
 
 
 def filter_argv(argv: list, include: list, exclude: list):
@@ -98,3 +108,12 @@ def filter_argv(argv: list, include: list, exclude: list):
         if adding:
             filtered.append(arg)
     return filtered
+
+
+def parse_time(strtime):
+    for format in C.time_formats:
+        try:
+            return datetime.datetime.strptime(strtime, format)
+        except ValueError:
+            continue
+    raise Exception("UNKNOWN TIME FORMAT!")

@@ -2,8 +2,8 @@ import argparse
 
 import tensorflow as tf
 
-from modules.tf_helper import tf_utils
-from tools import utils
+from . import tf_utils
+from ._initialize import *
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--gpu",
@@ -15,7 +15,6 @@ arg_parser.add_argument("--no-memory-growth",
                         help="Disables memory growth")
 args, unknown_args = arg_parser.parse_known_args()
 
-print = utils.get_cprint(color='light blue')
 print(f"UNKNOWN CMD ARGUMENTS: {unknown_args}")
 print(f"  KNOWN CMD ARGUMENTS: {args.__dict__}")
 

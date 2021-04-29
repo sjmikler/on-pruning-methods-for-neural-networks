@@ -15,7 +15,7 @@ if __name__ == '__main__':
                                      fromfile_prefix_chars='%')
     parser.add_argument('path', type=str, nargs='*',
                         help='path to .yaml file containing logs')
-    parser.add_argument('--dest', type=str, default='yaml_filter',
+    parser.add_argument('--dest', type=str, default='data/yaml_filter',
                         help='directory of new .yaml file')
     parser.add_argument('--filter', type=str, action='append',
                         help='python lambda function accepting experiment dict and '
@@ -60,5 +60,5 @@ if __name__ == '__main__':
     now = datetime.datetime.now().strftime(C.time_formats[1])
     dest = os.path.join(args.dest, f'flogs_{now}.yaml')
     with open(dest, 'w') as f:
-        yaml.safe_dump_all(logs, f, sort_keys=False)
+        yaml.safe_dump_all(logs, f, explicit_start=True, sort_keys=False)
     print(f"SAVED: {dest}")

@@ -1,8 +1,6 @@
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
-from tools import utils
-
 
 def cifar(train_batch_size=128,
           valid_batch_size=128,
@@ -11,8 +9,8 @@ def cifar(train_batch_size=128,
           shuffle_train=20000,
           repeat_train=True,
           version=10):
-    subtract = [0.49139968, 0.48215841, 0.44653091]
-    divide = [0.24703223, 0.24348513, 0.26158784]
+    subtract = tf.constant([0.49139968, 0.48215841, 0.44653091], dtype=dtype)
+    divide = tf.constant([0.24703223, 0.24348513, 0.26158784], dtype=dtype)
 
     def train_prep(x, y):
         x = tf.cast(x, dtype) / 255.0
@@ -34,17 +32,16 @@ def cifar(train_batch_size=128,
     else:
         raise exception(f"version = {version}, but should be from (10, 100)!")
 
-    ds = utils.ddict(ds)
     if repeat_train:
-        ds.train = ds.train.repeat()
+        ds['train'] = ds['train'].repeat()
     if shuffle_train:
-        ds.train = ds.train.shuffle(shuffle_train)
-    ds.train = ds.train.map(train_prep)
-    ds.train = ds.train.batch(train_batch_size)
+        ds['train'] = ds['train'].shuffle(shuffle_train)
+    ds['train'] = ds['train'].map(train_prep)
+    ds['train'] = ds['train'].batch(train_batch_size)
 
-    ds.valid = ds.pop('test')
-    ds.valid = ds.valid.map(valid_prep)
-    ds.valid = ds.valid.batch(valid_batch_size)
+    ds['valid'] = ds.pop('test')
+    ds['valid'] = ds['valid'].map(valid_prep)
+    ds['valid'] = ds['valid'].batch(valid_batch_size)
     return ds
 
 
@@ -58,15 +55,14 @@ def mnist(train_batch_size=100,
         return x, y
 
     ds = tfds.load(name='mnist', as_supervised=True)
-    ds = utils.ddict(ds)
-    ds.train = ds.train.repeat()
-    ds.train = ds.train.shuffle(shuffle_train)
-    ds.train = ds.train.map(preprocess)
-    ds.train = ds.train.batch(train_batch_size)
+    ds['train'] = ds['train'].repeat()
+    ds['train'] = ds['train'].shuffle(shuffle_train)
+    ds['train'] = ds['train'].map(preprocess)
+    ds['train'] = ds['train'].batch(train_batch_size)
 
-    ds.valid = ds.pop('test')
-    ds.valid = ds.valid.map(preprocess)
-    ds.valid = ds.valid.batch(valid_batch_size)
+    ds['valid'] = ds.pop('test')
+    ds['valid'] = ds['valid'].map(preprocess)
+    ds['valid'] = ds['valid'].batch(valid_batch_size)
     return ds
 
 

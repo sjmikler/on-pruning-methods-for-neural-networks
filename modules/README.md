@@ -11,7 +11,7 @@ optional arguments:
 
 **Available experiment parameters**
 
-* `precision` is 16 for mixed precision or anything else to skipping
+* `precision` is either 16, 32 or 64
 
 # pruning
 
