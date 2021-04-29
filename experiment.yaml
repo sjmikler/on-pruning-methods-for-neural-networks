@@ -1,16 +1,16 @@
 # DEFAULT CONFIG:
 
-repeat: 1  # e.g. 1, 1, 2, 2
-global_repeat: 1  # e.g. 1, 2, 1, 2
-precision: 16 # 16 for mixed precision or anything else for default 32 bit
-queue: null # specify path for queue file, if null keeps queue unaccessible in memory
-name: skip # with name=skip, training will be skipped
-module: modules.pruning
+GlobalRepeat: 1  # e.g. 1, 2, 1, 2
+GlobalQueue: null # specify path for queue file, if null keeps queue unaccessible in memory
+Repeat: 1  # e.g. 1, 1, 2, 2
+Name: skip # with name=skip, training will be skipped
+Nodule: modules.pruning
+YamlLog: eval f"{directory}/{Name}/{RND_IDX}/{REP}.yaml"
 
-directory: temp/dummy_tests
-full_path: eval f"{directory}/{name}/{RND_IDX}/{REP}" # REP is a value from [0, REPEAT-1] interval
-checkpoint: eval f"{directory}/{name}/{RND_IDX}/{REP}.h5" # RND_IDX is automatically assigned in `run.py`
-yaml_logdir: eval f"{directory}/{name}/{RND_IDX}/{REP}.yaml"
+precision: 16 # 16 for mixed precision or anything else for default 32 bit
+directory: data/dummy_tests
+full_path: eval f"{directory}/{Name}/{RND_IDX}/{REP}" # REP is a value from [0, REPEAT-1] interval
+checkpoint: eval f"{directory}/{Name}/{RND_IDX}/{REP}.h5" # RND_IDX is automatically assigned in `run.py`
 
 steps: 80000
 steps_per_epoch: 2000
@@ -42,7 +42,7 @@ pruning_config:
 
 # EXPERIMENTS:
 ---
-name: WRN16-4-short-training
+Name: WRN16-4-short-training
 steps: 2000
 ---
-name: WRN16-4
+Name: WRN16-4
