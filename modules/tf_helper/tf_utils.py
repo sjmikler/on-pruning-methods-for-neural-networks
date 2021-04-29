@@ -55,12 +55,13 @@ def logging_from_history(history, exp):
     exp.TRAIN_ACCU = max_tr_acc
     exp.TRAIN_LOSS = min_tr_loss
 
-    writer = tf.summary.create_file_writer(exp.full_path)
-    with writer.as_default():
-        for key in history:
-            for idx, value in enumerate(history[key]):
-                tf.summary.scalar(key, value, idx + 1)
-        tf.summary.text("experiment", data=str(exp), step=0)
+    if exp.full_path:
+        writer = tf.summary.create_file_writer(exp.full_path)
+        with writer.as_default():
+            for key in history:
+                for idx, value in enumerate(history[key]):
+                    tf.summary.scalar(key, value, idx + 1)
+            tf.summary.text("experiment", data=str(exp), step=0)
     return exp
 
 

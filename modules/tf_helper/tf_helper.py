@@ -2,7 +2,7 @@ import argparse
 
 import tensorflow as tf
 
-from . import tf_utils
+from modules.tf_helper import tf_utils
 from ._initialize import *
 
 arg_parser = argparse.ArgumentParser()

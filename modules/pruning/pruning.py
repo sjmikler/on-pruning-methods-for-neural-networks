@@ -3,8 +3,8 @@ import os
 import tensorflow as tf
 
 from modules import tf_helper
+from modules.pruning import pruning_utils
 from modules.tf_helper import datasets, models, tf_utils
-from . import pruning_utils
 from ._initialize import *
 
 
@@ -69,9 +69,10 @@ def main(exp):
     pruning_utils.apply_pruning_masks(model, pruning_method=exp.pruning)
     steps_per_epoch = min(exp.steps, exp.steps_per_epoch)
 
-    if unused := exp.get_unused_parameters():
-        print("WARNING! Unused parameters:")
-        print(unused)
+    if hasattr(exp, 'get_unused_parameters'):
+        if unused := exp.get_unused_parameters():
+            print("ATTENTION! Unused parameters:")
+            print(unused)
 
     if exp.steps != 0:
         history = model.fit(x=ds['train'],
@@ -82,40 +83,28 @@ def main(exp):
         print("FINAL DENSITY:", exp.FINAL_DENSITY)
         tf_utils.logging_from_history(history.history, exp=exp)
 
-    if dirpath := os.path.dirname(exp.checkpoint):
-        os.makedirs(dirpath, exist_ok=True)
-    model.save_weights(exp.checkpoint, save_format="h5")
+    if exp.checkpoint:
+        if dirpath := os.path.dirname(exp.checkpoint):
+            os.makedirs(dirpath, exist_ok=True)
+        model.save_weights(exp.checkpoint, save_format="h5")
 
 
 if __name__ == '__main__':
-    exp = {
-        'precision': 16,
-        'name': 'temp',
-        'full_path': 'temp',
-        'checkpoint': 'temp.h5',
-        'yaml_logdir': 'temp.yaml',
-        'steps': 200,
-        'steps_per_epoch': 20,
-        'dataset': 'cifar10',
-        'dataset_config': {
-            'train_batch_size': 128,
-            'valid_batch_size': 512,
-        },
-        'optimizer': 'tf.optimizers.SGD',
-        'optimizer_config': {
-            'learning_rate': 0.1,
-            'momentum': 0.9,
-        },
-        'pruning': 'magnitude',
-        'pruning_config': {
-            'sparsity': 0.5,
-        },
-        'model': 'lenet',
-        'model_config': {
-            'input_shape': [32, 32, 3],
-            'n_classes': 10,
-            'l2_reg': 1e-5,
-        }
-    }
-    # exp = utils.ddict(exp)
-    # main(exp)
+    class exp:
+        precision = 16
+        name = 'temp'
+        full_path = None
+        checkpoint = None
+        steps = 200
+        steps_per_epoch = 20
+        dataset = 'cifar10'
+        optimizer = 'tf.optimizers.SGD'
+        pruning = 'magnitude'
+        model = 'lenet'
+        dataset_config = {'train_batch_size': 128, 'valid_batch_size': 512}
+        optimizer_config = {'learning_rate': 0.1, 'momentum': 0.9}
+        pruning_config = {'sparsity': 0.5}
+        model_config = {'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 1e-5}
+
+
+    main(exp)

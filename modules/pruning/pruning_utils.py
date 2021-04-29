@@ -1,8 +1,8 @@
 import numpy as np
 import tensorflow as tf
 
+from modules.pruning import sparse_layers
 from modules.tf_helper import tf_utils
-from . import sparse_layers
 from ._initialize import *
 
 
@@ -227,7 +227,7 @@ def l1_saliences_over_channel(saliences):
 
 
 def prune_by_kernel_masks(model, config, silent=False):
-    sparsity = config.sparsity
+    sparsity = config.get('sparsity') or 0.0
     structure = config.get('structure')
     saliences = {}
     for layer in model.layers:
@@ -247,7 +247,7 @@ def prune_GraSP(model, dataset, config, silent=False):
 
     raise NotImplementedError("Check if the implementation is correct!")
 
-    sparsity = config.sparsity
+    sparsity = config.get('sparsity') or 0.0
     batches = config.get('batches') or 1
     structure = config.get('structure')
 
@@ -263,7 +263,7 @@ def prune_GraSP(model, dataset, config, silent=False):
 def prune_SNIP(model, dataset, config, silent=False):
     """Prune by saliences `|W*G|` for W being weights an G being gradients."""
 
-    sparsity = config.sparsity
+    sparsity = config.get('sparsity') or 0.0
     batches = config.get('batches') or 1
     structure = config.get('structure')
 
@@ -279,7 +279,7 @@ def prune_SNIP(model, dataset, config, silent=False):
 def prune_pseudo_SNIP(model, dataset, config, silent=False):
     """In SNIP's `W*G` we replace gradients G with a random from [-1, 1]."""
 
-    sparsity = config.sparsity
+    sparsity = config.get('sparsity') or 0.0
     structure = config.get('structure')
 
     saliences = psuedo_snip_saliences(model)
@@ -294,7 +294,7 @@ def prune_pseudo_SNIP(model, dataset, config, silent=False):
 def prune_random(model, config, silent=False):
     """Random, non-uniform pruning."""
 
-    sparsity = config.sparsity
+    sparsity = config.get('sparsity') or 0.0
     structure = config.get('structure')
     saliences = {w.name: np.random.rand(*w.shape) for w in model.trainable_weights}
     saliences = extract_kernels(saliences)
@@ -308,7 +308,7 @@ def prune_random(model, config, silent=False):
 def prune_l1(model, config, silent=False):
     """Prune smallest magnitudes."""
 
-    sparsity = config.sparsity
+    sparsity = config.get('sparsity') or 0.0
     structure = config.get('structure')
     saliences = {w.name: np.abs(w.numpy()) for w in model.trainable_weights}
     saliences = extract_kernels(saliences)
