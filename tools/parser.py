@@ -14,6 +14,7 @@ print = utils.get_cprint(color='yellow')
 class YamlExperimentQueue:
     def __init__(self, experiments=None, path='.queue.yaml'):
         self.path = path
+        self.num_popped = 0
         if experiments:  # if None, can just read existing experiments
             self.write_content(experiments)
         else:
@@ -27,6 +28,7 @@ class YamlExperimentQueue:
 
     def write_content(self, exps):
         assert isinstance(exps, Iterable)
+
         with open(self.path, 'w') as f:
             yaml.safe_dump_all((exp.todict() for exp in exps),
                                stream=f,
@@ -49,6 +51,7 @@ class YamlExperimentQueue:
             return None
         exp = exps.pop(0)
         self.write_content(exps)
+        self.num_popped += 1
         return exp
 
     def __iter__(self):
@@ -56,6 +59,9 @@ class YamlExperimentQueue:
         while self:
             exp = self.pop()
             yield exp
+
+    def __len__(self):
+        return len(self.read_content()) + self.num_popped
 
     def close(self):
         os.remove(self.path)
@@ -92,13 +98,14 @@ def cool_parse_exp(exp, E, scopes=[]):
         if isinstance(v, str):  # e.g. for parsing float in scientific notation
             try:
                 v = float(v)
+                v = int(v) if v == int(v) else v
             except ValueError:
                 pass
         exp[k] = v
     return exp
 
 
-def load_from_yaml(yaml_path, cmd_parameters):
+def load_from_yaml(yaml_path, cmd_parameters=(), private_keys=()):
     parser = argparse.ArgumentParser(prefix_chars='+')
     for arg in cmd_parameters:
         if arg[0] == '+':
@@ -110,10 +117,11 @@ def load_from_yaml(yaml_path, cmd_parameters):
     new_cmd_parameters = utils.Experiment()
 
     for key, value in args.__dict__.items():
-        try:
-            value = float(value)
-        except ValueError:
-            pass
+        if isinstance(value, str):
+            try:
+                value = int(value) if float(value) == int(value) else float(value)
+            except ValueError:
+                pass
         new_cmd_parameters[key] = value
 
     print(f"CMD PARAMETERS: {new_cmd_parameters}")
@@ -129,10 +137,15 @@ def load_from_yaml(yaml_path, cmd_parameters):
         for exp in experiments:
             nexp = deepcopy(exp)
             default_cpy = deepcopy(default)
+
             for key in nexp:
                 if key in default_cpy:
                     default_cpy.pop(key)  # necessary to preserve order in dict
             nexp.update(default_cpy)
+
+            for key in private_keys:
+                if key in nexp:
+                    nexp.pop(key)
 
             if "RND_IDX" in nexp:  # allow custom RND_IDX
                 rnd_idx = nexp["RND_IDX"]
@@ -150,6 +163,6 @@ def load_from_yaml(yaml_path, cmd_parameters):
     if path := default.GlobalQueue:
         queue = YamlExperimentQueue(all_unpacked_experiments, path=path)
     else:
-        queue = iter(all_unpacked_experiments)
+        queue = all_unpacked_experiments
     print(f"QUEUE TYPE: {type(queue)}")
     return default, queue

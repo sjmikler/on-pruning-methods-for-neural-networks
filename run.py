@@ -31,8 +31,12 @@ parameters = utils.filter_argv(unknown_args, include=['+'], exclude=['-'])
 for p in parameters:
     sys.argv.remove(p)  # filter out parameters, leave only real arguments
 
-default_config, experiment_queue = parser.load_from_yaml(yaml_path=args.exp,
-                                                         cmd_parameters=parameters)
+default_config, experiment_queue = parser.load_from_yaml(
+    yaml_path=args.exp,
+    cmd_parameters=parameters,
+    private_keys=['SlackLog', 'SlackLogConfig']
+)
+finished_experiments = []
 
 for exp_idx, exp in enumerate(experiment_queue):
     assert isinstance(exp, utils.Experiment)
@@ -42,7 +46,7 @@ for exp_idx, exp in enumerate(experiment_queue):
         continue
 
     print()
-    print(f"NEW EXPERIMENT {exp_idx}:\n{exp}")
+    print(f"NEW EXPERIMENT {exp_idx} / {len(experiment_queue)}:\n{exp}")
     if args.dry:
         continue
     if exp.Name == "skip":
@@ -51,8 +55,8 @@ for exp_idx, exp in enumerate(experiment_queue):
 
     exp._reset_usage_counts(
         ignore_keys=[
-            'REP', 'RND_IDX', 'HOST',
-            'GlobalRepeat', 'GlobalQueue', 'Repeat', 'Name', 'Module', 'YamlLog'
+            'REP', 'RND_IDX', 'HOST', 'GlobalRepeat', 'GlobalQueue', 'SlackBot',
+            'SlackBotConfig', 'Repeat', 'Name', 'Module', 'YamlLog'
         ])
 
     try:
@@ -66,6 +70,7 @@ for exp_idx, exp in enumerate(experiment_queue):
         with open(f"{exp.YamlLog}", "a") as f:
             yaml.safe_dump(exp.todict(), stream=f, explicit_start=True, sort_keys=False)
         print(f"SAVED {exp['YamlLog']}")
+        finished_experiments.append(exp)
 
     except KeyboardInterrupt:
         print(f"\n\nSKIPPING EXPERIMENT {exp_idx}, WAITING 2 SECONDS BEFORE "
@@ -75,3 +80,14 @@ for exp_idx, exp in enumerate(experiment_queue):
 if isinstance(experiment_queue, parser.YamlExperimentQueue):
     print(f"REMOVING QUEUE {experiment_queue.path}")
     experiment_queue.close()
+
+if 'SlackLog' in default_config and default_config.SlackLog:
+    slacklog = utils.SlackLogger(default_config.SlackLogConfig)
+    slacklog.add_finish_report()
+    for exp in finished_experiments:
+        slacklog.add_exp_report(exp)
+    status = slacklog.send_all()
+    if status == 0:
+        print("SlackLog SUCCESS!")
+    else:
+        print("SlackLog ERROR!")

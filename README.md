@@ -4,6 +4,7 @@ Experiments running orchestra that manages definitions and results of experiment
 Requirements:
 - python>=3.8
 - pyyaml>=5.1
+- slack-client (not necessary)
 ```
 
 # Defining experiments
@@ -23,6 +24,8 @@ Following parameters are required by `run.py`:
 ```
 GlobalRepeat: 1     # performs all listed experiments many times. Resulting order: `1, 2, 1, 2`
 GlobalQueue: null   # if valid path, create an experiment queue available to modify on the hard drive
+  
+                    # non-global parameters can be set separately for each experiment
 Repeat: 1           # copies a single experiment many times **before** fancy parsing. Resulting order: `1, 1, 2, 2`
 Name: test          # if Name==skip, experiment will be skipped. Besides that, it is not used by `run.py`
 YamlLog: log.yaml   # experiment definition with additional information (if added by a Module) will be saved there

@@ -1,5 +1,6 @@
 import datetime
 import pprint
+import socket
 
 from tools import constants as C
 
@@ -118,3 +119,35 @@ def parse_time(strtime):
         except ValueError:
             continue
     raise Exception("UNKNOWN TIME FORMAT!")
+
+
+class SlackLogger:
+    def __init__(self, config):
+        self.config = config
+        self.token = config.token
+        self.messages = []
+
+    def add_exp_report(self, exp):
+        message = eval(self.config.say, {}, {'exp': exp})
+        message = "`" + message + "`"
+        self.messages.append(message)
+
+    def add_finish_report(self):
+        host = socket.gethostname()
+        message = f"Experiment on {host} is completed!"
+        self.messages.append(message)
+
+    def send_all(self):
+        import slack
+        client = slack.WebClient(self.token)
+        final_message = '\n'.join(self.messages)
+
+        failed = False
+        try:
+            client.chat_postMessage(channel=self.config.channel,
+                                    text=final_message)
+        except slack.errors.SlackApiError as e:
+            failed = True
+            print(e)
+        self.messages = []
+        return failed
