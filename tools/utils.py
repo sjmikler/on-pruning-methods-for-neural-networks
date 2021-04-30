@@ -149,5 +149,4 @@ class SlackLogger:
         except slack.errors.SlackApiError as e:
             failed = True
             print(e)
-        self.messages = []
         return failed

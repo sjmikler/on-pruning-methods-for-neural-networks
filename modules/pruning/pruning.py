@@ -42,7 +42,7 @@ def main(exp):
     tf_utils.describe_model(model)
 
     # load checkpointed weights before the pruning
-    if hasattr(exp, 'checkpointBP'):
+    if hasattr(exp, 'checkpointBP') and exp.checkpointBP:
         model.load_weights(exp.checkpointBP)
         print(f"LOADED BEFORE PRUNING {exp.checkpointBP}")
 
@@ -53,7 +53,7 @@ def main(exp):
     assert isinstance(model, tf.keras.Model)
 
     # load or reset weights after the pruning, do not change masks
-    if hasattr(exp, 'checkpointAP'):
+    if hasattr(exp, 'checkpointAP') and exp.checkpointAP:
         if exp.checkpointAP == 'random':
             ckp = None
         else:

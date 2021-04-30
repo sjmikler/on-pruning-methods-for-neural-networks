@@ -4,7 +4,7 @@ Experiments running orchestra that manages definitions and results of experiment
 Requirements:
 - python>=3.8
 - pyyaml>=5.1
-- slack-client (not necessary)
+- slackclient (not necessary)
 ```
 
 # Defining experiments
