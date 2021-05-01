@@ -18,14 +18,15 @@ def recursive_collect_logs(path, exclude, verbose=False, level=0):
 
         if x.endswith('.yaml'):
             full_path = os.path.join(path, x)
-            with open(full_path, 'r') as f:
-                try:
+            try:
+                with open(full_path, 'r') as f:
                     for exp in yaml.safe_load_all(f):
                         if exp and exp not in logs:
                             logs.append(exp)
-                except Exception as e:
-                    print(f"EXCEPTION WHEN READING {full_path}")
-                    print(e)
+            except Exception as e:
+                print(f"EXCEPTION WHEN READING {full_path}")
+                print(e)
+                continue
         if os.path.isdir(npath := os.path.join(path, x)):
             for exp in recursive_collect_logs(npath,
                                               exclude=exclude,
