@@ -34,19 +34,15 @@ class Experiment:
         if key in self._internal_names:
             super().__setattr__(key, value)
         else:
-            if isinstance(value, dict):
-                value = Experiment(value)
-            self.dict[key] = value
-            self._usage_counts[key] = 0
+            self.__setitem__(key, value)
 
     def __getattr__(self, key):
         # complicated for `deepcopy` to work
         # fallbacks to normal dictionary
         if key in super().__getattribute__('dict'):
-            self._usage_counts[key] += 1
-            return self.dict[key]
+            return self.__getitem__(key)
         else:
-            return self.dict.__getattribute__(key)
+            return self.__getattribute__(key)
 
     def __getitem__(self, item):
         if item in self.dict:
@@ -62,8 +58,7 @@ class Experiment:
         self._usage_counts[key] = 0
 
     def __iter__(self):
-        for key in self.dict.keys():
-            yield key
+        return self.dict.__iter__()
 
     def __str__(self):
         return pprint.pformat(self.todict(), sort_dicts=False)
@@ -75,19 +70,13 @@ class Experiment:
         self._usage_counts = {key: 0 for key in self.dict}
         self._ignored_counts = set(ignore_keys)
 
-    def update(self, other):
-        for key in other.keys():
-            self._usage_counts[key] = 0
-        self.dict.update(other)
-
     def get_unused_parameters(self):
         unused_keys = []
         for key in self.dict.keys():
             if key in self._ignored_counts:
                 continue
 
-            counts = self._usage_counts[key]
-            if counts == 0:
+            if self._usage_counts[key] == 0:
                 unused_keys.append(key)
         return unused_keys
 
@@ -100,6 +89,33 @@ class Experiment:
                 value = value.tolist()
             new_dict[key] = value
         return new_dict
+
+    def update(self, other):
+        for key in other.keys():
+            self._usage_counts[key] = 0
+        self.dict.update(other)
+
+    def pop(self, key):
+        return self.dict.pop(key)
+
+    def get(self, key):
+        return self.dict.get(key)
+
+    def keys(self):
+        return self.dict.keys()
+
+    def values(self):
+        return self.dict.values()
+
+    def items(self):
+        return self.dict.items()
+
+
+if __name__ == '__main__':
+    from copy import deepcopy
+
+    exp = Experiment({"abc": {"cde": 1, "eef": 2}, "uyu": 14, 2: True})
+    exp = deepcopy(exp)
 
 
 def filter_argv(argv: list, include: list, exclude: list):
@@ -117,9 +133,9 @@ def filter_argv(argv: list, include: list, exclude: list):
 
 
 def parse_time(strtime):
-    for format in C.time_formats:
+    for time_format in C.time_formats:
         try:
-            return datetime.datetime.strptime(strtime, format)
+            return datetime.datetime.strptime(strtime, time_format)
         except ValueError:
             continue
     raise Exception("UNKNOWN TIME FORMAT!")
