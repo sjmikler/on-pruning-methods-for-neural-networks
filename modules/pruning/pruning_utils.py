@@ -410,7 +410,8 @@ def contains_any(t, *opts):
 
 
 def set_pruning_masks(model, pruning_method, pruning_config, dataset):
-    if contains_any(pruning_method.lower(), 'none', 'nothing'):
+    if (pruning_methods is None
+            or contains_any(pruning_method.lower(), 'none', 'nothing')):
         print('NO PRUNING')
         return model
     elif contains_any(pruning_method.lower(), 'random'):
@@ -455,17 +456,18 @@ def apply_pruning_for_model(model):
 def apply_pruning_masks(model, pruning_method):
     """Wrapper for `apply_pruning_for_model`"""
 
-    if contains_any(pruning_method.lower(), 'shuffle weight'):
-        print("SHUFFLING WEIGHTS IN LAYERS!")
-        model = shuffle_weights(model=model)
+    if pruning_method is not None:
+        if contains_any(pruning_method.lower(), 'shuffle weight'):
+            print("SHUFFLING WEIGHTS IN LAYERS!")
+            model = shuffle_weights(model=model)
 
-    if contains_any(pruning_method.lower(), 'shuffle layer'):
-        print("SHUFFLING WEIGHTS WITH MASKS IN LAYERS!")
-        model = shuffle_layers(model=model)
+        if contains_any(pruning_method.lower(), 'shuffle layer'):
+            print("SHUFFLING WEIGHTS WITH MASKS IN LAYERS!")
+            model = shuffle_layers(model=model)
 
-    if contains_any(pruning_method.lower(), 'shuffle mask'):
-        print("SHUFFLING MASKS IN LAYERS!")
-        model = shuffle_masks(model=model)
+        if contains_any(pruning_method.lower(), 'shuffle mask'):
+            print("SHUFFLING MASKS IN LAYERS!")
+            model = shuffle_masks(model=model)
 
     apply_pruning_for_model(model)
     density = report_density(model, silent=True)
