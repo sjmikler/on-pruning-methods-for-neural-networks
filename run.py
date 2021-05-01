@@ -48,8 +48,7 @@ for exp_idx, exp in enumerate(experiment_queue):
         continue
 
     exp._reset_usage_counts(
-        ignore_keys=['REP', 'RND_IDX', 'HOST', 'Global',
-                     'Repeat', 'Name', 'Module', 'YamlLog'])
+        ignore_keys=['REP', 'RND_IDX', 'HOST', 'Repeat', 'Name', 'Module', 'YamlLog'])
 
     try:
         t0 = time.time()

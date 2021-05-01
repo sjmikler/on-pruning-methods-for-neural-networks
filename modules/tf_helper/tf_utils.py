@@ -35,7 +35,6 @@ def set_precision(precision):
 
 def logging_from_history(history, exp):
     import datetime
-    import socket
 
     min_loss = min(history["val_loss"])
     max_acc = max(history["val_accuracy"])
@@ -47,7 +46,6 @@ def logging_from_history(history, exp):
     print(f"BEST ACCURACY: {max_acc}")
 
     exp.TIME = datetime.datetime.now().strftime("%Y.%m.%d %H:%M")
-    exp.HOST = socket.gethostname()
     exp.ACC = max_acc
     exp.FINAL_ACCU = final_acc
     exp.VALID_LOSS = min_loss

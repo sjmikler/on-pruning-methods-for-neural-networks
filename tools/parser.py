@@ -1,5 +1,6 @@
 import os
 import random
+import socket
 import sys
 from collections.abc import Iterable
 from copy import deepcopy
@@ -122,7 +123,9 @@ def load_from_yaml(yaml_path, cmd_parameters=(), private_keys=()):
             print(f"ERROR WHEN PARSING {cmd_param}!")
             raise e
 
+    default.HOST = socket.gethostname()
     all_unpacked_experiments = []
+
     for global_rep in range(default.Global.repeat):
         unpacked_experiments = []
         for exp in experiments:
@@ -139,14 +142,14 @@ def load_from_yaml(yaml_path, cmd_parameters=(), private_keys=()):
                     nexp.pop(key)
 
             if "RND_IDX" in nexp:  # allow custom RND_IDX
-                rnd_idx = nexp["RND_IDX"]
+                rnd_idx = nexp.RND_IDX
             else:
                 rnd_idx = random.randint(100000, 999999)
 
             for rep in range(nexp.Repeat):
                 nexp_rep = deepcopy(nexp)
-                nexp_rep["RND_IDX"] = rnd_idx
-                nexp_rep["REP"] = rep
+                nexp_rep.RND_IDX = rnd_idx
+                nexp_rep.REP = rep
                 nexp_rep = cool_parse_exp(nexp_rep, unpacked_experiments)
                 unpacked_experiments.append(nexp_rep)
         all_unpacked_experiments.extend(unpacked_experiments)
