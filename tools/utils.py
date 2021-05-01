@@ -162,11 +162,10 @@ class SlackLogger:
         self.messages.insert(0, message)
 
     def send_message(self, msg, channel):
-        import slack
         try:
             self.client.chat_postMessage(channel=channel, text=msg)
             status = 0
-        except slack.errors.SlackApiError as e:
+        except Exception as e:
             status = 1
             print(e)
         if status == 0:
