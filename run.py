@@ -30,7 +30,11 @@ default_config, experiment_queue = parser.load_from_yaml(yaml_path=args.exp,
                                                          cmd_parameters=unknown_args,
                                                          private_keys=("Global",))
 print(f"GLOBAL CONFIG:\n{default_config.Global}")
-finished_experiments = []
+
+use_slack = 'slack' in default_config.Global and default_config.Global.slack
+if use_slack:
+    slacklogger = utils.SlackLogger(default_config.Global.slack_config,
+                                    host=default_config.HOST)
 
 for exp_idx, exp in enumerate(experiment_queue):
     assert isinstance(exp, utils.Experiment)
@@ -61,7 +65,9 @@ for exp_idx, exp in enumerate(experiment_queue):
         with open(f"{exp.YamlLog}", "a") as f:
             yaml.safe_dump(exp.todict(), stream=f, explicit_start=True, sort_keys=False)
         print(f"SAVED {exp['YamlLog']}")
-        finished_experiments.append(exp)
+
+        if use_slack:
+            slacklogger.add_exp_report(exp)
 
     except KeyboardInterrupt:
         print(f"\n\nSKIPPING EXPERIMENT {exp_idx}, WAITING 2 SECONDS BEFORE "
@@ -72,13 +78,6 @@ if isinstance(experiment_queue, parser.YamlExperimentQueue):
     print(f"REMOVING QUEUE {experiment_queue.path}")
     experiment_queue.close()
 
-if 'slack' in default_config.Global and default_config.Global.slack:
-    slacklog = utils.SlackLogger(default_config.Global.slack_config)
-    slacklog.add_finish_report()
-    for exp in finished_experiments:
-        slacklog.add_exp_report(exp)
-    status = slacklog.send_all()
-    if status == 0:
-        print("SLACK LOGGING SUCCESS!")
-    else:
-        print("SLACK LOGGING ERROR!")
+if use_slack:
+    slacklogger.add_finish_report()
+    status = slacklogger.send_all()

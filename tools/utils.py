@@ -1,6 +1,5 @@
 import datetime
 import pprint
-import socket
 
 from tools import constants as C
 
@@ -142,31 +141,42 @@ def parse_time(strtime):
 
 
 class SlackLogger:
-    def __init__(self, config):
-        self.config = config
+    def __init__(self, config, host):
+        import slack
         self.token = config.token
+        self.client = slack.WebClient(self.token)
+        self.host = host
         self.messages = []
+        self.config = config
 
     def add_exp_report(self, exp):
         message = eval(self.config.say, {}, {'exp': exp})
-        message = "`" + message + "`"
+        message = '`' + message + '`'
         self.messages.append(message)
+        if 'channel_short' in self.config and self.config.channel_short:
+            self.send_message(f"`{self.host:^15}` : {message}",
+                              channel=self.config.channel_short)
 
     def add_finish_report(self):
-        host = socket.gethostname()
-        message = f"Experiment on {host} is completed!"
-        self.messages.append(message)
+        message = f"Experiment on {self.host} is completed!"
+        self.messages.insert(0, message)
+
+    def send_message(self, msg, channel):
+        import slack
+        try:
+            self.client.chat_postMessage(channel=channel, text=msg)
+            status = 0
+        except slack.errors.SlackApiError as e:
+            status = 1
+            print(e)
+        if status == 0:
+            print("SLACK LOGGING SUCCESS!")
+        else:
+            print("SLACK LOGGING FAILED!")
 
     def send_all(self):
-        import slack
-        client = slack.WebClient(self.token)
+        assert self.messages
         final_message = '\n'.join(self.messages)
-
-        failed = False
-        try:
-            client.chat_postMessage(channel=self.config.channel,
-                                    text=final_message)
-        except slack.errors.SlackApiError as e:
-            failed = True
-            print(e)
-        return failed
+        final_message = final_message.replace('`\n`', '\n')
+        final_message = final_message.replace('`', '```')
+        self.send_message(final_message, channel=self.config.channel)
