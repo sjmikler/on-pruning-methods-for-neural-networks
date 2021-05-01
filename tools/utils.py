@@ -34,6 +34,8 @@ class Experiment:
         if key in self._internal_names:
             super().__setattr__(key, value)
         else:
+            if isinstance(value, dict):
+                value = Experiment(value)
             self.dict[key] = value
             self._usage_counts[key] = 0
 
@@ -54,6 +56,8 @@ class Experiment:
             raise KeyError(item)
 
     def __setitem__(self, key, value):
+        if isinstance(value, dict):
+            value = Experiment(value)
         self.dict[key] = value
         self._usage_counts[key] = 0
 

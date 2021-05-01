@@ -22,13 +22,14 @@ There's a single file that contains your **experiment definition** (by default `
 Following parameters are required by `run.py`:
 
 ```
-GlobalRepeat: 1     # performs all listed experiments many times. Resulting order: `1, 2, 1, 2`
-GlobalQueue: null   # if valid path, create an experiment queue available to modify on the hard drive
+Global:
+  repeat: 2         # repeats whole experiment list. Order: 1, 2, 1, 2
+  queue: null       # if valid path, create an experiment queue available to modify on the hard drive
   
                     # non-global parameters can be set separately for each experiment
-Repeat: 1           # copies a single experiment many times **before** fancy parsing. Resulting order: `1, 1, 2, 2`
-Name: test          # if Name==skip, experiment will be skipped. Besides that, it is not used by `run.py`
-YamlLog: log.yaml   # experiment definition with additional information (if added by a Module) will be saved there
+Repeat: 1           # copies a single experiment many times **before** fancy parsing. Resulting order: 1, 1, 2, 2
+Name: test          # if Name==skip, experiment will be skipped 
+YamlLog: log.yaml   # experiment definition with additional information (added by Module) will be saved there
 Module: modules.example      # location of the module that will be run by run.py
 ```
 
@@ -54,7 +55,7 @@ If in need, use following parameter names for consistency:
 
 Script `run.py` launches experiments specified in experiment definition.
 
-* If `Queue` parameter is specified as a valid path, the Queue of the experiments will be stored as a `.yaml` file and can be modified when experiments are running. Otherwise, Queue is stored in RAM memory and cannot be modified.
+* If `Global.queue` parameter is specified as a valid path, the Queue of the experiments will be stored as a `.yaml` file and can be modified when experiments are running. Otherwise, Queue is stored in RAM memory and cannot be modified.
 
 
 * If experiment is stopped with `KeyboardInterrupt`, there will be 2 second pause during which `run.py` can be interrupted completely by a second `KeyboardInterrupt`. If not interrupted completely, next experiment in the Queue will start.
@@ -72,7 +73,7 @@ Script `run.py` launches experiments specified in experiment definition.
                            Run only selected experiments, e.g. 0,1,3 or 1
    ```
 
-* You can update **global config** straight from command line by passing arguments with `+` prefix instead of `-`, e.g. `python run.py +GlobalQueue queue.yaml`.
+* You can update default config straight from command line by passing arguments with `+` prefix instead of `-`, e.g. `python run.py +Global.queue=queue.yaml` without any spaces.
 
 # Modules
 

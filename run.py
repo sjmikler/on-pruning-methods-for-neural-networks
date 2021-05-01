@@ -1,7 +1,6 @@
 import argparse
 import importlib
 import os
-import sys
 import time
 
 import yaml
@@ -27,15 +26,10 @@ args, unknown_args = arg_parser.parse_known_args()
 print(f"UNKNOWN CMD ARGUMENTS: {unknown_args}")
 print(f"  KNOWN CMD ARGUMENTS: {args.__dict__}")
 
-parameters = utils.filter_argv(unknown_args, include=['+'], exclude=['-'])
-for p in parameters:
-    sys.argv.remove(p)  # filter out parameters, leave only real arguments
-
-default_config, experiment_queue = parser.load_from_yaml(
-    yaml_path=args.exp,
-    cmd_parameters=parameters,
-    private_keys=['SlackLog', 'SlackLogConfig']
-)
+default_config, experiment_queue = parser.load_from_yaml(yaml_path=args.exp,
+                                                         cmd_parameters=unknown_args,
+                                                         private_keys=("Global",))
+print(f"GLOBAL CONFIG:\n{default_config.Global}")
 finished_experiments = []
 
 for exp_idx, exp in enumerate(experiment_queue):
@@ -54,7 +48,7 @@ for exp_idx, exp in enumerate(experiment_queue):
         continue
 
     exp._reset_usage_counts(
-        ignore_keys=['REP', 'RND_IDX', 'HOST', 'GlobalRepeat', 'GlobalQueue',
+        ignore_keys=['REP', 'RND_IDX', 'HOST', 'Global',
                      'Repeat', 'Name', 'Module', 'YamlLog'])
 
     try:
@@ -79,13 +73,13 @@ if isinstance(experiment_queue, parser.YamlExperimentQueue):
     print(f"REMOVING QUEUE {experiment_queue.path}")
     experiment_queue.close()
 
-if 'SlackLog' in default_config and default_config.SlackLog:
-    slacklog = utils.SlackLogger(default_config.SlackLogConfig)
+if 'slack' in default_config.Global and default_config.Global.slack:
+    slacklog = utils.SlackLogger(default_config.Global.slack_config)
     slacklog.add_finish_report()
     for exp in finished_experiments:
         slacklog.add_exp_report(exp)
     status = slacklog.send_all()
     if status == 0:
-        print("SlackLog SUCCESS!")
+        print("SLACK LOGGING SUCCESS!")
     else:
-        print("SlackLog ERROR!")
+        print("SLACK LOGGING ERROR!")

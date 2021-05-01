@@ -1,6 +1,6 @@
-import argparse
 import os
 import random
+import sys
 from collections.abc import Iterable
 from copy import deepcopy
 
@@ -97,42 +97,33 @@ def cool_parse_exp(exp, E, scopes=[]):
 
         if isinstance(v, str):  # e.g. for parsing float in scientific notation
             try:
-                v = float(v)
-                v = int(v) if v == int(v) else v
-            except ValueError:
+                v = eval(v, {}, {})
+            except (NameError, SyntaxError):
                 pass
         exp[k] = v
     return exp
 
 
 def load_from_yaml(yaml_path, cmd_parameters=(), private_keys=()):
-    parser = argparse.ArgumentParser(prefix_chars='+')
-    for arg in cmd_parameters:
-        if arg[0] == '+':
-            if '=' in arg:
-                arg = arg[:arg.index('=')]  # for usage with +arg=V
-            parser.add_argument(arg)
-
-    args = parser.parse_args(cmd_parameters)
-    new_cmd_parameters = utils.Experiment()
-
-    for key, value in args.__dict__.items():
-        if isinstance(value, str):
-            try:
-                value = int(value) if float(value) == int(value) else float(value)
-            except ValueError:
-                pass
-        new_cmd_parameters[key] = value
-
-    print(f"CMD PARAMETERS: {new_cmd_parameters}")
-
     experiments = yaml.safe_load_all(open(yaml_path, "r"))
     experiments = [utils.Experiment(exp) for exp in experiments]
     default = experiments.pop(0)
-    default.update(new_cmd_parameters)
+
+    parameters = [p for p in cmd_parameters if p.startswith('+')]
+    print(f"FOUND CMD PARAMETERS: {parameters}")
+
+    for cmd_param in parameters:
+        try:
+            sys.argv.remove(cmd_param)
+            param = cmd_param.strip('+ ')
+            param = 'default.' + param
+            exec(param)
+        except Exception as e:
+            print(f"ERROR WHEN PARSING {cmd_param}!")
+            raise e
 
     all_unpacked_experiments = []
-    for global_rep in range(default.GlobalRepeat):
+    for global_rep in range(default.Global.repeat):
         unpacked_experiments = []
         for exp in experiments:
             nexp = deepcopy(exp)
@@ -160,7 +151,7 @@ def load_from_yaml(yaml_path, cmd_parameters=(), private_keys=()):
                 unpacked_experiments.append(nexp_rep)
         all_unpacked_experiments.extend(unpacked_experiments)
 
-    if path := default.GlobalQueue:
+    if path := default.Global.queue:
         queue = YamlExperimentQueue(all_unpacked_experiments, path=path)
     else:
         queue = all_unpacked_experiments
