@@ -410,7 +410,7 @@ def contains_any(t, *opts):
 
 
 def set_pruning_masks(model, pruning_method, pruning_config, dataset):
-    if (pruning_methods is None
+    if (pruning_method is None
             or contains_any(pruning_method.lower(), 'none', 'nothing')):
         print('NO PRUNING')
         return model
