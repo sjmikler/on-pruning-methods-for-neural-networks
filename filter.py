@@ -43,7 +43,7 @@ if __name__ == '__main__':
         for f in args.filter:
             logs = filter(eval(f), logs)
             logs = list(logs)
-    print(f"Filter {len(logs):^5} logs!")
+        print(f"Filter {len(logs):^5} logs!")
 
     if args.sort:
         for f in args.sort:
