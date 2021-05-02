@@ -165,14 +165,10 @@ class SlackLogger:
     def send_message(self, msg, channel):
         try:
             self.client.chat_postMessage(channel=channel, text=msg)
-            status = 0
-        except Exception as e:
-            status = 1
-            print(e)
-        if status == 0:
             print("SLACK LOGGING SUCCESS!")
-        else:
+        except Exception as e:
             print("SLACK LOGGING FAILED!")
+            print(e)
 
     def send_all(self):
         assert self.messages
