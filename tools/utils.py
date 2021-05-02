@@ -162,7 +162,7 @@ class SlackLogger:
             print(e)
 
     def get_desc(self):
-        return f'*{self.desc}*'
+        return f'_{self.desc}_'
 
     def add_exp_report(self, exp):
         message = eval(self.config.say, {}, {'exp': exp})
