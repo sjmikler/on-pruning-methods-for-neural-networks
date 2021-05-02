@@ -143,11 +143,10 @@ def parse_time(strtime):
 class SlackLogger:
     def __init__(self, config, host):
         import slack
-        self.token = config.token
-        self.client = slack.WebClient(self.token)
         self.host = host
         self.messages = []
         self.config = config
+        self.client = slack.WebClient(config.token)
 
     def add_exp_report(self, exp):
         message = eval(self.config.say, {}, {'exp': exp})
@@ -157,8 +156,10 @@ class SlackLogger:
             self.send_message(f"`{self.host:^15}` : {message}",
                               channel=self.config.channel_short)
 
-    def add_finish_report(self):
+    def add_finish_report(self, desc=None):
         message = f"Experiment on {self.host} is completed!"
+        if desc:
+            message += f"\n{desc}"
         self.messages.insert(0, message)
 
     def send_message(self, msg, channel):
