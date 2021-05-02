@@ -422,15 +422,17 @@ def set_pruning_masks(model, pruning_method, pruning_config, dataset):
             print('PSUEDO SNIP PRUNING')
             model = prune_pseudo_SNIP(model=model,
                                       config=pruning_config,
-                                      dataset=dataset.train)
+                                      dataset=dataset['train'])
         else:
             print('SNIP PRUNING')
             model = prune_SNIP(model=model,
                                config=pruning_config,
-                               dataset=dataset.train)
+                               dataset=dataset['train'])
     elif contains_any(pruning_method.lower(), 'grasp'):
         print('GRASP PRUNING')
-        model = prune_GraSP(model=model, config=pruning_config, dataset=dataset.train)
+        model = prune_GraSP(model=model,
+                            config=pruning_config,
+                            dataset=dataset['train'])
     elif contains_any(pruning_method.lower(), 'l1', 'magnitude'):
         print('WEIGHT MAGNITUDE PRUNING')
         model = prune_l1(model=model, config=pruning_config)
