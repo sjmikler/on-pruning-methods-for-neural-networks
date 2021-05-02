@@ -18,7 +18,6 @@ arg_parser.add_argument("--exp",
                         type=str,
                         help="path to .yaml file with experiments")
 arg_parser.add_argument("--pick",
-                        "--cherrypick-experiments",
                         type=int,
                         nargs='*',
                         help="run only selected experiments, e.g. 0 1 3 or just 1")
