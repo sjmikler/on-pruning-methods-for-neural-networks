@@ -184,9 +184,11 @@ class SlackLogger:
             message = f"Experiment on {self.host} is running!"
             if self.desc:
                 message += f"\n{self.get_desc()}"
+
             response = self.send_message(message, channel)
-            self.threads[channel] = response['ts']
-            return self.threads[channel]
+            if response:
+                self.threads[channel] = response['ts']
+                return self.threads[channel]
 
     def add_finish_report(self):
         message = f"Experiment on {self.host} is completed!"
