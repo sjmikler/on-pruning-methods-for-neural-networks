@@ -80,4 +80,4 @@ if isinstance(experiment_queue, parser.YamlExperimentQueue):
 
 if use_slack and slacklogger.has_reports():
     slacklogger.add_finish_report()
-    status = slacklogger.send_all()
+    slacklogger.send_all()
