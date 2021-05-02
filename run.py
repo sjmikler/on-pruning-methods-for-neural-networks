@@ -33,7 +33,8 @@ print(f"GLOBAL CONFIG:\n{default_config.Global}")
 use_slack = 'slack' in default_config.Global and default_config.Global.slack
 if use_slack:
     slacklogger = utils.SlackLogger(config=default_config.Global.slack_config,
-                                    host=default_config.HOST)
+                                    host=default_config.HOST,
+                                    desc=default_config.get("Desc"))
 
 for exp_idx, exp in enumerate(experiment_queue):
     assert isinstance(exp, utils.Experiment)
@@ -77,6 +78,6 @@ if isinstance(experiment_queue, parser.YamlExperimentQueue):
     print(f"REMOVING QUEUE {experiment_queue.path}")
     experiment_queue.close()
 
-if use_slack and slacklogger.has_reports():
-    slacklogger.add_finish_report(desc=default_config.get("Desc"))
-    slacklogger.send_all()
+if use_slack:
+    slacklogger.send_accumulated()
+    slacklogger.close_threads()

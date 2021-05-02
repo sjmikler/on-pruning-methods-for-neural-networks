@@ -141,41 +141,68 @@ def parse_time(strtime):
 
 
 class SlackLogger:
-    def __init__(self, config, host):
+    def __init__(self, config, host, desc):
         import slack
         self.host = host
+        self.desc = desc
         self.messages = []
         self.config = config
         self.client = slack.WebClient(config.token)
+        self.threads = {}
 
-    def add_exp_report(self, exp):
-        message = eval(self.config.say, {}, {'exp': exp})
-        message = '`' + message + '`'
-        self.messages.append(message)
-        if 'channel_short' in self.config and self.config.channel_short:
-            self.send_message(f"`{self.host:^15}` : {message}",
-                              channel=self.config.channel_short)
-
-    def add_finish_report(self, desc=None):
-        message = f"Experiment on {self.host} is completed!"
-        if desc:
-            message += f"\n{desc}"
-        self.messages.insert(0, message)
-
-    def send_message(self, msg, channel):
+    def send_message(self, msg, channel, thread_ts=None):
         try:
-            self.client.chat_postMessage(channel=channel, text=msg)
+            response = self.client.chat_postMessage(channel=channel,
+                                                    text=msg,
+                                                    thread_ts=thread_ts)
             print("SLACK LOGGING SUCCESS!")
+            return response
         except Exception as e:
             print("SLACK LOGGING FAILED!")
             print(e)
 
-    def send_all(self):
-        assert self.messages
-        final_message = '\n'.join(self.messages)
-        final_message = final_message.replace('`\n`', '\n')
-        final_message = final_message.replace('`', '```')
-        self.send_message(final_message, channel=self.config.channel)
+    def get_desc(self):
+        return f'*{self.desc}*'
 
-    def has_reports(self):
-        return bool(self.messages)
+    def add_exp_report(self, exp):
+        message = eval(self.config.say, {}, {'exp': exp})
+        message = '`' + message + '`'
+
+        if self.config.get('channel_final'):
+            self.messages.append(message)
+
+        if self.config.get('channel_short'):
+            self.send_message(
+                msg=message,
+                channel=self.config.channel_short,
+                thread_ts=self.get_thread_for_running(self.config.channel_short))
+
+    def get_thread_for_running(self, channel):
+        if channel in self.threads:
+            return self.threads[channel]
+        else:
+            message = f"Experiment on {self.host} is running!"
+            if self.desc:
+                message += f"\n{self.get_desc()}"
+            response = self.send_message(message, channel)
+            self.threads[channel] = response['ts']
+            return self.threads[channel]
+
+    def add_finish_report(self):
+        message = f"Experiment on {self.host} is completed!"
+        if self.desc:
+            message += f"\n{self.get_desc()}"
+        self.messages.insert(0, message)
+
+    def send_accumulated(self):
+        if self.messages:
+            self.add_finish_report()
+            final_message = '\n'.join(self.messages)
+            final_message = final_message.replace('`\n`', '\n')
+            final_message = final_message.replace('`', '```')
+            self.send_message(final_message, channel=self.config.channel_final)
+
+    def close_threads(self):
+        for channel, thread in self.threads.items():
+            message = f"Experiment is completed!"
+            self.send_message(message, channel, thread)
