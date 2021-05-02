@@ -14,6 +14,7 @@ def recursive_collect_logs(path, exclude, verbose=False, level=0):
     logs = []
     for x in os.listdir(path):
         if x in exclude:
+            print(f"SKIPPING EXCLUDED {x}")
             continue
 
         if x.endswith('.yaml'):
