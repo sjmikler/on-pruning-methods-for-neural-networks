@@ -1,9 +1,10 @@
-# DEFAULT CONFIG:
+Global:
+    repeat: 2  # e.g. 1, 2, 1, 2
+    queue: null # specify path for queue file, if null keeps queue unaccessible in memory
 
-GlobalRepeat: 1  # e.g. 1, 2, 1, 2
-GlobalQueue: null # specify path for queue file, if null keeps queue unaccessible in memory
-Repeat: 1  # e.g. 1, 1, 2, 2
-Name: skip # with name=skip, training will be skipped
+# DEFAULT CONFIG:
+Repeat: 2  # e.g. 1, 1, 2, 2
+Name: null # with name=None, training will be skipped
 Module: modules.pruning
 YamlLog: eval f"{directory}/{Name}/{RND_IDX}/{REP}.yaml"
 
