@@ -179,3 +179,6 @@ class SlackLogger:
         final_message = final_message.replace('`\n`', '\n')
         final_message = final_message.replace('`', '```')
         self.send_message(final_message, channel=self.config.channel)
+
+    def has_reports(self):
+        return bool(self.messages)

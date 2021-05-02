@@ -42,13 +42,13 @@ for exp_idx, exp in enumerate(experiment_queue):
     if args.pick and exp_idx not in args.pick:
         print(f"SKIPPING EXPERIMENT {exp_idx} (not picked)")
         continue
+    if not exp.Name or exp.Name == "skip":
+        print(f"SKIPPING EXPERIMENT {exp_idx} (Name = {exp.Name})")
+        continue
 
     print()
     print(f"NEW EXPERIMENT {exp_idx} / {len(experiment_queue)}:\n{exp}")
     if args.dry:
-        continue
-    if exp.Name == "skip":
-        print(f"SKIPPING EXPERIMENT {exp_idx} (Name == skip)")
         continue
 
     exp._reset_usage_counts(
@@ -78,6 +78,6 @@ if isinstance(experiment_queue, parser.YamlExperimentQueue):
     print(f"REMOVING QUEUE {experiment_queue.path}")
     experiment_queue.close()
 
-if use_slack:
+if use_slack and slacklogger.has_reports():
     slacklogger.add_finish_report()
     status = slacklogger.send_all()
