@@ -1,5 +1,6 @@
 import datetime
 import pprint
+import time
 
 from tools import constants as C
 
@@ -150,7 +151,7 @@ class SlackLogger:
         self.client = slack.WebClient(config.token)
         self.threads = {}
 
-    def send_message(self, msg, channel, thread_ts=None):
+    def send_message(self, msg, channel, thread_ts=None, retry=True):
         try:
             response = self.client.chat_postMessage(channel=channel,
                                                     text=msg,
@@ -158,8 +159,12 @@ class SlackLogger:
             print("SLACK LOGGING SUCCESS!")
             return response
         except Exception as e:
-            print("SLACK LOGGING FAILED!")
-            print(e)
+            if retry:
+                time.sleep(3)
+                self.send_message(msg, channel, thread_ts, retry=False)
+            else:
+                print("SLACK LOGGING FAILED!")
+                print(e)
 
     def get_desc(self):
         return f'_{self.desc}_'
@@ -172,10 +177,11 @@ class SlackLogger:
             self.messages.append(message)
 
         if self.config.get('channel_short'):
-            self.send_message(
-                msg=message,
-                channel=self.config.channel_short,
-                thread_ts=self.get_thread_for_running(self.config.channel_short))
+            thread = self.get_thread_for_running(self.config.channel_short)
+            if thread:
+                self.send_message(msg=message,
+                                  channel=self.config.channel_short,
+                                  thread_ts=thread)
 
     def get_thread_for_running(self, channel):
         if channel in self.threads:
