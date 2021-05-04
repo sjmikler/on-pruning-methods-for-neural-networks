@@ -147,10 +147,31 @@ class SlackLogger:
         import slack
         self.host = host
         self.desc = desc
-        self.messages = []
         self.config = config
         self.client = slack.WebClient(config.token)
-        self.threads = {}
+        self.channel2thread_short = {}
+        self.queue_final = []
+        self.queue_short = []
+
+    def get_description(self):
+        return f'_{self.desc}_'
+
+    def add_exp_report(self, exp):
+        message = eval(self.config.say, {}, {'exp': exp})
+        message = '`' + message + '`'
+
+        if self.config.get('channel_final'):
+            self.queue_final.append(message)
+
+        if self.config.get('channel_short'):
+            self.queue_short.append(message)
+            self.send_short()
+
+    def add_finish_report(self):
+        message = f"Experiment on {self.host} is completed!"
+        if self.desc:
+            message += f"\n{self.get_description()}"
+        self.queue_final.insert(0, message)
 
     def send_message(self, msg, channel, thread_ts=None, retries=2):
         try:
@@ -167,51 +188,45 @@ class SlackLogger:
                 print("SLACK LOGGING FAILED!")
                 print(e)
 
-    def get_desc(self):
-        return f'_{self.desc}_'
-
-    def add_exp_report(self, exp):
-        message = eval(self.config.say, {}, {'exp': exp})
-        message = '`' + message + '`'
-
-        if self.config.get('channel_final'):
-            self.messages.append(message)
-
-        if self.config.get('channel_short'):
-            thread = self.get_thread_for_running(self.config.channel_short)
-            if thread:
-                self.send_message(msg=message,
-                                  channel=self.config.channel_short,
-                                  thread_ts=thread)
-
-    def get_thread_for_running(self, channel):
-        if channel in self.threads:
-            return self.threads[channel]
+    def get_thread_short(self, channel):
+        if channel in self.channel2thread_short:
+            return self.channel2thread_short[channel]
         else:
             message = f"Experiment on {self.host} is running!"
             if self.desc:
-                message += f"\n{self.get_desc()}"
+                message += f"\n{self.get_description()}"
 
-            response = self.send_message(message, channel)
-            if response:
-                self.threads[channel] = response['ts']
-                return self.threads[channel]
+            r = self.send_message(message, channel)
+            if r and r['ok']:
+                self.channel2thread_short[channel] = r['ts']
+                return self.channel2thread_short[channel]
 
-    def add_finish_report(self):
-        message = f"Experiment on {self.host} is completed!"
-        if self.desc:
-            message += f"\n{self.get_desc()}"
-        self.messages.insert(0, message)
+    def send_short(self):
+        thread = self.get_thread_short(self.config.channel_short)
+        if thread:
+            while self.queue_short:
+                r = self.send_message(msg=self.queue_short[0],
+                                      channel=self.config.channel_short,
+                                      thread_ts=thread)
+                if r and r['ok']:
+                    self.queue_short.pop(0)
+                else:
+                    break
 
-    def send_accumulated(self):
-        if self.messages:
+    def finalize(self):
+        if self.queue_final:
             self.add_finish_report()
-            final_message = '\n'.join(self.messages)
+            final_message = '\n'.join(self.queue_final)
             final_message = final_message.replace('`\n`', '\n')
             final_message = final_message.replace('`', '```')
             self.send_message(final_message, channel=self.config.channel_final)
 
-    def close_threads(self):
-        for channel, thread in self.threads.items():
+    def finalize_short(self):
+        for channel, thread in self.channel2thread_short.items():
             message = f"Experiment is completed!"
+            self.send_message(message, channel, thread)
+
+    def interrupt_short(self):
+        for channel, thread in self.channel2thread_short.items():
+            message = f"Experiment has been interrupted!"
             self.send_message(message, channel, thread)

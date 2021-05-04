@@ -73,11 +73,17 @@ for exp_idx, exp in enumerate(experiment_queue):
         print(f"\n\nSKIPPING EXPERIMENT {exp_idx}, WAITING 2 SECONDS BEFORE "
               f"RESUMING...")
         time.sleep(2)
+        try:
+            pass
+        except KeyboardInterrupt:
+            if use_slack:
+                slacklogger.interrupt_short()
+            raise KeyboardInterrupt
 
 if isinstance(experiment_queue, parser.YamlExperimentQueue):
     print(f"REMOVING QUEUE {experiment_queue.path}")
     experiment_queue.close()
 
 if use_slack:
-    slacklogger.send_accumulated()
-    slacklogger.close_threads()
+    slacklogger.finalize()
+    slacklogger.finalize_short()
