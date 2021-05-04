@@ -1,5 +1,3 @@
-import os
-
 import tensorflow as tf
 
 from modules import tf_helper
@@ -20,8 +18,8 @@ def main(exp):
     7. Training
 
     EXPERIMENT KEYS:
-    * checkpointBP: not required
-    * checkpointAP: not required
+    * load_model_before_pruning: not required
+    * load_model_after_pruning: not required
     * ...
     """
     print("RUNNING PRUNING MODULE")
@@ -32,19 +30,19 @@ def main(exp):
     ds = datasets.get_dataset(exp.dataset,
                               precision=exp.precision,
                               **exp.dataset_config)
-    loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     model_func = models.get_model(exp.model)
     model_config = exp.model_config
     model = model_func(**model_config)
 
+    loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     optimizer = tf_utils.get_optimizer(exp.optimizer, exp.optimizer_config)
     model.compile(optimizer, loss_fn, metrics=["accuracy"])
-    tf_utils.describe_model(model)
+    tf_utils.print_model_info(model)
 
     # load checkpointed weights before the pruning
-    if hasattr(exp, 'checkpointBP') and exp.checkpointBP:
-        model.load_weights(exp.checkpointBP)
-        print(f"LOADED BEFORE PRUNING {exp.checkpointBP}")
+    if hasattr(exp, 'load_model_before_pruning') and exp.load_model_before_pruning:
+        model.load_weights(exp.load_model_before_pruning)
+        print(f"LOADED BEFORE PRUNING {exp.load_model_before_pruning}")
 
     model = pruning_utils.set_pruning_masks(model=model,
                                             pruning_method=exp.pruning,
@@ -53,47 +51,66 @@ def main(exp):
     assert isinstance(model, tf.keras.Model)
 
     # load or reset weights after the pruning, do not change masks
-    if hasattr(exp, 'checkpointAP') and exp.checkpointAP:
-        if exp.checkpointAP == 'random':
+    if hasattr(exp, 'load_model_after_pruning') and exp.load_model_after_pruning:
+        if exp.load_model_after_pruning == 'random':
             ckp = None
         else:
-            ckp = exp.checkpointAP
+            ckp = exp.load_model_after_pruning
         num_masks = tf_utils.reset_weights_to_checkpoint(model,
                                                          ckp=ckp,
                                                          skip_keyword='kernel_mask')
-        print(f"LOADED AFTER PRUNING {exp.checkpointAP}, but keeping {num_masks} "
-              f"masks!")
+        print(f"LOADED AFTER PRUNING {exp.load_model_after_pruning}, but keeping "
+              f"{num_masks} masks")
 
-    # apply pruning from previously calculated masks
+    if hasattr(exp, 'load_optimizer') and exp.load_optimizer:
+        tf_utils.build_optimizer(model, optimizer)
+        tf_utils.update_optimizer(optimizer, exp.load_optimizer)
+        print(f"LOADED OPTIMIZER {exp.load_optimizer}")
+
+    checkpoint_callback = tf_utils.CheckpointAfterEpoch(epoch2path=exp.save_model,
+                                                        epoch2path_optim=exp.save_optim)
+
+    # just apply pruning by zeroing weights with previously calculated masks
     pruning_utils.apply_pruning_masks(model, pruning_method=exp.pruning)
     steps_per_epoch = min(exp.steps, exp.steps_per_epoch)
+    num_epochs = int(exp.steps / steps_per_epoch)
+
+    if hasattr(exp, 'initial_epoch'):
+        initial_epoch = exp.initial_epoch
+    else:
+        initial_epoch = 0
 
     if hasattr(exp, 'get_unused_parameters'):
         if unused := exp.get_unused_parameters():
-            print("ATTENTION! Unused parameters:")
+            print("!!!ATTENTION!!! Unused parameters:")
             print(unused)
 
-    if exp.steps != 0:
-        history = model.fit(x=ds['train'],
-                            validation_data=ds['valid'],
-                            steps_per_epoch=steps_per_epoch,
-                            epochs=int(exp.steps / steps_per_epoch))
+    checkpoint_callback.set_model(model)
+    checkpoint_callback.on_epoch_end(epoch=-1)  # for checkpoint at epoch 0
+
+    if num_epochs != initial_epoch:
+        history = model.fit(
+            x=ds['train'],
+            validation_data=ds['valid'],
+            steps_per_epoch=steps_per_epoch,
+            epochs=num_epochs,
+            initial_epoch=initial_epoch,
+            callbacks=[checkpoint_callback],
+            use_multiprocessing=True,
+        )
         exp.FINAL_DENSITY = pruning_utils.report_density(model)
         print("FINAL DENSITY:", exp.FINAL_DENSITY)
         tf_utils.logging_from_history(history.history, exp=exp)
-
-    if exp.weight_checkpoint:
-        if dirpath := os.path.dirname(exp.weight_checkpoint):
-            os.makedirs(dirpath, exist_ok=True)
-        model.save_weights(exp.weight_checkpoint, save_format="h5")
+    checkpoint_callback.list_created_checkpoints()
 
 
 if __name__ == '__main__':
     class exp:
-        precision = 16
         name = 'temp'
+        precision = 16
+        save_model = {}
+        save_optim = {}
         tensorboard_log = None
-        weight_checkpoint = None
         steps = 200
         steps_per_epoch = 20
         dataset = 'cifar10'

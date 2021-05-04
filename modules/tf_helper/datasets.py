@@ -66,17 +66,32 @@ def mnist(train_batch_size=100,
     return ds
 
 
+def test(train_batch_size=100,
+         image_shape=(32, 32, 3),
+         dtype=tf.float32):
+    images = tf.ones([2, *image_shape])
+    target = tf.constant([0, 1])
+
+    def preprocess(x, y):
+        x = tf.cast(x, dtype)
+        return x, y
+
+    ds = {}
+    ds['train'] = tf.data.Dataset.from_tensor_slices((images, target))
+    ds['train'] = ds['train'].map(preprocess).repeat().batch(train_batch_size)
+    ds['valid'] = tf.data.Dataset.from_tensor_slices((images, target))
+    ds['valid'] = ds['valid'].map(preprocess).batch(2)
+    return ds
+
+
 def get_dataset(ds_name, precision, **config):
     if ds_name == 'cifar10':
-        return cifar(dtype=tf.float16 if precision == 16 else tf.float32,
-                     version=10,
+        return cifar(dtype=tf.float16 if precision == 16 else tf.float32, version=10,
                      **config)
     if ds_name == 'cifar100':
-        return cifar(dtype=tf.float16 if precision == 16 else tf.float32,
-                     version=100,
+        return cifar(dtype=tf.float16 if precision == 16 else tf.float32, version=100,
                      **config)
-    elif ds_name == 'mnist':
-        return mnist(dtype=tf.float16 if precision == 16 else tf.float32,
-                     **config)
+    elif ds_name == 'test':
+        return test(dtype=tf.float16 if precision == 16 else tf.float32, **config)
     else:
         raise KeyError(f"DATASET {ds_name} NOT RECOGNIZED!")

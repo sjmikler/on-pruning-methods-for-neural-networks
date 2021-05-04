@@ -1,3 +1,5 @@
+import os
+import pickle
 from collections import Counter, abc
 from copy import deepcopy
 
@@ -131,7 +133,7 @@ def concatenate_flattened(arrays):
                            else x.numpy().flatten() for x in arrays], axis=0)
 
 
-def describe_model(model):
+def print_model_info(model):
     print(f"MODEL INFO")
     layer_counts = Counter()
     for layer in model.layers:
@@ -170,3 +172,62 @@ def describe_model(model):
     print(f"KERNELS: {kernels} ({kernels / trainable_w * 100:^6.2f}%), "
           f"BIASES: {biases} ({biases / trainable_w * 100:^6.2f}%), "
           f"BN: {bn} ({bn / trainable_w * 100:^6.2f}%)")
+
+
+def save_optimizer(optimizer, path):
+    if dirpath := os.path.dirname(path):
+        os.makedirs(dirpath, exist_ok=True)
+    weights = optimizer.get_weights()
+    with open(path, 'wb') as f:
+        pickle.dump(weights, f)
+
+
+def save_model(model, path):
+    if dirpath := os.path.dirname(path):
+        os.makedirs(dirpath, exist_ok=True)
+    model.save_weights(path, save_format="h5")
+
+
+def update_optimizer(optimizer, path):
+    with open(path, 'rb') as f:
+        weights = pickle.load(f)
+    try:
+        optimizer.set_weights(weights)
+    except ValueError as e:
+        print("!!!WARNING!!! Tried to load empty optimizer!")
+        print(e)
+
+
+def build_optimizer(model, optimizer):
+    zero_grad = [tf.zeros_like(w) for w in model.trainable_weights]
+    optimizer.apply_gradients(zip(zero_grad, model.trainable_weights))
+
+
+class CheckpointAfterEpoch(tf.keras.callbacks.Callback):
+    def __init__(self, epoch2path, epoch2path_optim):
+        super().__init__()
+        self.epoch2path = epoch2path
+        self.epoch2path_optim = epoch2path_optim
+        self.created_model_ckp = []
+        self.created_optim_ckp = []
+
+    def on_epoch_end(self, epoch, logs=None):
+        next_epoch = epoch + 1
+
+        if next_epoch in self.epoch2path:
+            path = self.epoch2path[next_epoch]
+            save_model(self.model, path)
+            self.created_model_ckp.append(path)
+
+        if next_epoch in self.epoch2path_optim:
+            path = self.epoch2path_optim[next_epoch]
+            save_optimizer(self.model.optimizer, path)
+            self.created_optim_ckp.append(path)
+
+    def list_created_checkpoints(self):
+        print(f"CREATED MODEL CHECKPOINTS:")
+        for ckp in self.created_model_ckp:
+            print(ckp)
+        print(f"CREATED OPTIM CHECKPOINTS:")
+        for ckp in self.created_optim_ckp:
+            print(ckp)

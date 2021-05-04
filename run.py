@@ -62,9 +62,9 @@ for exp_idx, exp in enumerate(experiment_queue):
 
         if dirpath := os.path.dirname(exp.YamlLog):
             os.makedirs(dirpath, exist_ok=True)
-        with open(f"{exp.YamlLog}", "a") as f:
+        with open(exp.YamlLog, "a") as f:
             yaml.safe_dump(exp.todict(), stream=f, explicit_start=True, sort_keys=False)
-        print(f"SAVED {exp['YamlLog']}")
+        print(f"SAVED LOGS: {exp['YamlLog']}")
 
         if use_slack:
             slacklogger.add_exp_report(exp)

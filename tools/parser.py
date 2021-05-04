@@ -93,7 +93,7 @@ def cool_parse_exp(exp, E, scopes=[]):
             scope.update(deepcopy(exp))  # top it with this level scope
             scope['E'] = E  # and add experiment history
 
-            v = eval(v, {}, scope)
+            v = eval(v, scope, scope)
             print(f"FANCY PARSING {k}: {org_expr} --> {v}")
 
         if isinstance(v, str):  # e.g. for parsing float in scientific notation
