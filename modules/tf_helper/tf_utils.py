@@ -35,7 +35,7 @@ def set_precision(precision):
     mixed_precision.set_policy(policy)
 
 
-def logging_from_history(history, exp):
+def log_from_history(history, exp):
     import datetime
 
     min_loss = min(history["val_loss"])

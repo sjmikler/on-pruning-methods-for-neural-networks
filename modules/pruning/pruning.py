@@ -89,18 +89,15 @@ def main(exp):
     checkpoint_callback.on_epoch_end(epoch=-1)  # for checkpoint at epoch 0
 
     if num_epochs != initial_epoch:
-        history = model.fit(
-            x=ds['train'],
-            validation_data=ds['valid'],
-            steps_per_epoch=steps_per_epoch,
-            epochs=num_epochs,
-            initial_epoch=initial_epoch,
-            callbacks=[checkpoint_callback],
-            use_multiprocessing=True,
-        )
+        history = model.fit(x=ds['train'],
+                            validation_data=ds['valid'],
+                            steps_per_epoch=steps_per_epoch,
+                            epochs=num_epochs,
+                            initial_epoch=initial_epoch,
+                            callbacks=[checkpoint_callback])
         exp.FINAL_DENSITY = pruning_utils.report_density(model)
         print("FINAL DENSITY:", exp.FINAL_DENSITY)
-        tf_utils.logging_from_history(history.history, exp=exp)
+        tf_utils.log_from_history(history.history, exp=exp)
     checkpoint_callback.list_created_checkpoints()
 
 

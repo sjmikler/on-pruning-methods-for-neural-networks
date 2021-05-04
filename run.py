@@ -70,14 +70,14 @@ for exp_idx, exp in enumerate(experiment_queue):
             slacklogger.add_exp_report(exp)
 
     except KeyboardInterrupt:
-        print(f"\n\nSKIPPING EXPERIMENT {exp_idx}, WAITING 2 SECONDS BEFORE "
-              f"RESUMING...")
-        time.sleep(2)
+        print("\n")
+        print(f"SKIPPING EXPERIMENT {exp_idx}, WAITING 2 SECONDS BEFORE RESUMING...")
         try:
-            pass
+            time.sleep(2)
         except KeyboardInterrupt:
             if use_slack:
                 slacklogger.interrupt_short()
+            print(f"EXITED GRACEFULLY!")
             raise KeyboardInterrupt
 
 if isinstance(experiment_queue, parser.YamlExperimentQueue):

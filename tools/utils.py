@@ -157,7 +157,7 @@ class SlackLogger:
         return f'_{self.desc}_'
 
     def add_exp_report(self, exp):
-        message = eval(self.config.say, {}, {'exp': exp})
+        message = eval(self.config.say, {'exp': exp}, {'exp': exp})
         message = '`' + message + '`'
 
         if self.config.get('channel_final'):
