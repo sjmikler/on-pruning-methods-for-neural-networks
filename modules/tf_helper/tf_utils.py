@@ -54,7 +54,7 @@ def logging_from_history(history, exp):
     exp.TRAIN_ACCU = max_tr_acc
     exp.TRAIN_LOSS = min_tr_loss
 
-    if exp.tensorboard_log:
+    if hasattr(exp, 'tensorboard_log') and exp.tensorboard_log:
         writer = tf.summary.create_file_writer(exp.tensorboard_log)
         with writer.as_default():
             for key in history:

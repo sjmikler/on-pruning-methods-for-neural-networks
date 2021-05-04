@@ -113,7 +113,7 @@ def load_from_yaml(yaml_path, cmd_parameters=(), private_keys=()):
     assert 'Global' in default, "Global missing from default config!"
 
     parameters = [p for p in cmd_parameters if p.startswith('+')]
-    print(f"FOUND CMD PARAMETERS: {parameters}")
+    print(f"RECOGNIZED CMD PARAMETERS: {parameters}")
 
     for cmd_param in parameters:
         try:

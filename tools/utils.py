@@ -1,5 +1,6 @@
 import datetime
 import pprint
+import random
 import time
 
 from tools import constants as C
@@ -151,7 +152,7 @@ class SlackLogger:
         self.client = slack.WebClient(config.token)
         self.threads = {}
 
-    def send_message(self, msg, channel, thread_ts=None, retry=True):
+    def send_message(self, msg, channel, thread_ts=None, retries=2):
         try:
             response = self.client.chat_postMessage(channel=channel,
                                                     text=msg,
@@ -159,9 +160,9 @@ class SlackLogger:
             print("SLACK LOGGING SUCCESS!")
             return response
         except Exception as e:
-            if retry:
-                time.sleep(3)
-                self.send_message(msg, channel, thread_ts, retry=False)
+            if retries > 0:
+                time.sleep(random.random() * 4 + 1)
+                self.send_message(msg, channel, thread_ts, retries=retries - 1)
             else:
                 print("SLACK LOGGING FAILED!")
                 print(e)

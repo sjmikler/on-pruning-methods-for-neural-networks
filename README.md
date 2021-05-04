@@ -33,23 +33,14 @@ YamlLog: log.yaml   # experiment definition with additional information (added b
 Module: modules.example      # location of the module that will be run by run.py
 ```
 
-There are conventions for parameter names:
+There are conventions for parameter names (this is not required):
 
-* `parameter` is used in modules
+* `parameter` is used (required or not) in modules
 * `Parameter` is used in `run.py` for experiment parsing and saving logs
 * `PARAMETER` is added by scripts, not by user, and should be used to write results, e.g. `ACCURACY`
+* `_parameter` to denote something that is not used by the code, but might be used in fancy parsing
 
 Custom modules will require custom parameters. It is advised to write flexible module with many parameters.
-
-If in need, use following parameter names for consistency:
-
-* `steps`: total number of steps in the training
-* `steps_per_epoch`
-* `model` with `model_config`
-* `dataset` with `dataset_config`
-* `optimizer` with `optimizer_config`
-* `full_path`: location of `tensorboard` logs
-* `checkpoint`: location of model checkpoints
 
 # Running experiments
 
@@ -73,7 +64,7 @@ Script `run.py` launches experiments specified in experiment definition.
                            Run only selected experiments, e.g. 0,1,3 or 1
    ```
 
-* You can update default config straight from command line by passing arguments with `+` prefix instead of `-`, e.g. `python run.py +Global.queue=queue.yaml` without any spaces.
+* You can update default config straight from command line by passing arguments with `+` prefix instead of `-`, e.g. `python run.py +Global.queue=queue.yaml` without any spaces. Use quotations if needed.
 
 # Modules
 
