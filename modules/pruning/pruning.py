@@ -86,9 +86,9 @@ def main(exp):
             print(unused)
 
     checkpoint_callback.set_model(model)
-    checkpoint_callback.on_epoch_end(epoch=-1)  # for checkpoint at epoch 0
+    checkpoint_callback.on_epoch_end(epoch=-1)  # for checkpointing before training
 
-    if num_epochs != initial_epoch:
+    if num_epochs > initial_epoch:
         history = model.fit(x=ds['train'],
                             validation_data=ds['valid'],
                             steps_per_epoch=steps_per_epoch,
