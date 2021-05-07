@@ -32,6 +32,8 @@ def set_precision(precision):
         policy = mixed_precision.Policy('float32')
     elif precision == 64:
         policy = mixed_precision.Policy('float64')
+    else:
+        raise NameError(f"Available precision: 16, 32, 64. Not {precision}!")
     mixed_precision.set_policy(policy)
 
 
