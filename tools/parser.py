@@ -68,18 +68,69 @@ class YamlExperimentQueue:
         os.remove(self.path)
 
 
-def cool_parse_exp(exp, E, scopes=[]):
+# def cool_parse_exp(exp, exp_history, scopes=[]):
+#     keys = list(exp.keys())
+#     assert 'temp' not in keys
+#     assert 'E' not in keys
+#
+#     exp_history_dict = {}
+#     if exp_history:
+#         for idx, prev_exp in enumerate(exp_history):
+#             exp_history_dict[idx] = prev_exp
+#             exp_history_dict[prev_exp.Name] = prev_exp
+#         exp_history_dict[-1] = exp_history[-1]
+#
+#     for k in keys:
+#         v = exp[k]
+#
+#         if isinstance(v, utils.Experiment):
+#             nscopes = deepcopy(scopes)
+#             nscopes.append(exp)
+#             parsed_v = cool_parse_exp(v, exp_history, nscopes)
+#             exp[k] = parsed_v
+#             continue
+#
+#         if isinstance(v, str) and v.startswith('eval'):
+#             org_expr = v
+#             v = v[4:].strip()
+#
+#             scope = {}  # populating the scope for eval
+#             for new_scope in scopes:  # for each parent scope
+#                 scope.update(new_scope)  # update current
+#             scope.update(deepcopy(exp))  # top it with this level scope
+#             scope['E'] = exp_history_dict  # and add experiment history
+#
+#             v = eval(v, scope, scope)
+#             print(f"FANCY PARSING {k}: {org_expr} --> {v}")
+#
+#         if isinstance(v, str):  # e.g. for parsing float in scientific notation
+#             try:
+#                 v = eval(v, {}, {})
+#             except (NameError, SyntaxError):
+#                 pass
+#         exp[k] = v
+#     return exp
+
+
+def cool_parse_exp(exp, exp_history, parent_scope={}):
     keys = list(exp.keys())
     assert 'temp' not in keys
     assert 'E' not in keys
+
+    exp_history_dict = {}
+    if exp_history:
+        for idx, prev_exp in enumerate(exp_history):
+            exp_history_dict[idx] = prev_exp
+            exp_history_dict[prev_exp.Name] = prev_exp
+        exp_history_dict[-1] = exp_history[-1]
 
     for k in keys:
         v = exp[k]
 
         if isinstance(v, utils.Experiment):
-            nscopes = deepcopy(scopes)
-            nscopes.append(exp)
-            parsed_v = cool_parse_exp(v, E, nscopes)
+            scope = deepcopy(parent_scope)
+            scope.update(exp)
+            parsed_v = cool_parse_exp(v, exp_history, scope)
             exp[k] = parsed_v
             continue
 
@@ -87,14 +138,12 @@ def cool_parse_exp(exp, E, scopes=[]):
             org_expr = v
             v = v[4:].strip()
 
-            scope = {}  # populating the scope for eval
-            for new_scope in scopes:  # for each parent scope
-                scope.update(new_scope)  # update current
-            scope.update(deepcopy(exp))  # top it with this level scope
-            scope['E'] = E  # and add experiment history
+            scope = deepcopy(parent_scope)
+            scope.update(exp)
+            scope['E'] = exp_history_dict  # and add experiment history
 
             v = eval(v, scope, scope)
-            print(f"FANCY PARSING {k}: {org_expr} --> {v}")
+            print(f"{k}: {org_expr} --> {v}")
 
         if isinstance(v, str):  # e.g. for parsing float in scientific notation
             try:
@@ -128,6 +177,7 @@ def load_from_yaml(yaml_path, cmd_parameters=(), private_keys=()):
     default.HOST = socket.gethostname()
     all_unpacked_experiments = []
 
+    print("FANCY PARSING BEGINS! KEY: VALUE --> PARSED VALUE")
     for global_rep in range(default.Global.repeat):
         unpacked_experiments = []
         for exp in experiments:
@@ -160,5 +210,5 @@ def load_from_yaml(yaml_path, cmd_parameters=(), private_keys=()):
         queue = YamlExperimentQueue(all_unpacked_experiments, path=path)
     else:
         queue = all_unpacked_experiments
-    print(f"QUEUE TYPE: {type(queue)}")
+    print(f"QUEUE TYPE: {type(queue)} | QUEUE LENGTH: {len(queue)}")
     return default, queue
