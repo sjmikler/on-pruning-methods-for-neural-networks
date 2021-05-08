@@ -36,7 +36,19 @@ def main(exp):
 
     loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     optimizer = tf_utils.get_optimizer(exp.optimizer, exp.optimizer_config)
-    model.compile(optimizer, loss_fn, metrics=["accuracy"])
+
+    metrics = ["accuracy"]
+
+    if hasattr(optimizer, '_decayed_lr'):
+        def get_lr_metric(optimizer):
+            def lr(*args):
+                return optimizer._decayed_lr(tf.float32)
+
+            return lr
+
+        metrics.append(get_lr_metric(optimizer))
+
+    model.compile(optimizer, loss_fn, metrics=metrics)
     tf_utils.print_model_info(model)
 
     # load checkpointed weights before the pruning

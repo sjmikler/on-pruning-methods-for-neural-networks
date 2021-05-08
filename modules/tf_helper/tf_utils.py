@@ -67,6 +67,7 @@ def log_from_history(history, exp):
 
 
 def get_optimizer(optimizer, optimizer_config):
+    import tensorflow_addons as tfa
     schedules = tf.optimizers.schedules
     config = deepcopy(optimizer_config)
     optimizer = eval(optimizer)  # string -> optimizer
