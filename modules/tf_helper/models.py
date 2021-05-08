@@ -347,16 +347,3 @@ def LeNetConv(input_shape,
     outs = dense(n_classes, activation=None)(flow)
     model = tf.keras.Model(inputs=inputs, outputs=outs)
     return model
-
-
-def get_model(model_name):
-    if model_name.lower() in ['vgg']:
-        return VGG
-    elif model_name.lower() in ['resnet']:
-        return ResNet
-    elif model_name.lower() in ['wrn', 'wide_resnet', 'wide resnet']:
-        return WRN
-    elif model_name.lower() in ['lenet', 'dense lenet', 'dense_lenet']:
-        return LeNet
-    else:
-        raise KeyError(f'MODEL {model_name} WAS NOT RECOGNIZED!')

@@ -1,9 +1,10 @@
+import importlib
 import os
 import random
 import socket
 import sys
 from collections.abc import Iterable
-from copy import deepcopy
+from copy import copy, deepcopy
 
 import yaml
 
@@ -68,89 +69,38 @@ class YamlExperimentQueue:
         os.remove(self.path)
 
 
-# def cool_parse_exp(exp, exp_history, scopes=[]):
-#     keys = list(exp.keys())
-#     assert 'temp' not in keys
-#     assert 'E' not in keys
-#
-#     exp_history_dict = {}
-#     if exp_history:
-#         for idx, prev_exp in enumerate(exp_history):
-#             exp_history_dict[idx] = prev_exp
-#             exp_history_dict[prev_exp.Name] = prev_exp
-#         exp_history_dict[-1] = exp_history[-1]
-#
-#     for k in keys:
-#         v = exp[k]
-#
-#         if isinstance(v, utils.Experiment):
-#             nscopes = deepcopy(scopes)
-#             nscopes.append(exp)
-#             parsed_v = cool_parse_exp(v, exp_history, nscopes)
-#             exp[k] = parsed_v
-#             continue
-#
-#         if isinstance(v, str) and v.startswith('eval'):
-#             org_expr = v
-#             v = v[4:].strip()
-#
-#             scope = {}  # populating the scope for eval
-#             for new_scope in scopes:  # for each parent scope
-#                 scope.update(new_scope)  # update current
-#             scope.update(deepcopy(exp))  # top it with this level scope
-#             scope['E'] = exp_history_dict  # and add experiment history
-#
-#             v = eval(v, scope, scope)
-#             print(f"FANCY PARSING {k}: {org_expr} --> {v}")
-#
-#         if isinstance(v, str):  # e.g. for parsing float in scientific notation
-#             try:
-#                 v = eval(v, {}, {})
-#             except (NameError, SyntaxError):
-#                 pass
-#         exp[k] = v
-#     return exp
-
-
 def cool_parse_exp(exp, exp_history, parent_scope={}):
-    keys = list(exp.keys())
-    assert 'temp' not in keys
-    assert 'E' not in keys
+    assert 'E' not in parent_scope
+    assert 'E' not in exp
 
     exp_history_dict = {}
     if exp_history:
         for idx, prev_exp in enumerate(exp_history):
             exp_history_dict[idx] = prev_exp
-            exp_history_dict[prev_exp.Name] = prev_exp
+            exp_history_dict[prev_exp.Name] = prev_exp  # make aliases in history
         exp_history_dict[-1] = exp_history[-1]
 
-    for k in keys:
-        v = exp[k]
+    scope = deepcopy(parent_scope)
+    scope.update(exp)
+    for key, value in exp.items():
+        if isinstance(value, utils.Experiment):
+            value = cool_parse_exp(value, exp_history, scope)
 
-        if isinstance(v, utils.Experiment):
-            scope = deepcopy(parent_scope)
-            scope.update(exp)
-            parsed_v = cool_parse_exp(v, exp_history, scope)
-            exp[k] = parsed_v
-            continue
+        elif isinstance(value, str) and value.startswith('parse '):
+            org_expr = value
+            value = value[6:].strip()
+            escope = deepcopy(scope)
+            escope['E'] = exp_history_dict  # make experiment history available to user
+            value = eval(value, escope, escope)
+            print(f"{key}: {org_expr} --> {value}")
 
-        if isinstance(v, str) and v.startswith('eval'):
-            org_expr = v
-            v = v[4:].strip()
-
-            scope = deepcopy(parent_scope)
-            scope.update(exp)
-            scope['E'] = exp_history_dict  # and add experiment history
-
-            v = eval(v, scope, scope)
-            print(f"{k}: {org_expr} --> {v}")
-
-        if isinstance(v, str):  # e.g. for parsing float in scientific notation
+        elif isinstance(value, str):  # e.g. for parsing float in scientific notation
             try:
-                v = eval(v, {}, {})
+                value = eval(value, {}, {})
             except (NameError, SyntaxError):
                 pass
-        exp[k] = v
+        scope[key] = value
+        exp[key] = value
     return exp
 
 
@@ -159,7 +109,7 @@ def load_from_yaml(yaml_path, cmd_parameters=(), private_keys=()):
     experiments = [utils.Experiment(exp) for exp in experiments]
     default = experiments.pop(0)
 
-    assert 'Global' in default, "Global missing from default config!"
+    assert 'Global' in default, "Global missing from default confi!g"
 
     parameters = [p for p in cmd_parameters if p.startswith('+')]
     print(f"RECOGNIZED CMD PARAMETERS: {parameters}")
@@ -212,3 +162,51 @@ def load_from_yaml(yaml_path, cmd_parameters=(), private_keys=()):
         queue = all_unpacked_experiments
     print(f"QUEUE TYPE: {type(queue)} | QUEUE LENGTH: {len(queue)}")
     return default, queue
+
+
+def load_python_object(path, scope={}):
+    assert isinstance(path, str)
+    try:
+        func = eval(path, scope, scope)
+        return func
+    except NameError as e:
+        try:
+            module = importlib.import_module(path)
+            return module
+        except ModuleNotFoundError as e:
+            if '.' in path:
+                sep = path.rfind('.')
+                scope['__m__'] = importlib.import_module(path[:sep])
+                func = eval(f"__m__.{path[sep + 1:]}", scope, scope)
+                return func
+            else:
+                raise e
+
+
+def solve_python_objects(exp, parent_scope={}):
+    new_scope = copy(parent_scope)
+    for key, value in exp.items():
+        if isinstance(value, utils.Experiment):
+            value = solve_python_objects(value, parent_scope=new_scope)
+
+        elif isinstance(value, str) and value.startswith('solve '):
+            value = value[6:].strip()
+            value = load_python_object(value, scope=new_scope)
+        new_scope[key] = value
+        exp[key] = value
+    return exp
+
+
+def get_exp_diff(old, new):
+    diff = {}
+    for key, value in new.items():
+        if key in old:
+            if isinstance(value, utils.Experiment):
+                d = get_exp_diff(old[key], new[key])
+                if d:
+                    diff[key] = d
+            elif str(old[key]) != str(new[key]):
+                diff[key] = value
+        else:
+            diff[key] = value
+    return diff

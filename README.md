@@ -68,7 +68,7 @@ Script `run.py` launches experiments specified in experiment definition.
 
 # Modules
 
-Module is a package that provides a function accepting one argument `exp` which is a dict-like structure with details defined in experiment definition (e.g. `experiment.yaml`). They contain code for running an actual experiment. They use experiments parsed by `run.py`. Besides these parameters, they might define their own command line arguments. It is recommended that only a few hardware related settings are defined as command line arguments and the rest are in experiment definition.
+Module is a package that provides a function accepting one argument `exp` which is a dict-like structure with details defined in experiment definition (e.g. `experiment.yaml`). They contain code for running an actual experiment. They use experiments parsed by `run.py`. Besides these parameters, they might define their own command line arguments. It is recommended that only a few settings related to hardware are defined as command line arguments, and the rest are in experiment definition.
 
 [Available modules](modules/README.md)
 
@@ -76,17 +76,17 @@ Module is a package that provides a function accepting one argument `exp` which 
 
 `run.py` is parsing the experiments and launching a Module to do its work. Path to the module should be specified as a parameter `Module` in default config of experiment definition. Before Module starts doing what it is supposed to do, experiments will be parsed and there are a few tricks to it.
 
-## Fancy parsing with `eval`
+## Fancy parsing with `parse`
 
-> **WARNING**: `eval` is considered unsafe - if someone has access to your experiment definition, they can run malicious code
+> **WARNING**: Python's `eval` is considered unsafe - if someone has access to your experiment definition, they can run malicious code
 
-All values for experiments can be specified explicitly in `experiment.yaml` as a number, string, dictionary or list, e.g. `sparsity: 0.9`, but there are some tricks that can simplify longer and complicated experiments. Fancy parsing allows you to execute python code during parsing. To do this, you need to type `eval` in the beginning of a parameter value. With this, you can do really cool tricks.
+All values for experiments can be specified explicitly in `experiment.yaml` as a number, string, dictionary or list, e.g. `sparsity: 0.9`, but there are some tricks that can simplify longer and complicated experiments. Fancy parsing allows you to execute python code during parsing. To do this, you need to type `parse` in the beginning of a parameter value. With this, you can do really cool tricks.
 
 #### Tricks:
 
-1. `odd_name: eval '\'.join([directory, Name])` will run real Python code and the result will be saved as `odd_name`. Code will be executed using `eval` function with variable scope from current experiment. In special case, if `directory` is fancy-parsed too, `directory` should be resolved before `odd_name`. Default config values can be fancy-parsed too, but they are resolved at the end.
+1. `odd_name: parse '\'.join([directory, Name])` will run real Python code and the result will be saved as `odd_name`. Code will be executed using `parse` function with variable scope from current experiment. In special case, if `directory` is fancy-parsed too, `directory` should be resolved before `odd_name`. Default config values can be fancy-parsed too, but they are resolved at the end.
 
-2. `sparsity: eval 0.5 * E[-1].sparsity` will be parsed as half of the `sparsity` value from the previous experiment in the experiment Queue. This works, because before running `eval`, list `E` is added to the scope and this allows access to previous experiments.
+2. `sparsity: parse 0.5 * E[-1].sparsity` will be parsed as half of the `sparsity` value from the previous experiment in the experiment Queue. This works, because before running `parse`, list `E` is added to the scope and this allows access to previous experiments.
 
 3. You can access values from nested dictionaries using `.` or standard indexing:
 
@@ -95,9 +95,9 @@ pruning_config:
    odd_config:
       sparsity: 0.5
 ---
-sparsity: eval E[-1].pruning_config.odd_config.sparsity
+sparsity: parse E[-1].pruning_config.odd_config.sparsity
 pruning_config:
-   sparsity: eval E[-1]['pruning_config']['odd_config']['sparsity']
+   sparsity: parse E[-1]['pruning_config']['odd_config']['sparsity']
 ```
 
 4. You can access values from parents' levels:
@@ -107,7 +107,7 @@ abc: 1
 nested:
    abc: 2
    nested2:
-      test: eval abc
+      test: parse abc
 ```
 
 This will work and will resolve to `test: 2`. Deeper levels have priority in this case.
@@ -119,7 +119,7 @@ Name: test
 ---
 model: VGG
 Name: test2
-directory: eval f"{Name}/{E[-1].Name}/{model}"
+directory: parse f"{Name}/{E[-1].Name}/{model}"
 ```
 
 > Resulting `directory` value will be `test2/test/VGG`.
@@ -128,8 +128,8 @@ directory: eval f"{Name}/{E[-1].Name}/{model}"
 list: [1, 2, 3]
 ---
 list: [2, 3, 4]
-number2: eval list[0]
-number3: eval E[-1].list[2]
+number2: parse list[0]
+number3: parse E[-1].list[2]
 ```
 
 > Resulting `number2` value will be `2` and `number3` value will be `3`.
@@ -138,25 +138,25 @@ number3: eval E[-1].list[2]
 nested:
    test: 1
 
-incremented: eval nested.test + 1
+incremented: parse nested.test + 1
 ```
 
 > Resulting `incremented` value will be `2`.
 
 ```
 # DEFAULT CONFIG
-test1: eval test3 - 1
+test1: parse test3 - 1
 ---
 test2: 5
-test3: eval test2 - 1
+test3: parse test2 - 1
 ```
 
-> This is correct. Eval from default config is resolved at the end - `test3: 4`, `test1: 3`.
+> This is correct. `parse` in default config is resolved at the end - `test3: 4`, `test1: 3`.
 
 Following examples **won't work**
 
 ```
-test3: eval test2 - 1  # ERROR: test2 IS UNKNOWN (WRONG ORDER)
+test3: parse test2 - 1  # ERROR: test2 IS UNKNOWN (WRONG ORDER)
 test2: 5
 ```
 
@@ -164,10 +164,12 @@ test2: 5
 # DEFAULT CONFIG
 test1: 1
 ---
-test2: eval test1 # ERROR: test1 IS UNKNOWN (CAN'T REFERENCE DEFAULT CONFIG)
+test2: parse test1 # ERROR: test1 IS UNKNOWN (CAN'T REFERENCE DEFAULT CONFIG)
 ```
 
 Order is important for fancy parsing. If you need to reference a default value, redefine it in the experiment instead.
+
+## Magic keywords: `parse`, `solve`
 
 ## Logs management
 

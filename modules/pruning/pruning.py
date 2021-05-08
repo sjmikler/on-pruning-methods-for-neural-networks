@@ -27,26 +27,16 @@ def main(exp):
 
     pruning_utils.globally_enable_pruning()
 
-    ds = datasets.get_dataset(exp.dataset,
-                              precision=exp.precision,
-                              **exp.dataset_config)
-    model_func = models.get_model(exp.model)
-    model_config = exp.model_config
-    model = model_func(**model_config)
-
-    loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    optimizer = tf_utils.get_optimizer(exp.optimizer, exp.optimizer_config)
+    model = exp.model
+    loss_fn = exp.loss_fn
+    dataset = exp.dataset
+    optimizer = exp.optimizer
 
     metrics = ["accuracy"]
 
-    if hasattr(optimizer, '_decayed_lr'):
-        def get_lr_metric(optimizer):
-            def lr(*args):
-                return optimizer._decayed_lr(tf.float32)
-
-            return lr
-
-        metrics.append(get_lr_metric(optimizer))
+    lr_metric = tf_utils.get_optimizer_lr_metric(optimizer)
+    if lr_metric:
+        metrics.append(lr_metric)
 
     model.compile(optimizer, loss_fn, metrics=metrics)
     tf_utils.print_model_info(model)
@@ -59,7 +49,7 @@ def main(exp):
     model = pruning_utils.set_pruning_masks(model=model,
                                             pruning_method=exp.pruning,
                                             pruning_config=exp.pruning_config,
-                                            dataset=ds)
+                                            dataset=dataset)
     assert isinstance(model, tf.keras.Model)
 
     # load or reset weights after the pruning, do not change masks
@@ -101,8 +91,8 @@ def main(exp):
     checkpoint_callback.on_epoch_end(epoch=-1)  # for checkpointing before training
 
     if num_epochs > initial_epoch:
-        history = model.fit(x=ds['train'],
-                            validation_data=ds['valid'],
+        history = model.fit(x=dataset['train'],
+                            validation_data=dataset['valid'],
                             steps_per_epoch=steps_per_epoch,
                             epochs=num_epochs,
                             initial_epoch=initial_epoch,

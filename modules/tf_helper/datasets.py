@@ -82,16 +82,3 @@ def test(train_batch_size=100,
     ds['valid'] = tf.data.Dataset.from_tensor_slices((images, target))
     ds['valid'] = ds['valid'].map(preprocess).batch(2)
     return ds
-
-
-def get_dataset(ds_name, precision, **config):
-    if ds_name == 'cifar10':
-        return cifar(dtype=tf.float16 if precision == 16 else tf.float32, version=10,
-                     **config)
-    if ds_name == 'cifar100':
-        return cifar(dtype=tf.float16 if precision == 16 else tf.float32, version=100,
-                     **config)
-    elif ds_name == 'test':
-        return test(dtype=tf.float16 if precision == 16 else tf.float32, **config)
-    else:
-        raise KeyError(f"DATASET {ds_name} NOT RECOGNIZED!")

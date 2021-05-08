@@ -66,17 +66,6 @@ def log_from_history(history, exp):
     return exp
 
 
-def get_optimizer(optimizer, optimizer_config):
-    import tensorflow_addons as tfa
-    schedules = tf.optimizers.schedules
-    config = deepcopy(optimizer_config)
-    optimizer = eval(optimizer)  # string -> optimizer
-
-    for k, v in config.items():
-        config[k] = eval(f"{config[k]}")
-    return optimizer(**config)
-
-
 def get_kernels(model):
     return [l.kernel for l in model.layers if hasattr(l, 'kernel')]
 
@@ -234,3 +223,13 @@ class CheckpointAfterEpoch(tf.keras.callbacks.Callback):
         print(f"CREATED OPTIM CHECKPOINTS:")
         for ckp in self.created_optim_ckp:
             print(ckp)
+
+
+def get_optimizer_lr_metric(opt):
+    if hasattr(opt, '_decayed_lr'):
+        def lr(*args):
+            return opt._decayed_lr(tf.float32)
+
+        return lr
+    else:
+        return None

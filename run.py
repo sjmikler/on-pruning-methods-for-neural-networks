@@ -1,7 +1,7 @@
 import argparse
-import importlib
 import os
 import time
+from copy import deepcopy
 
 import yaml
 
@@ -48,16 +48,21 @@ for exp_idx, exp in enumerate(experiment_queue):
 
     print()
     print(f"NEW EXPERIMENT {exp_idx} / {len(experiment_queue)}:\n{exp}")
+
+    solved_exp = parser.solve_python_objects(deepcopy(exp))
+    if solved_diff := parser.get_exp_diff(exp, solved_exp):
+        solved_diff = utils.Experiment(solved_diff)
+        print(f"SOLVED DIFF:\n{solved_diff}")
+
     if args.dry:
         continue
 
-    exp._reset_usage_counts(ignore_keys=['REP', 'RND_IDX', 'HOST',
-                                         'Name', 'Desc', 'Repeat', 'Module', 'YamlLog'])
-
+    solved_exp._reset_usage_counts(
+        ignore_keys=['REP', 'RND_IDX', 'HOST', 'Name', 'Desc', 'Repeat', 'Module',
+                     'YamlLog'])
     try:
         t0 = time.time()
-        module = importlib.import_module(exp.Module)
-        module.main(exp)  # RUN MODULE
+        solved_exp.Run(solved_exp)  # RUN MODULE
         exp.TIME_ELAPSED = time.time() - t0
 
         if dirpath := os.path.dirname(exp.YamlLog):
