@@ -1,6 +1,6 @@
 # tf-helper
 
-**Available command line arguments** (required*)
+**Available command line arguments** 
 
 ```
 optional arguments:
@@ -9,7 +9,7 @@ optional arguments:
   --no-memory-growth  Disables memory growth
 ```
 
-**Available experiment parameters**
+**Available experiment parameters** (required*)
 
 * `precision`* is either 16, 32 or 64
 
