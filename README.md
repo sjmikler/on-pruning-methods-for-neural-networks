@@ -169,7 +169,7 @@ test2: parse test1 # ERROR: test1 IS UNKNOWN (CAN'T REFERENCE DEFAULT CONFIG)
 
 Order is important for fancy parsing. If you need to reference a default value, redefine it in the experiment instead.
 
-## Magic keywords: `parse`, `solve`
+## Differences between `parse` and `solve`
 
 ## Logs management
 

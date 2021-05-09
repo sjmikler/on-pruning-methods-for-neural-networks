@@ -169,7 +169,7 @@ def load_python_object(path, scope={}):
     try:
         func = eval(path, scope, scope)
         return func
-    except NameError as e:
+    except (NameError, AttributeError) as e:
         try:
             module = importlib.import_module(path)
             return module
