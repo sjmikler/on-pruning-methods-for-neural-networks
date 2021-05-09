@@ -25,8 +25,6 @@ def main(exp):
     print("RUNNING PRUNING MODULE")
     tf_helper.main(exp)  # RUN INHERITED MODULES
 
-    pruning_utils.globally_enable_pruning()
-
     model = exp.model
     loss_fn = exp.loss_fn
     dataset = exp.dataset
