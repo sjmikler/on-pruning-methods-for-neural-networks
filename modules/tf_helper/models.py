@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+import re
 
 import tensorflow as tf
 
@@ -73,7 +74,7 @@ def VGG(input_shape,
         n_classes,
         version=None,
         l1_reg=0,
-        l2_reg=0,
+        l2_reg=1e-4,
         group_sizes=(1, 1, 2, 2, 2),
         features=(64, 128, 256, 512, 512),
         pools=(2, 2, 2, 2, 2),
@@ -141,7 +142,7 @@ def ResNet(
     n_classes,
     version=None,
     l1_reg=0,
-    l2_reg=0,
+    l2_reg=2e-4,
     bootleneck=False,
     strides=(1, 2, 2),
     group_sizes=(2, 2, 2),
@@ -347,3 +348,25 @@ def LeNetConv(input_shape,
     outs = dense(n_classes, activation=None)(flow)
     model = tf.keras.Model(inputs=inputs, outputs=outs)
     return model
+
+
+def get_model(model_str, input_shape, n_classes):
+    assert isinstance(model_str, str)
+    if model_str.startswith("WRN"):
+        try:
+            N, K = re.match(r"WRN(\d+)-(\d+)", model_str).groups()
+        except Exception as e:
+            print("Pass WRN in format: WRN{N}-{K}!")
+            raise e
+        return WRN(int(N), int(K), input_shape=input_shape, n_classes=n_classes)
+
+    elif model_str.startswith("VGG"):
+        try:
+            N, = re.match(r"VGG(\d+)", model_str).groups()
+        except Exception as e:
+            print("Pass VGG in format: VGG{N}!")
+            raise e
+        return VGG(input_shape=input_shape, n_classes=n_classes, version=int(N))
+
+    else:
+        raise NotImplementedError

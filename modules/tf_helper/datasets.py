@@ -42,6 +42,9 @@ def cifar(train_batch_size=128,
     ds['valid'] = ds.pop('test')
     ds['valid'] = ds['valid'].map(valid_prep)
     ds['valid'] = ds['valid'].batch(valid_batch_size)
+
+    ds['input_shape'] = (32, 32, 3)
+    ds['n_classes'] = 10
     return ds
 
 
@@ -63,6 +66,9 @@ def mnist(train_batch_size=100,
     ds['valid'] = ds.pop('test')
     ds['valid'] = ds['valid'].map(preprocess)
     ds['valid'] = ds['valid'].batch(valid_batch_size)
+
+    ds['input_shape'] = (28, 28, 1)
+    ds['n_classes'] = 10
     return ds
 
 
@@ -81,10 +87,15 @@ def test(train_batch_size=100,
     ds['train'] = ds['train'].map(preprocess).repeat().batch(train_batch_size)
     ds['valid'] = tf.data.Dataset.from_tensor_slices((images, target))
     ds['valid'] = ds['valid'].map(preprocess).batch(2)
+
+    ds['input_shape'] = image_shape
+    ds['n_classes'] = 2
     return ds
 
 
 def get_dataset(name, precision):
+    assert isinstance(name, str)
+
     if precision == 16:
         dtype = tf.float16
     elif precision == 32:
@@ -100,3 +111,5 @@ def get_dataset(name, precision):
         return cifar(dtype=dtype, version=100)
     elif name == 'mnist':
         return mnist(dtype=dtype)
+    else:
+        raise NameError(f"{name} must be cifar10, cifar100 or mnist!")

@@ -4,7 +4,6 @@ from modules import tf_helper
 from modules.pruning import pruning_utils
 from modules.tf_helper import datasets, models, tf_utils
 
-
 from ._initialize import *
 
 
@@ -27,7 +26,6 @@ def main(exp):
     print("RUNNING PRUNING MODULE")
     tf_helper.main(exp)  # RUN INHERITED MODULES
 
-    model = exp.model
     optimizer = exp.optimizer
 
     if exp.loss_fn == 'crossentropy':
@@ -39,6 +37,13 @@ def main(exp):
         dataset = datasets.get_dataset(exp.dataset, exp.precision)
     else:
         dataset = exp.dataset
+
+    if isinstance(exp.model, str):
+        model = models.get_model(exp.model,
+                                 dataset['input_shape'],
+                                 dataset['n_classes'])
+    else:
+        model = exp.model
 
     metrics = ["accuracy"]
 
