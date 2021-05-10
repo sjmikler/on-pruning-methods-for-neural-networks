@@ -39,9 +39,8 @@ def cifar(train_batch_size=128,
     ds['train'] = ds['train'].map(train_prep)
     ds['train'] = ds['train'].batch(train_batch_size)
 
-    ds['valid'] = ds.pop('test')
-    ds['valid'] = ds['valid'].map(valid_prep)
-    ds['valid'] = ds['valid'].batch(valid_batch_size)
+    ds['test'] = ds['test'].map(valid_prep)
+    ds['test'] = ds['test'].batch(valid_batch_size)
 
     ds['input_shape'] = (32, 32, 3)
     ds['n_classes'] = 10
@@ -63,9 +62,8 @@ def mnist(train_batch_size=100,
     ds['train'] = ds['train'].map(preprocess)
     ds['train'] = ds['train'].batch(train_batch_size)
 
-    ds['valid'] = ds.pop('test')
-    ds['valid'] = ds['valid'].map(preprocess)
-    ds['valid'] = ds['valid'].batch(valid_batch_size)
+    ds['test'] = ds['test'].map(preprocess)
+    ds['test'] = ds['test'].batch(valid_batch_size)
 
     ds['input_shape'] = (28, 28, 1)
     ds['n_classes'] = 10
@@ -85,8 +83,8 @@ def test(train_batch_size=100,
     ds = dict()
     ds['train'] = tf.data.Dataset.from_tensor_slices((images, target))
     ds['train'] = ds['train'].map(preprocess).repeat().batch(train_batch_size)
-    ds['valid'] = tf.data.Dataset.from_tensor_slices((images, target))
-    ds['valid'] = ds['valid'].map(preprocess).batch(2)
+    ds['test'] = tf.data.Dataset.from_tensor_slices((images, target))
+    ds['test'] = ds['test'].map(preprocess).batch(2)
 
     ds['input_shape'] = image_shape
     ds['n_classes'] = 2

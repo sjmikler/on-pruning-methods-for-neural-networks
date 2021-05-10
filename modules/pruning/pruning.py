@@ -28,6 +28,8 @@ def main(exp):
 
     optimizer = exp.optimizer
 
+    # TODO: this magic parsing should all be in one place in some utils, could be
+    #  called `figure_out_object` or smth
     if exp.loss_fn == 'crossentropy':
         loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(True)
     else:
@@ -39,6 +41,8 @@ def main(exp):
         dataset = exp.dataset
 
     if isinstance(exp.model, str):
+        # TODO: dataset postprocessing: if 'valid' in dataset then use 'valid'
+        # TODO: figure out input_shape and n_classes from dataset['test']
         model = models.get_model(exp.model,
                                  dataset['input_shape'],
                                  dataset['n_classes'])
@@ -105,7 +109,7 @@ def main(exp):
 
     if num_epochs > initial_epoch:
         history = model.fit(x=dataset['train'],
-                            validation_data=dataset['valid'],
+                            validation_data=dataset['test'],
                             steps_per_epoch=steps_per_epoch,
                             epochs=num_epochs,
                             initial_epoch=initial_epoch,
