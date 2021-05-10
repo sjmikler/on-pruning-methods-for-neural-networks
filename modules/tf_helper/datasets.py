@@ -2,6 +2,8 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 
 
+# TODO allow custom location with .load(data_dir='/my/custom/tensorflow_datasets')
+
 def cifar(train_batch_size=128,
           valid_batch_size=512,
           padding='reflect',
@@ -43,7 +45,7 @@ def cifar(train_batch_size=128,
     ds['test'] = ds['test'].batch(valid_batch_size)
 
     ds['input_shape'] = (32, 32, 3)
-    ds['n_classes'] = 10
+    ds['n_classes'] = version
     return ds
 
 
