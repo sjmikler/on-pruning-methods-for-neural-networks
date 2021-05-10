@@ -92,7 +92,7 @@ def snip_saliences(model, loader, batches=1):
     return saliences
 
 
-def psuedo_snip_saliences(model, *args, **kwargs):
+def psuedo_snip_saliences(model, *args, **kwds):
     """
     :param model: callable model with trainable_weights
     :return: dict, keys are Variable name, values are saliences from SNIP

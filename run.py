@@ -53,6 +53,7 @@ for exp_idx, exp in enumerate(experiment_queue):
     if solved_diff := parser.get_exp_diff(exp, solved_exp):
         solved_diff = utils.Experiment(solved_diff)
         print(f"SOLVED DIFF:\n{solved_diff}")
+        del solved_diff  # unused
 
     if args.dry:
         continue

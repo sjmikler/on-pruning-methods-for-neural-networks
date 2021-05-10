@@ -12,7 +12,7 @@ class GemPool(tf.keras.layers.Layer):
         self.initial_value = initial_value
         self.pool = pool_size
 
-    def call(self, flow, **kwargs):
+    def call(self, flow, **kwds):
         input_dtype = flow.dtype
         flow = tf.cast(flow, tf.float32)
         flow = tf.clip_by_value(flow, 1e-6, 1e3)
@@ -79,8 +79,8 @@ def VGG(input_shape,
         features=(64, 128, 256, 512, 512),
         pools=(2, 2, 2, 2, 2),
         regularize_bias=True,
-        **kwargs):
-    print(f"VGG: unknown parameters: {list(kwargs)}")
+        **kwds):
+    print(f"VGG: unknown parameters: {list(kwds)}")
     if version:
         if version == 11:
             group_sizes = (1, 1, 2, 2, 2)
@@ -97,11 +97,11 @@ def VGG(input_shape,
                                               l2_reg) if l2_reg or l1_reg else None
     bias_regularizer = regularizer if regularize_bias else None
 
-    def conv3x3(*args, **kwargs):
+    def conv3x3(*args, **kwds):
         # bias is not needed, since batch norm does it
         return tf.keras.layers.Conv2D(
             *args,
-            **kwargs,
+            **kwds,
             kernel_size=3,
             padding="same",
             use_bias=False,
@@ -156,18 +156,18 @@ def ResNet(
     head=(
             ('conv', 16, 3, 1),
     ),
-    **kwargs
+    **kwds
 ):
     if version:
         raise KeyError("Versions not defined yet!")
-    print(f"ResNet: unknown parameters: {list(kwargs)}")
+    print(f"ResNet: unknown parameters: {list(kwds)}")
 
     activation_func = eval(activation)
     regularizer = tf.keras.regularizers.l1_l2(l1_reg,
                                               l2_reg) if l2_reg or l1_reg else None
     bias_regularizer = regularizer if regularize_bias else None
 
-    def conv(filters, kernel_size, use_bias=False, **kwargs):
+    def conv(filters, kernel_size, use_bias=False, **kwds):
         return tf.keras.layers.Conv2D(filters,
                                       kernel_size,
                                       padding='same',
@@ -175,7 +175,7 @@ def ResNet(
                                       kernel_initializer=initializer,
                                       kernel_regularizer=regularizer,
                                       bias_regularizer=bias_regularizer,
-                                      **kwargs)
+                                      **kwds)
 
     def shortcut(x, filters, strides):
         if x.shape[-1] != filters or strides != 1:
@@ -258,8 +258,8 @@ def ResNet(
     return model
 
 
-def WRN(N, K, *args, **kwargs) -> tf.keras.Model:
-    """filter, kwargs parameters:
+def WRN(N, K, *args, **kwds) -> tf.keras.Model:
+    """filter, kwds parameters:
         * input_shape,
         * n_classes,
         * l2_reg=0,
@@ -280,7 +280,7 @@ def WRN(N, K, *args, **kwargs) -> tf.keras.Model:
     assert (N - 4) % 6 == 0
     size = int((N - 4) / 6)
     return ResNet(*args, group_sizes=(size, size, size),
-                  features=(16 * K, 32 * K, 64 * K), **kwargs)
+                  features=(16 * K, 32 * K, 64 * K), **kwds)
 
 
 def LeNet(input_shape,
@@ -289,15 +289,15 @@ def LeNet(input_shape,
           l2_reg=0,
           layer_sizes=(300, 100),
           initializer='glorot_uniform',
-          **kwargs):
-    print(f"LeNet: unknown parameters: {list(kwargs)}")
+          **kwds):
+    print(f"LeNet: unknown parameters: {list(kwds)}")
     regularizer = tf.keras.regularizers.l1_l2(l1_reg,
                                               l2_reg) if l2_reg or l1_reg else None
     initializer = initializer
 
-    def dense(*args, **kwargs):
+    def dense(*args, **kwds):
         return tf.keras.layers.Dense(*args,
-                                     **kwargs,
+                                     **kwds,
                                      kernel_initializer=initializer,
                                      kernel_regularizer=regularizer)
 
@@ -317,21 +317,21 @@ def LeNetConv(input_shape,
               l1_reg=0,
               l2_reg=0,
               initializer='glorot_uniform',
-              **kwargs):
-    print(f"Unknown parameters: {list(kwargs)}")
+              **kwds):
+    print(f"Unknown parameters: {list(kwds)}")
     regularizer = tf.keras.regularizers.l1_l2(l1_reg,
                                               l2_reg) if l2_reg or l1_reg else None
     initializer = initializer
 
-    def dense(*args, **kwargs):
+    def dense(*args, **kwds):
         return tf.keras.layers.Dense(*args,
-                                     **kwargs,
+                                     **kwds,
                                      kernel_initializer=initializer,
                                      kernel_regularizer=regularizer)
 
-    def conv(*args, **kwargs):
+    def conv(*args, **kwds):
         return tf.keras.layers.Conv2D(*args,
-                                      **kwargs,
+                                      **kwds,
                                       kernel_initializer=initializer,
                                       kernel_regularizer=regularizer)
 

@@ -3,8 +3,8 @@ import tensorflow as tf
 
 
 class MaskedDense(tf.keras.layers.Dense):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, **kwds):
+        super().__init__(*args, **kwds)
 
     def build(self, input_shape):
         super().build(input_shape)
@@ -45,8 +45,8 @@ class MaskedDense(tf.keras.layers.Dense):
 
 
 class MaskedConv(tf.keras.layers.Conv2D):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, **kwds):
+        super().__init__(*args, **kwds)
 
     def build(self, input_shape):
         super().build(input_shape)

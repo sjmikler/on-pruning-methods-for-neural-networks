@@ -96,7 +96,7 @@ def reset_weights_to_checkpoint(model, ckp=None, skip_keyword=None):
         temp.load_weights(ckp)
     skipped = 0
     for w1, w2 in zip(model.weights, temp.weights):
-        if skip_keyword in w1.name:
+        if skip_keyword and skip_keyword in w1.name:
             skipped += 1
             continue
         w1.assign(w2)

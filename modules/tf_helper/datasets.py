@@ -93,7 +93,7 @@ def test(train_batch_size=100,
     return ds
 
 
-def get_dataset(name, precision):
+def get_dataset(name, precision=32):
     assert isinstance(name, str)
 
     if precision == 16:
