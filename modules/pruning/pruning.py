@@ -3,6 +3,8 @@ import tensorflow as tf
 from modules import tf_helper
 from modules.pruning import pruning_utils
 from modules.tf_helper import datasets, models, tf_utils
+
+
 from ._initialize import *
 
 
@@ -26,9 +28,17 @@ def main(exp):
     tf_helper.main(exp)  # RUN INHERITED MODULES
 
     model = exp.model
-    loss_fn = exp.loss_fn
-    dataset = exp.dataset
     optimizer = exp.optimizer
+
+    if exp.loss_fn == 'crossentropy':
+        loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(True)
+    else:
+        loss_fn = exp.loss_fn
+
+    if isinstance(exp.dataset, str):
+        dataset = datasets.get_dataset(exp.dataset, exp.precision)
+    else:
+        dataset = exp.dataset
 
     metrics = ["accuracy"]
 
@@ -102,7 +112,10 @@ def main(exp):
 
 
 if __name__ == '__main__':
-    class exp:
+    pruning_utils.globally_enable_pruning()
+
+
+    class Exp:
         name = 'temp'
         precision = 16
         save_model = {}
@@ -110,14 +123,12 @@ if __name__ == '__main__':
         tensorboard_log = None
         steps = 200
         steps_per_epoch = 20
-        dataset = 'cifar10'
-        optimizer = 'tf.optimizers.SGD'
+        model = models.LeNet([32, 32, 3], n_classes=10)
+        dataset = datasets.cifar(128, 512)
+        optimizer = tf.optimizers.SGD(0.1)
+        loss_fn = tf.losses.SparseCategoricalCrossentropy(True)
         pruning = 'magnitude'
-        model = 'lenet'
-        dataset_config = {'train_batch_size': 128, 'valid_batch_size': 512}
-        optimizer_config = {'learning_rate': 0.1, 'momentum': 0.9}
         pruning_config = {'sparsity': 0.5}
-        model_config = {'input_shape': [32, 32, 3], 'n_classes': 10, 'l2_reg': 1e-5}
 
 
-    main(exp)
+    main(Exp)

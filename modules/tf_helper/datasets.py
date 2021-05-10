@@ -3,7 +3,7 @@ import tensorflow_datasets as tfds
 
 
 def cifar(train_batch_size=128,
-          valid_batch_size=128,
+          valid_batch_size=512,
           padding='reflect',
           dtype=tf.float32,
           shuffle_train=20000,
@@ -30,7 +30,7 @@ def cifar(train_batch_size=128,
     elif version == 100:
         ds = tfds.load(name='cifar100', as_supervised=True)
     else:
-        raise exception(f"version = {version}, but should be from (10, 100)!")
+        raise Exception(f"version = {version}, but should be from (10, 100)!")
 
     if repeat_train:
         ds['train'] = ds['train'].repeat()
@@ -46,7 +46,7 @@ def cifar(train_batch_size=128,
 
 
 def mnist(train_batch_size=100,
-          valid_batch_size=100,
+          valid_batch_size=400,
           dtype=tf.float32,
           shuffle_train=10000):
     def preprocess(x, y):
@@ -76,9 +76,27 @@ def test(train_batch_size=100,
         x = tf.cast(x, dtype)
         return x, y
 
-    ds = {}
+    ds = dict()
     ds['train'] = tf.data.Dataset.from_tensor_slices((images, target))
     ds['train'] = ds['train'].map(preprocess).repeat().batch(train_batch_size)
     ds['valid'] = tf.data.Dataset.from_tensor_slices((images, target))
     ds['valid'] = ds['valid'].map(preprocess).batch(2)
     return ds
+
+
+def get_dataset(name, precision):
+    if precision == 16:
+        dtype = tf.float16
+    elif precision == 32:
+        dtype = tf.float32
+    elif precision == 64:
+        dtype = tf.float64
+    else:
+        raise Exception
+
+    if name == 'cifar10':
+        return cifar(dtype=dtype, version=10)
+    elif name == 'cifar100':
+        return cifar(dtype=dtype, version=100)
+    elif name == 'mnist':
+        return mnist(dtype=dtype)
