@@ -3,7 +3,10 @@ import re
 
 import tensorflow as tf
 
-from ._initialize import *
+try:
+    from ._initialize import *
+except ImportError:
+    pass
 
 
 class GemPool(tf.keras.layers.Layer):
@@ -350,23 +353,16 @@ def LeNetConv(input_shape,
     return model
 
 
-def get_model(model_str, input_shape, n_classes):
-    assert isinstance(model_str, str)
-    if model_str.startswith("WRN"):
-        try:
-            N, K = re.match(r"WRN(\d+)-(\d+)", model_str).groups()
-        except Exception as e:
-            print("Pass WRN in format: WRN{N}-{K}!")
-            raise e
+def get_model_from_alias(alias, input_shape, n_classes):
+    assert isinstance(alias, str)
+
+    if m := re.match(r"WRN(\d+)-(\d+)", alias):
+        N, K = m.groups()
         return WRN(int(N), int(K), input_shape=input_shape, n_classes=n_classes)
 
-    elif model_str.startswith("VGG"):
-        try:
-            N, = re.match(r"VGG(\d+)", model_str).groups()
-        except Exception as e:
-            print("Pass VGG in format: VGG{N}!")
-            raise e
+    elif m := re.match(r"VGG(\d+)", alias):
+        N, = m.groups()
         return VGG(input_shape=input_shape, n_classes=n_classes, version=int(N))
 
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"Unknown alias {alias}")

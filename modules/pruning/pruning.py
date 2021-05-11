@@ -4,7 +4,10 @@ from modules import tf_helper
 from modules.pruning import pruning_utils
 from modules.tf_helper import datasets, models, tf_utils
 
-from ._initialize import *
+try:
+    from ._initialize import *
+except ImportError:
+    pass
 
 
 def main(exp):
@@ -28,24 +31,21 @@ def main(exp):
 
     optimizer = exp.optimizer
 
-    # TODO: this magic parsing should all be in one place in some utils, could be
-    #  called `figure_out_object` or smth
-    if exp.loss_fn == 'crossentropy':
-        loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(True)
+    if isinstance(exp.loss_fn, str):
+        loss_fn = tf_utils.get_loss_fn_from_alias(exp.loss_fn)
     else:
         loss_fn = exp.loss_fn
 
     if isinstance(exp.dataset, str):
-        dataset = datasets.get_dataset(exp.dataset, exp.precision)
+        dataset = datasets.get_dataset_from_alias(exp.dataset, exp.precision)
     else:
         dataset = exp.dataset
 
     if isinstance(exp.model, str):
-        # TODO: dataset postprocessing: if 'valid' in dataset then use 'valid'
-        # TODO: figure out input_shape and n_classes from dataset['test']
-        model = models.get_model(exp.model,
-                                 dataset['input_shape'],
-                                 dataset['n_classes'])
+        model = models.get_model_from_alias(
+            exp.model,
+            input_shape=datasets.figure_out_input_shape(dataset),
+            n_classes=datasets.figure_out_n_classes(dataset))
     else:
         model = exp.model
 
@@ -58,7 +58,7 @@ def main(exp):
     model.compile(optimizer, loss_fn, metrics=metrics)
     tf_utils.print_model_info(model)
 
-    # load checkpointed weights before the pruning
+    # load checkpointed all weights before the pruning
     if hasattr(exp, 'load_model_before_pruning') and exp.load_model_before_pruning:
         model.load_weights(exp.load_model_before_pruning)
         print(f"LOADED BEFORE PRUNING {exp.load_model_before_pruning}")
@@ -91,8 +91,14 @@ def main(exp):
 
     # just apply pruning by zeroing weights with previously calculated masks
     pruning_utils.apply_pruning_masks(model, pruning_method=exp.pruning)
-    steps_per_epoch = min(exp.steps, exp.steps_per_epoch)
-    num_epochs = int(exp.steps / steps_per_epoch)
+    steps_per_epoch = exp.steps_per_epoch
+
+    if hasattr(exp, 'epochs'):
+        num_epochs = exp.epochs
+    elif hasattr(exp, 'steps'):
+        num_epochs = int(exp.steps / steps_per_epoch)
+    else:
+        num_epochs = 0
 
     if hasattr(exp, 'initial_epoch'):
         initial_epoch = exp.initial_epoch
@@ -132,10 +138,10 @@ if __name__ == '__main__':
         tensorboard_log = None
         steps = 200
         steps_per_epoch = 20
-        model = models.LeNet([32, 32, 3], n_classes=10)
-        dataset = datasets.cifar(128, 512)
+        model = 'VGG13'
+        dataset = 'cifar10'
         optimizer = tf.optimizers.SGD(0.1)
-        loss_fn = tf.losses.SparseCategoricalCrossentropy(True)
+        loss_fn = 'crossentropy'
         pruning = 'magnitude'
         pruning_config = {'sparsity': 0.5}
 

@@ -192,21 +192,8 @@ def solve_python_objects(exp, parent_scope={}):
         elif isinstance(value, str) and value.startswith('solve '):
             value = value[6:].strip()
             value = load_python_object(value, scope=new_scope)
+
         new_scope[key] = value
         exp[key] = value
     return exp
 
-
-def get_exp_diff(old, new):
-    diff = {}
-    for key, value in new.items():
-        if key in old:
-            if isinstance(value, utils.Experiment):
-                d = get_exp_diff(old[key], new[key])
-                if d:
-                    diff[key] = d
-            elif str(old[key]) != str(new[key]):
-                diff[key] = value
-        else:
-            diff[key] = value
-    return diff

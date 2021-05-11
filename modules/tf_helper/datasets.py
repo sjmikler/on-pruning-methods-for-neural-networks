@@ -2,15 +2,14 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 
 
-# TODO allow custom location with .load(data_dir='/my/custom/tensorflow_datasets')
-
 def cifar(train_batch_size=128,
           valid_batch_size=512,
           padding='reflect',
           dtype=tf.float32,
           shuffle_train=20000,
           repeat_train=True,
-          version=10):
+          version=10,
+          data_dir=None):
     subtract = tf.constant([0.49139968, 0.48215841, 0.44653091], dtype=dtype)
     divide = tf.constant([0.24703223, 0.24348513, 0.26158784], dtype=dtype)
 
@@ -27,12 +26,10 @@ def cifar(train_batch_size=128,
         x = (x - subtract) / divide
         return x, y
 
-    if version == 10:
-        ds = tfds.load(name='cifar10', as_supervised=True)
-    elif version == 100:
-        ds = tfds.load(name='cifar100', as_supervised=True)
+    if version == 10 or version == 100:
+        ds = tfds.load(name=f'cifar{version}', as_supervised=True, data_dir=data_dir)
     else:
-        raise Exception(f"version = {version}, but should be from (10, 100)!")
+        raise Exception(f"version = {version}, but should be either 10 or 100!")
 
     if repeat_train:
         ds['train'] = ds['train'].repeat()
@@ -43,22 +40,20 @@ def cifar(train_batch_size=128,
 
     ds['test'] = ds['test'].map(valid_prep)
     ds['test'] = ds['test'].batch(valid_batch_size)
-
-    ds['input_shape'] = (32, 32, 3)
-    ds['n_classes'] = version
     return ds
 
 
 def mnist(train_batch_size=100,
           valid_batch_size=400,
           dtype=tf.float32,
-          shuffle_train=10000):
+          shuffle_train=10000,
+          data_dir=None):
     def preprocess(x, y):
         x = tf.cast(x, dtype)
         x /= 255
         return x, y
 
-    ds = tfds.load(name='mnist', as_supervised=True)
+    ds = tfds.load(name='mnist', as_supervised=True, data_dir=data_dir)
     ds['train'] = ds['train'].repeat()
     ds['train'] = ds['train'].shuffle(shuffle_train)
     ds['train'] = ds['train'].map(preprocess)
@@ -87,14 +82,11 @@ def test(train_batch_size=100,
     ds['train'] = ds['train'].map(preprocess).repeat().batch(train_batch_size)
     ds['test'] = tf.data.Dataset.from_tensor_slices((images, target))
     ds['test'] = ds['test'].map(preprocess).batch(2)
-
-    ds['input_shape'] = image_shape
-    ds['n_classes'] = 2
     return ds
 
 
-def get_dataset(name, precision=32):
-    assert isinstance(name, str)
+def get_dataset_from_alias(alias, precision=32):
+    assert isinstance(alias, str)
 
     if precision == 16:
         dtype = tf.float16
@@ -103,13 +95,26 @@ def get_dataset(name, precision=32):
     elif precision == 64:
         dtype = tf.float64
     else:
-        raise Exception
+        raise NotImplementedError(f"Unknown precision {precision}!")
 
-    if name == 'cifar10':
+    if alias == 'cifar10':
         return cifar(dtype=dtype, version=10)
-    elif name == 'cifar100':
+    elif alias == 'cifar100':
         return cifar(dtype=dtype, version=100)
-    elif name == 'mnist':
+    elif alias == 'mnist':
         return mnist(dtype=dtype)
     else:
-        raise NameError(f"{name} must be cifar10, cifar100 or mnist!")
+        raise NotImplementedError(f"Unknown alias {alias}")
+
+
+def figure_out_input_shape(ds):
+    for x, y in ds['test']:
+        break
+    return x.shape[1:]
+
+
+def figure_out_n_classes(ds):
+    classes = set()
+    for x, y in ds['test']:
+        classes.update(y.numpy())
+    return len(classes)

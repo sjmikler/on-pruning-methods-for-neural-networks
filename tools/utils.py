@@ -22,11 +22,12 @@ def get_cprint(color):
 
 class Experiment:
     """Dict like structure that allows for dot indexing."""
-    _internal_names = ['dict', '_usage_counts', '_ignored_counts']
+    _internal_names = ['dict', '_usage_counts', '_ignored_counts', '_frozen']
 
     def __init__(self, from_dict={}):
         self._usage_counts = {key: 0 for key in from_dict}
         self._ignored_counts = set()
+        self._frozen = False
 
         self.dict = {k: Experiment(v) if isinstance(v, dict) else v for k, v in
                      from_dict.items()}
@@ -55,6 +56,8 @@ class Experiment:
     def __setitem__(self, key, value):
         if isinstance(value, dict):
             value = Experiment(value)
+        if self._frozen and key in self.dict and value != self.dict[key]:
+            raise RuntimeError("Exising values cannot be modified!")
         self.dict[key] = value
         self._usage_counts[key] = 0
 
@@ -67,9 +70,18 @@ class Experiment:
     def __contains__(self, item):
         return self.dict.__contains__(item)
 
-    def _reset_usage_counts(self, ignore_keys):
+    def freeze(self):
+        self._frozen = True
+        return self
+
+    def unfreeze(self):
+        self._frozen = False
+        return self
+
+    def reset_usage_counts(self, ignore_keys):
         self._usage_counts = {key: 0 for key in self.dict}
         self._ignored_counts = set(ignore_keys)
+        return self
 
     def get_unused_parameters(self):
         unused_keys = []
@@ -110,6 +122,35 @@ class Experiment:
 
     def items(self):
         return self.dict.items()
+
+    def difference(self, other):
+        if isinstance(other, dict):
+            other = Experiment(other)
+        diff = Experiment()
+        for key, value in other.items():
+            if key in self:
+                if isinstance(value, Experiment) and isinstance(self[key], Experiment):
+                    if d := self[key].difference(value):
+                        diff[key] = d
+                elif str(self[key]) != str(value):
+                    diff[key] = value
+            else:
+                diff[key] = value
+        return diff
+
+    def deep_update(self, other):
+        if isinstance(other, dict):
+            other = Experiment(other)
+        for key, value in other.items():
+            if key in self:
+                if isinstance(value, Experiment) and isinstance(self[key], Experiment):
+                    self[key].deep_update(value)
+                    self._usage_counts[key] = 0
+                elif str(self[key]) != str(value):
+                    self[key] = value
+                    self._usage_counts[key] = 0
+            else:
+                self[key] = value
 
 
 if __name__ == '__main__':

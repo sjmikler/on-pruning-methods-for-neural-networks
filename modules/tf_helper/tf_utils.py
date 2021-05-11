@@ -6,7 +6,10 @@ from copy import deepcopy
 import numpy as np
 import tensorflow as tf
 
-from ._initialize import *
+try:
+    from ._initialize import *
+except ImportError:
+    pass
 
 
 def set_memory_growth():
@@ -233,3 +236,10 @@ def get_optimizer_lr_metric(opt):
         return lr
     else:
         return None
+
+
+def get_loss_fn_from_alias(alias):
+    if alias == 'crossentropy':
+        return tf.losses.SparseCategoricalCrossentropy(from_logits=True)
+    else:
+        raise NotImplementedError(f"Unknown alias {alias}")

@@ -3,7 +3,11 @@ import tensorflow as tf
 
 from modules.pruning import sparse_layers
 from modules.tf_helper import tf_utils
-from ._initialize import *
+
+try:
+    from ._initialize import *
+except ImportError:
+    pass
 
 
 def globally_enable_pruning():

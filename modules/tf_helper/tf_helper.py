@@ -3,7 +3,11 @@ import argparse
 import tensorflow as tf
 
 from modules.tf_helper import tf_utils
-from ._initialize import *
+
+try:
+    from ._initialize import *
+except ImportError:
+    pass
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("--gpu",
