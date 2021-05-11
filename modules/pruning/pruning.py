@@ -96,6 +96,8 @@ def main(exp):
     if hasattr(exp, 'epochs'):
         num_epochs = exp.epochs
     elif hasattr(exp, 'steps'):
+        if exp.steps < steps_per_epoch:
+            steps_per_epoch = exp.steps
         num_epochs = int(exp.steps / steps_per_epoch)
     else:
         num_epochs = 0
