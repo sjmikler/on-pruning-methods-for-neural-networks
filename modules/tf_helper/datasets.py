@@ -110,6 +110,8 @@ def get_dataset_from_alias(alias, precision=32):
 def figure_out_input_shape(ds):
     for x, y in ds['test']:
         break
+    else:
+        raise RuntimeError("Dataset is empty!")
     return x.shape[1:]
 
 

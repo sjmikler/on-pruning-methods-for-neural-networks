@@ -70,6 +70,12 @@ class Experiment:
     def __contains__(self, item):
         return self.dict.__contains__(item)
 
+    def __bool__(self):
+        if self.dict:
+            return True
+        else:
+            return False
+
     def freeze(self):
         self._frozen = True
         return self
