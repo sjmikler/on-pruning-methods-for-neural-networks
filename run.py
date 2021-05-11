@@ -55,6 +55,7 @@ for exp_idx, exp in enumerate(experiment_queue):
         assert solved_diff.keys() == backup_diff.keys()
         print(f"SOLVED DIFF:\n{solved_diff}")
 
+    exp_cp = deepcopy(exp)
     exp = solved_exp
 
     if args.dry:
@@ -70,7 +71,11 @@ for exp_idx, exp in enumerate(experiment_queue):
 
         exp.unfreeze()
         exp.deep_update(backup_diff)
-        print(exp)
+        exp.freeze()
+
+        exp_by_module = exp_cp.difference(exp)
+        print(f"LOGGED BY MODULE:")
+        print(exp_by_module)
 
         if dirpath := os.path.dirname(exp.YamlLog):
             os.makedirs(dirpath, exist_ok=True)
