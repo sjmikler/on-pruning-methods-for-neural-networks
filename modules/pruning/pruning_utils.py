@@ -175,7 +175,7 @@ def get_pruning_mask(saliences, percentage):
     flat_mask = np.ones_like(flatten)
 
     threshold = np.percentile(flatten, percentage * 100)
-    print(f'pruning threshold: {threshold:8.5f}')
+    # print(f'pruning threshold: {threshold:8.5f}')
     flat_mask[flatten < threshold] = 0
 
     cumsizes = np.cumsum(sizes)[:-1]

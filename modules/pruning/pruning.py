@@ -114,6 +114,10 @@ def main(exp):
 
     checkpoint_callback.set_model(model)
     checkpoint_callback.on_epoch_end(epoch=-1)  # for checkpointing before training
+    callbacks = [checkpoint_callback]
+
+    if hasattr(exp, 'callback'):
+        callbacks.append(exp.callback)
 
     if num_epochs > initial_epoch:
         history = model.fit(x=dataset['train'],
@@ -121,7 +125,7 @@ def main(exp):
                             steps_per_epoch=steps_per_epoch,
                             epochs=num_epochs,
                             initial_epoch=initial_epoch,
-                            callbacks=[checkpoint_callback])
+                            callbacks=callbacks)
         exp.FINAL_DENSITY = pruning_utils.report_density(model)
         print("FINAL DENSITY:", exp.FINAL_DENSITY)
         tf_utils.log_from_history(history.history, exp=exp)
