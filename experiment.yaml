@@ -1,49 +1,85 @@
 Global:
-    repeat: 2  # e.g. 1, 2, 1, 2
-    queue: null # specify path for queue file, if null keeps queue unaccessible in memory
+    repeat: 1
+    queue: null
+    slack: true
+    slack_config:
+        token: xoxb-2033382586257-2033399501089-JtVfALz4f1mpnUET5vgiW7O1
+        say: f"{exp.Name:>40} - {exp.ACC if 'ACC' in exp else '??':<20}"
+        channel_final: cool-runner
+        channel_short: cool-runner-short
 
-# DEFAULT CONFIG:
-Name: null # with name=None, training will be skipped
-Repeat: 2  # e.g. 1, 1, 2, 2
-Module: modules.pruning
-YamlLog: eval f"{directory}/{Name}/{RND_IDX}/{REP}.yaml"
+# DEFAULT CONFIG
+Name: null
+Repeat: 1
+Run: solve modules.pruning.main
+YamlLog: parse f"{_dir}/{Name}/id{RND_IDX}/rep{REP}.yaml"
 
-precision: 16 # 16 for mixed precision or anything else for default 32 bit
-directory: data/dummy_tests
-full_path: eval f"{directory}/{Name}/{RND_IDX}/{REP}" # REP is a value from [0, REPEAT-1] interval
-checkpoint: eval f"{directory}/{Name}/{RND_IDX}/{REP}.h5" # RND_IDX is automatically assigned in `run.py`
+precision: 16
+_dir: data/temp/2021.29.05
+tensorboard_log: parse f"{_dir}/{Name}/id{RND_IDX}/rep{REP}"
 
-steps: 80000
+epochs: 80
 steps_per_epoch: 2000
+initial_epoch: 0
 
-dataset: cifar10 # mnist|cifar10|cifar100 available
-dataset_config:
-    train_batch_size: 128
-    valid_batch_size: 512
-    padding: reflect
+_save_epochs: []
+_save_dir: parse f"{_dir}/{Name}/id{RND_IDX}/rep{REP}"
+save_model: "parse {ep: f'{_save_dir}/ep{ep}.h5'  for ep in _save_epochs}"
+save_optim: "parse {ep: f'{_save_dir}/ep{ep}.pkl' for ep in _save_epochs}"
 
-optimizer: tf.optimizers.SGD
-optimizer_config:
-    learning_rate: tf.optimizers.schedules.PiecewiseConstantDecay([32000, 48000, 64000], [0.1, 0.02, 0.004, 0.0008])
+_optim: solve tensorflow.keras.optimizers
+_args: [0.2, 160000, 0.0008]
+_optim_kwds:
+    learning_rate: solve tensorflow.keras.experimental.CosineDecay(*_args)
     momentum: 0.9
-    nesterov: True
+    nesterov: true
+optimizer: solve _optim.SGD(**_optim_kwds)
 
-model: WRN
-model_config:
-    N: 16
-    K: 4
-    input_shape: [32, 32, 3]
-    n_classes: 10
-    l2_reg: 2e-4
+_: solve modules.pruning.pruning_utils.globally_enable_pruning()
 
-pruning: none # none|random|l1|snip|grasp
+model: WRN16-8
+dataset: cifar10
+loss_fn: crossentropy
+
+pruning: null
 pruning_config:
-    sparsity: 0
-    structure: false # true for classic structural pruning OR int N for enforcing N groups OR false
+    sparsity: 0.0
+    structure: false
 
-# EXPERIMENTS:
+Desc: WRN16-8 Cosine Decay with with cosine pruning, test many sparsities
 ---
-Name: WRN16-4-short-training
-steps: 2000
+epochs: 40
+
+_args: [0.2, 78000, 0.0008]
+_optim_kwds:
+    learning_rate: solve tensorflow.keras.experimental.CosineDecay(*_args)
+    momentum: 0.9
+    nesterov: true
+
+_kwds:
+    decay_steps: 78000
+    alpha: parse [0.75, 0.5, 0.2, 0.1, 0.05, 0.025, 0.0125][REP]
+    interval: 100
+    verbose_interval: 2000
+callback: solve callbacks.callbacks.CosinePruningCallback(**_kwds)
+
+Name: parse f"WRN16-8-CosineDecay-cosine-pruning-de{_kwds.alpha}-80k"
+Repeat: 7
 ---
-Name: WRN16-4
+epochs: 80
+
+_args: [0.2, 156000, 0.0008]
+_optim_kwds:
+    learning_rate: solve tensorflow.keras.experimental.CosineDecay(*_args)
+    momentum: 0.9
+    nesterov: true
+
+_kwds:
+    decay_steps: 158000
+    alpha: parse [0.75, 0.5, 0.2, 0.1, 0.05, 0.025, 0.0125][REP]
+    interval: 100
+    verbose_interval: 2000
+callback: solve callbacks.callbacks.CosinePruningCallback(**_kwds)
+
+Name: parse f"WRN16-8-CosineDecay-cosine-pruning-de{_kwds.alpha}-80k"
+Repeat: 7
