@@ -15,10 +15,13 @@ class CosinePruningCallback(tf.keras.callbacks.Callback):
             self.step += self.interval
             density = self.schedule(self.step)
 
-            silent = (self.step % self.verbose_interval) != 0
             model = pruning_utils.prune_l1(model=self.model,
                                            config={"sparsity": 1 - density},
-                                           silent=silent)
+                                           silent=True)
+            density = pruning_utils.report_density(model, silent=True)
+            silent = (self.step % self.verbose_interval) != 0
+            if not silent:
+                print(f"REPORTED DENSITY: {density}")
             pruning_utils.apply_pruning_for_model(model)
 
 

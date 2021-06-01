@@ -37,6 +37,7 @@ def cifar(train_batch_size=128,
         ds['train'] = ds['train'].shuffle(shuffle_train)
     ds['train'] = ds['train'].map(train_prep)
     ds['train'] = ds['train'].batch(train_batch_size)
+    # ds['train'] = ds['train'].prefetch(tf.data.experimental.AUTOTUNE)
 
     ds['test'] = ds['test'].map(valid_prep)
     ds['test'] = ds['test'].batch(valid_batch_size)
