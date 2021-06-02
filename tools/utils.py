@@ -20,6 +20,32 @@ def get_cprint(color):
     return cprint
 
 
+class LazyExperiment:
+    def __init__(self, from_dict=None):
+        if from_dict is None:
+            from_dict = {}
+
+        self.dict = {k: LazyExperiment(v) if isinstance(v, dict) else v for k, v in
+                     from_dict.items()}
+        self._recipes = {}
+
+    def _get_recipe(self, key):
+        return self.dict[key]
+
+    def _get_object(self, key):
+        recipe = self.dict[key]
+        if recipe in self._recipes:
+            return self._recipes[recipe]
+        else:
+            self._make_object_from_recipe(recipe)
+            assert recipe in self._recipes
+            return self._recipes[recipe]
+
+    def _make_object_from_recipe(self, recipe):
+        assert isinstance(recipe, str)
+        self._recipes[recipe] = None
+
+
 class Experiment:
     """Dict like structure that allows for dot indexing."""
     _internal_names = ['dict', '_usage_counts', '_ignored_counts', '_frozen']
@@ -157,13 +183,6 @@ class Experiment:
                     self._usage_counts[key] = 0
             else:
                 self[key] = value
-
-
-if __name__ == '__main__':
-    from copy import deepcopy
-
-    exp = Experiment({"abc": {"cde": 1, "eef": 2}, "uyu": 14, 2: True})
-    exp = deepcopy(exp)
 
 
 def filter_argv(argv: list, include: list, exclude: list):
