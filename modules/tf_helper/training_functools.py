@@ -1,4 +1,4 @@
-"""Source created in notebook: modules\tf_helper\training_functools.ipynb"""
+"""Source created in notebook: notebooks\training_functools.ipynb"""
 
 from collections import defaultdict
 from itertools import islice
