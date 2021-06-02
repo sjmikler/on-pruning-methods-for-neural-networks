@@ -2,7 +2,7 @@ import tensorflow as tf
 
 from modules import tf_helper
 from modules.pruning import pruning_utils
-from modules.tf_helper import datasets, models, tf_utils
+from modules.tf_helper import datasets, models, tf_utils, training_functools
 
 try:
     from ._initialize import *
@@ -117,18 +117,31 @@ def main(exp):
     callbacks = [checkpoint_callback]
 
     if hasattr(exp, 'callback'):
+        exp.callback.set_model(model)
         callbacks.append(exp.callback)
 
     if num_epochs > initial_epoch:
-        history = model.fit(x=dataset['train'],
-                            validation_data=dataset['test'],
-                            steps_per_epoch=steps_per_epoch,
-                            epochs=num_epochs,
-                            initial_epoch=initial_epoch,
-                            callbacks=callbacks)
+        if hasattr(exp, 'custom_training') and exp['custom_training']:
+            history = training_functools.fit(
+                model=model,
+                training_data=dataset['train'],
+                validation_data=dataset['test'],
+                steps_per_epoch=steps_per_epoch,
+                epochs=num_epochs,
+                initial_epoch=initial_epoch,
+                callbacks=callbacks,
+            )
+        else:
+            history = model.fit(x=dataset['train'],
+                                validation_data=dataset['test'],
+                                steps_per_epoch=steps_per_epoch,
+                                epochs=num_epochs,
+                                initial_epoch=initial_epoch,
+                                callbacks=callbacks).history
+
         exp.FINAL_DENSITY = pruning_utils.report_density(model)
         print("FINAL DENSITY:", exp.FINAL_DENSITY)
-        tf_utils.log_from_history(history.history, exp=exp)
+        tf_utils.log_from_history(history, exp=exp)
     checkpoint_callback.list_created_checkpoints()
 
 

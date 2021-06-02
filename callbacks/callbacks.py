@@ -1,4 +1,6 @@
 import tensorflow as tf
+import tqdm
+
 from modules.pruning import pruning_utils
 
 
@@ -21,7 +23,7 @@ class CosinePruningCallback(tf.keras.callbacks.Callback):
             density = pruning_utils.report_density(model, silent=True)
             silent = (self.step % self.verbose_interval) != 0
             if not silent:
-                print(f"REPORTED DENSITY: {density}")
+                tqdm.tqdm.write(f"REPORTED DENSITY: {density}")
             pruning_utils.apply_pruning_for_model(model)
 
 
