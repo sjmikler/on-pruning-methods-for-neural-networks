@@ -1,16 +1,15 @@
-import importlib
 import os
 import random
 import socket
 import sys
 from collections.abc import Iterable
-from copy import copy, deepcopy
+from copy import deepcopy
 
 import yaml
 
-from tools import utils
+import tools
 
-print = utils.get_cprint(color='yellow')
+print = tools.get_cprint(color='yellow')
 
 
 class YamlExperimentQueue:
@@ -21,12 +20,12 @@ class YamlExperimentQueue:
             self.write_content(experiments)
         else:
             assert os.path.exists(path), "Neither experiments or queue were given!"
-            raise NotImplementedError("UNTESTED!")
+            raise NotImplementedError("UNTESTED USAGE!")
 
     def read_content(self):
         with open(self.path, 'r') as f:
             z = list(yaml.safe_load_all(f))
-        return [utils.Experiment(exp) for exp in z]
+        return [tools.LazyExperiment(exp) for exp in z]
 
     def write_content(self, exps):
         assert isinstance(exps, Iterable)
@@ -69,7 +68,8 @@ class YamlExperimentQueue:
         os.remove(self.path)
 
 
-def cool_parse_exp(exp, exp_history, parent_scope={}):
+def cool_parse_exp(exp, exp_history, parent_scope=None):
+    parent_scope = parent_scope or {}
     assert 'E' not in parent_scope
     assert 'E' not in exp
 
@@ -83,7 +83,7 @@ def cool_parse_exp(exp, exp_history, parent_scope={}):
     scope = deepcopy(parent_scope)
     scope.update(exp)
     for key, value in exp.items():
-        if isinstance(value, utils.Experiment):
+        if isinstance(value, tools.LazyExperiment):
             value = cool_parse_exp(value, exp_history, scope)
 
         elif isinstance(value, str) and value.startswith('parse '):
@@ -106,7 +106,7 @@ def cool_parse_exp(exp, exp_history, parent_scope={}):
 
 def load_from_yaml(yaml_path, cmd_parameters=(), private_keys=()):
     experiments = yaml.safe_load_all(open(yaml_path, "r"))
-    experiments = [utils.Experiment(exp) for exp in experiments]
+    experiments = [tools.LazyExperiment(exp) for exp in experiments]
     default = experiments.pop(0)
 
     assert 'Global' in default, "Global missing from default confi!g"
@@ -162,38 +162,3 @@ def load_from_yaml(yaml_path, cmd_parameters=(), private_keys=()):
         queue = all_unpacked_experiments
     print(f"QUEUE TYPE: {type(queue)} | QUEUE LENGTH: {len(queue)}")
     return default, queue
-
-
-def load_python_object(path, scope={}):
-    assert isinstance(path, str)
-    try:
-        func = eval(path, scope, scope)
-        return func
-    except (NameError, AttributeError) as e:
-        try:
-            module = importlib.import_module(path)
-            return module
-        except ModuleNotFoundError as e:
-            if '.' in path:
-                sep = path.rfind('.')
-                scope['__m__'] = importlib.import_module(path[:sep])
-                func = eval(f"__m__.{path[sep + 1:]}", scope, scope)
-                return func
-            else:
-                raise e
-
-
-def solve_python_objects(exp, parent_scope={}):
-    new_scope = copy(parent_scope)
-    for key, value in exp.items():
-        if isinstance(value, utils.Experiment):
-            value = solve_python_objects(value, parent_scope=new_scope)
-
-        elif isinstance(value, str) and value.startswith('solve '):
-            value = value[6:].strip()
-            value = load_python_object(value, scope=new_scope)
-
-        new_scope[key] = value
-        exp[key] = value
-    return exp
-
