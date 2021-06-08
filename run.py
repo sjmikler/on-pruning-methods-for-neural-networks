@@ -28,7 +28,9 @@ args, unknown_args = arg_parser.parse_known_args()
 print(f"UNKNOWN CMD ARGUMENTS: {unknown_args}")
 print(f"  KNOWN CMD ARGUMENTS: {args.__dict__}")
 
-default_config, experiment_queue = tools.load_from_yaml(args.exp)
+default_config, experiment_queue = tools.load_from_yaml(
+    yaml_path=args.exp, cmd_parameters=unknown_args, private_keys=("Global",)
+)
 print(f"GLOBAL CONFIG:\n{default_config.Global}")
 
 use_slack = "slack" in default_config.Global and default_config.Global.slack
