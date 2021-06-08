@@ -2,15 +2,15 @@ import datetime
 from tools import constants as C
 
 
-def get_cprint(color):
+def get_cprint(color, prefix="# "):
     def cprint(*args, **kwds):
         if not args:
             print(**kwds)
             return
 
         args = list(args)
-        args[0] = C.color2code[color] + '# ' + str(args[0])
-        args[-1] = str(args[-1]) + C.color2code['reset']
+        args[0] = C.color2code[color] + prefix + str(args[0])
+        args[-1] = str(args[-1]) + C.color2code["reset"]
         print(*args, **kwds)
 
     return cprint

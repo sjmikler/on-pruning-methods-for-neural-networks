@@ -1,19 +1,116 @@
 import numpy as np
 import tensorflow as tf
 
-from modules.pruning import sparse_layers
-from modules.tf_helper import tf_utils
+from modules.tfhi import tools
 
 try:
-    from ._initialize import *
+    from modules.pruning._initialize import *
 except ImportError:
     pass
 
 
+class MaskedDense(tf.keras.layers.Dense):
+    def __init__(self, *args, **kwds):
+        super().__init__(*args, **kwds)
+
+    def build(self, input_shape):
+        super().build(input_shape)
+
+        self.kernel_mask = self.add_weight(
+            name="kernel_mask",
+            shape=self.kernel.shape,
+            dtype=self.kernel.dtype,
+            initializer="ones",
+            trainable=False,
+        )
+
+        self.sparsity = 1 - np.mean(self.kernel_mask.numpy())
+
+    def call(self, x):
+        masked_w = tf.multiply(self.kernel, self.kernel_mask)
+        # masked_w = masked_w / tf.reduce_mean(self.kernel_mask)
+
+        result = tf.matmul(x, masked_w)
+
+        if self.use_bias:
+            result = tf.add(result, self.bias)
+
+        return self.activation(result)
+
+    def set_pruning_mask(self, new_mask: np.ndarray):
+        """
+        :param new_mask: mask of the same shape as `layer.kernel`
+        :return: None
+        """
+        tf.assert_equal(new_mask.shape, self.kernel_mask.shape)
+        self.kernel_mask.assign(new_mask)
+        self.sparsity = 1 - np.mean(self.kernel_mask.numpy())
+        self.left_unpruned = np.sum(self.kernel_mask.numpy() == 1)
+
+    def apply_pruning_mask(self):
+        self.kernel.assign(tf.multiply(self.kernel, self.kernel_mask))
+
+
+class MaskedConv(tf.keras.layers.Conv2D):
+    def __init__(self, *args, **kwds):
+        super().__init__(*args, **kwds)
+
+    def build(self, input_shape):
+        super().build(input_shape)
+
+        self.kernel_mask = self.add_weight(
+            name="kernel_mask",
+            shape=self.kernel.shape,
+            dtype=self.kernel.dtype,
+            initializer="ones",
+            trainable=False,
+        )
+        self.sparsity = 1 - np.mean(self.kernel_mask.numpy())
+
+    def call(self, x):
+        masked_w = tf.multiply(self.kernel, self.kernel_mask)
+        # masked_w = masked_w / tf.reduce_mean(self.kernel_mask)
+
+        result = tf.nn.conv2d(
+            x, masked_w, strides=self.strides, padding=self.padding.upper()
+        )
+
+        if self.use_bias:
+            result = tf.add(result, self.bias)
+
+        return self.activation(result)
+
+    def set_pruning_mask(self, new_mask: np.ndarray):
+        """
+        :param new_mask: mask of the same shape as `layer.kernel`
+        :return: None
+        """
+        tf.assert_equal(new_mask.shape, self.kernel_mask.shape)
+        self.kernel_mask.assign(new_mask)
+        self.sparsity = 1 - np.mean(self.kernel_mask.numpy())
+        self.left_unpruned = np.sum(self.kernel_mask.numpy() == 1)
+
+    def apply_pruning_mask(self):
+        self.kernel.assign(tf.multiply(self.kernel, self.kernel_mask))
+
+
+tf_keras_layers_Dense = tf.keras.layers.Dense
+tf_keras_layers_Conv2D = tf.keras.layers.Conv2D
+
+
 def globally_enable_pruning():
-    tf.keras.layers.Dense = sparse_layers.MaskedDense
-    tf.keras.layers.Conv2D = sparse_layers.MaskedConv
-    print("PRUNING IS ENABLED GLOBALLY! LAYERS HAVE BEEN REPLACED...")
+    tf.keras.layers.Dense = MaskedDense
+    tf.keras.layers.Conv2D = MaskedConv
+    print("PRUNING IS ENABLED! LAYERS HAVE BEEN REPLACED...")
+
+
+def globally_disaple_pruning():
+    tf.keras.layers.Dense = tf_keras_layers_Dense
+    tf.keras.layers.Conv2D = tf_keras_layers_Conv2D
+    print("PRUNING IS DISABLED! LAYERS HAVE BEEN RESTORED...")
+
+
+# %%
 
 
 def structurize_matrix(matrix, n_clusters):
@@ -34,6 +131,7 @@ def structurize_dense(matrix, n_clusters):
     :return: structured array, the same shape and dtype and matrix
     """
     from sklearn.cluster import KMeans
+
     kmeans = KMeans(n_clusters)
 
     clusters = kmeans.fit_predict(matrix)
@@ -52,6 +150,7 @@ def structurize_conv(matrix, n_clusters):
     matrix = matrix.reshape(matrix.shape[0], -1)
 
     from sklearn.cluster import KMeans
+
     kmeans = KMeans(n_clusters)
 
     clusters = kmeans.fit_predict(matrix)
@@ -69,8 +168,10 @@ def structurize_anything(structure, saliences):
         saliences = l1_saliences_over_channel(saliences)
     elif isinstance(structure, int):
         print(f"ENFORCING {structure} GROUPS!")
-        saliences = {key: structurize_matrix(value, structure) for key, value in
-                     saliences.items()}
+        saliences = {
+            key: structurize_matrix(value, structure)
+            for key, value in saliences.items()
+        }
     return saliences
 
 
@@ -91,8 +192,10 @@ def snip_saliences(model, loader, batches=1):
             loss = loss_fn(y, outs)
         grads = tape.gradient(loss, model.trainable_weights)
         cumulative_grads = [c + g for c, g in zip(cumulative_grads, grads)]
-    saliences = {w.name: tf.abs(w * g).numpy() for w, g in
-                 zip(model.trainable_weights, cumulative_grads)}
+    saliences = {
+        w.name: tf.abs(w * g).numpy()
+        for w, g in zip(model.trainable_weights, cumulative_grads)
+    }
     return saliences
 
 
@@ -101,10 +204,14 @@ def psuedo_snip_saliences(model, *args, **kwds):
     :param model: callable model with trainable_weights
     :return: dict, keys are Variable name, values are saliences from SNIP
     """
-    cumulative_grads = [tf.random.uniform(shape=w.shape, minval=-1, maxval=1) for w in
-                        model.trainable_weights]
-    saliences = {w.name: tf.abs(w * g).numpy() for w, g in
-                 zip(model.trainable_weights, cumulative_grads)}
+    cumulative_grads = [
+        tf.random.uniform(shape=w.shape, minval=-1, maxval=1)
+        for w in model.trainable_weights
+    ]
+    saliences = {
+        w.name: tf.abs(w * g).numpy()
+        for w, g in zip(model.trainable_weights, cumulative_grads)
+    }
     return saliences
 
 
@@ -130,8 +237,10 @@ def grasp_saliences(model, loader, batches=1):
         g2 = tape.gradient(g1, model.trainable_weights)
         cumulative_grads = [c + g for c, g in zip(cumulative_grads, g2)]
 
-    saliences = {w.name: -(w * g).numpy() for w, g in
-                 zip(model.trainable_weights, cumulative_grads)}
+    saliences = {
+        w.name: -(w * g).numpy()
+        for w, g in zip(model.trainable_weights, cumulative_grads)
+    }
     return saliences
 
 
@@ -157,8 +266,10 @@ def minus_grasp_saliences(model, loader, batches=1):
         g2 = tape.gradient(g1, model.trainable_weights)
         cumulative_grads = [c + g for c, g in zip(cumulative_grads, g2)]
 
-    saliences = {w.name: (w * g).numpy() for w, g in
-                 zip(model.trainable_weights, cumulative_grads)}
+    saliences = {
+        w.name: (w * g).numpy()
+        for w, g in zip(model.trainable_weights, cumulative_grads)
+    }
     return saliences
 
 
@@ -171,7 +282,7 @@ def get_pruning_mask(saliences, percentage):
     sizes = [w.size for w in saliences]
     shapes = [w.shape for w in saliences]
 
-    flatten = tf_utils.concatenate_flattened(saliences)
+    flatten = tools.concatenate_flattened(saliences)
     flat_mask = np.ones_like(flatten)
 
     threshold = np.percentile(flatten, percentage * 100)
@@ -205,9 +316,11 @@ def set_kernel_masks_for_model(model, masks_dict, silent=False):
                 if mask == weight.name:
                     layer.set_pruning_mask(masks_dict[mask])
                     if not silent:
-                        print(f"{weight.name:<32} pruning to "
-                              f"{layer.sparsity * 100:6.2f}%"
-                              f" (left {layer.left_unpruned})")
+                        print(
+                            f"{weight.name:<32} pruning to "
+                            f"{layer.sparsity * 100:6.2f}%"
+                            f" (left {layer.left_unpruned})"
+                        )
 
 
 def l1_saliences_over_channel(saliences):
@@ -226,36 +339,18 @@ def l1_saliences_over_channel(saliences):
             saliences[key] = value
 
         else:
-            raise TypeError('Weight matrix should have 2 or 4 dimensions!')
+            raise TypeError("Weight matrix should have 2 or 4 dimensions!")
     return saliences
 
 
 def prune_by_kernel_masks(model, config, silent=False):
-    sparsity = config.get('sparsity') or 0.0
-    structure = config.get('structure')
+    sparsity = config.get("sparsity") or 0.0
+    structure = config.get("structure")
     saliences = {}
     for layer in model.layers:
-        if hasattr(layer, 'kernel_mask'):
+        if hasattr(layer, "kernel_mask"):
             kernel = layer.kernel
             saliences[kernel.name] = layer.kernel_mask.numpy()
-    saliences = extract_kernels(saliences)
-    if structure:
-        saliences = structurize_anything(structure, saliences)
-    masks = saliences2masks(saliences, percentage=sparsity)
-    set_kernel_masks_for_model(model, masks, silent)
-    return model
-
-
-def prune_GraSP(model, dataset, config, silent=False):
-    """Hessian related pruning."""
-
-    raise NotImplementedError("Check if the implementation is correct!")
-
-    sparsity = config.get('sparsity') or 0.0
-    batches = config.get('batches') or 1
-    structure = config.get('structure')
-
-    saliences = grasp_saliences(model, dataset, batches=batches)
     saliences = extract_kernels(saliences)
     if structure:
         saliences = structurize_anything(structure, saliences)
@@ -267,9 +362,9 @@ def prune_GraSP(model, dataset, config, silent=False):
 def prune_SNIP(model, dataset, config, silent=False):
     """Prune by saliences `|W*G|` for W being weights an G being gradients."""
 
-    sparsity = config.get('sparsity') or 0.0
-    batches = config.get('batches') or 1
-    structure = config.get('structure')
+    sparsity = config.get("sparsity") or 0.0
+    batches = config.get("batches") or 1
+    structure = config.get("structure")
 
     saliences = snip_saliences(model, dataset, batches=batches)
     saliences = extract_kernels(saliences)
@@ -283,8 +378,8 @@ def prune_SNIP(model, dataset, config, silent=False):
 def prune_pseudo_SNIP(model, dataset, config, silent=False):
     """In SNIP's `W*G` we replace gradients G with a random from [-1, 1]."""
 
-    sparsity = config.get('sparsity') or 0.0
-    structure = config.get('structure')
+    sparsity = config.get("sparsity") or 0.0
+    structure = config.get("structure")
 
     saliences = psuedo_snip_saliences(model)
     saliences = extract_kernels(saliences)
@@ -298,8 +393,8 @@ def prune_pseudo_SNIP(model, dataset, config, silent=False):
 def prune_random(model, config, silent=False):
     """Random, non-uniform pruning."""
 
-    sparsity = config.get('sparsity') or 0.0
-    structure = config.get('structure')
+    sparsity = config.get("sparsity") or 0.0
+    structure = config.get("structure")
     saliences = {w.name: np.random.rand(*w.shape) for w in model.trainable_weights}
     saliences = extract_kernels(saliences)
     if structure:
@@ -312,8 +407,8 @@ def prune_random(model, config, silent=False):
 def prune_l1(model, config, silent=False):
     """Prune smallest magnitudes."""
 
-    sparsity = config.get('sparsity') or 0.0
-    structure = config.get('structure')
+    sparsity = config.get("sparsity") or 0.0
+    structure = config.get("structure")
     saliences = {w.name: np.abs(w.numpy()) for w in model.trainable_weights}
     saliences = extract_kernels(saliences)
     if structure:
@@ -376,19 +471,14 @@ def shuffle_layers(model):
 def report_density(model, silent=True):
     nonzero = 0
     kernels = 0
-    biases = 0
     for w in model.weights:
-        if 'kernel_mask' in w.name:
+        if "kernel_mask" in w.name:
             km = w.numpy()
             kernels += km.size
             nonzero_here = (km != 0).sum()
             nonzero += nonzero_here
             if not silent:
                 print(f"{w.name:<32} density is {nonzero_here / km.size:6.4f}")
-        if 'bias' in w.name or 'beta' in w.name:
-            biases += w.shape.num_elements()
-    if not silent:
-        print(f"Biases make {biases / (kernels + biases) * 100:6.3f}% of weights!")
     if kernels == 0:
         return 1.0
     return nonzero / kernels
@@ -398,13 +488,13 @@ def initialize_kernel_masks(model):
     nmasks = 0
     for layer in model.layers:
         if type(layer) in [tf.keras.layers.Conv2D, tf.keras.layers.Dense]:
-            layer.kernel_mask = layer.add_weight(name=layer.kernel.name.replace(
-                'kernel',
-                'kernel_mask'),
+            layer.kernel_mask = layer.add_weight(
+                name=layer.kernel.name.replace("kernel", "kernel_mask"),
                 shape=layer.kernel.shape,
                 dtype=layer.kernel.dtype,
                 initializer="ones",
-                trainable=False, )
+                trainable=False,
+            )
             nmasks += layer.kernel.shape.num_elements()
     print(f"CREATED {nmasks} KERNEL MASKS!")
 
@@ -414,36 +504,37 @@ def contains_any(t, *opts):
 
 
 def set_pruning_masks(model, pruning_method, pruning_config, dataset):
-    if (pruning_method is None
-            or contains_any(pruning_method.lower(), 'none', 'nothing')):
-        print('NO PRUNING')
+    if pruning_method is None or contains_any(
+        pruning_method.lower(), "none", "nothing"
+    ):
+        print("NO PRUNING")
         return model
-    elif contains_any(pruning_method.lower(), 'random'):
-        print('RANDOM PRUNING')
+    elif contains_any(pruning_method.lower(), "random"):
+        print("RANDOM PRUNING")
         model = prune_random(model=model, config=pruning_config)
-    elif contains_any(pruning_method.lower(), 'snip'):
-        if contains_any(pruning_method.lower(), 'pseudo'):
-            print('PSUEDO SNIP PRUNING')
-            model = prune_pseudo_SNIP(model=model,
-                                      config=pruning_config,
-                                      dataset=dataset['train'])
+    elif contains_any(pruning_method.lower(), "snip"):
+        if contains_any(pruning_method.lower(), "pseudo"):
+            print("PSUEDO SNIP PRUNING")
+            model = prune_pseudo_SNIP(
+                model=model, config=pruning_config, dataset=dataset["train"]
+            )
         else:
-            print('SNIP PRUNING')
-            model = prune_SNIP(model=model,
-                               config=pruning_config,
-                               dataset=dataset['train'])
-    elif contains_any(pruning_method.lower(), 'grasp'):
-        print('GRASP PRUNING')
-        model = prune_GraSP(model=model,
-                            config=pruning_config,
-                            dataset=dataset['train'])
-    elif contains_any(pruning_method.lower(), 'l1', 'magnitude'):
-        print('WEIGHT MAGNITUDE PRUNING')
+            print("SNIP PRUNING")
+            model = prune_SNIP(
+                model=model, config=pruning_config, dataset=dataset["train"]
+            )
+    elif contains_any(pruning_method.lower(), "grasp"):
+        print("GRASP PRUNING")
+        model = prune_GraSP(
+            model=model, config=pruning_config, dataset=dataset["train"]
+        )
+    elif contains_any(pruning_method.lower(), "l1", "magnitude"):
+        print("WEIGHT MAGNITUDE PRUNING")
         model = prune_l1(model=model, config=pruning_config)
-    elif contains_any(pruning_method.lower(), 'imp_complete'):
-        print('IMP COMPLETE PRUNING')
+    elif contains_any(pruning_method.lower(), "imp_complete"):
+        print("IMP COMPLETE PRUNING")
         model = prune_IMP_complete(model=model, config=pruning_config)
-    elif contains_any(pruning_method.lower(), 'kernel mask'):
+    elif contains_any(pruning_method.lower(), "kernel mask"):
         print("PRUNING BY KERNEL MASK VALUES")
         model = prune_by_kernel_masks(model=model, config=pruning_config)
     else:
@@ -459,30 +550,30 @@ def apply_pruning_for_model(model):
             layer.apply_pruning_mask()
 
 
-def apply_pruning_masks(model, pruning_method):
-    """Wrapper for `apply_pruning_for_model`"""
-
-    if pruning_method is not None:
-        if contains_any(pruning_method.lower(), 'shuffle weight'):
-            print("SHUFFLING WEIGHTS IN LAYERS!")
-            model = shuffle_weights(model=model)
-
-        if contains_any(pruning_method.lower(), 'shuffle layer'):
-            print("SHUFFLING WEIGHTS WITH MASKS IN LAYERS!")
-            model = shuffle_layers(model=model)
-
-        if contains_any(pruning_method.lower(), 'shuffle mask'):
-            print("SHUFFLING MASKS IN LAYERS!")
-            model = shuffle_masks(model=model)
-
-    apply_pruning_for_model(model)
-    density = report_density(model, silent=True)
-    print(f"REPORTING KERNELS DENSITY: {density:7.5f}")
-    return model
+# def apply_pruning_masks(model, pruning_method):
+#     """Wrapper for `apply_pruning_for_model`"""
+#
+#     if pruning_method is not None:
+#         if contains_any(pruning_method.lower(), "shuffle weight"):
+#             print("SHUFFLING WEIGHTS IN LAYERS!")
+#             model = shuffle_weights(model=model)
+#
+#         if contains_any(pruning_method.lower(), "shuffle layer"):
+#             print("SHUFFLING WEIGHTS WITH MASKS IN LAYERS!")
+#             model = shuffle_layers(model=model)
+#
+#         if contains_any(pruning_method.lower(), "shuffle mask"):
+#             print("SHUFFLING MASKS IN LAYERS!")
+#             model = shuffle_masks(model=model)
+#
+#     apply_pruning_for_model(model)
+#     density = report_density(model, silent=True)
+#     print(f"REPORTING KERNELS DENSITY: {density:7.5f}")
+#     return model
 
 
 def get_kernel_masks(model):
-    return [l.kernel_mask for l in model.layers if hasattr(l, 'kernel_mask')]
+    return [l.kernel_mask for l in model.layers if hasattr(l, "kernel_mask")]
 
 
 def set_kernel_masks_values_on_model(model, values):
@@ -504,6 +595,6 @@ def set_kernel_masks_values(masks, values):
 
 
 def set_kernel_masks_object(model, masks):
-    layers = (l for l in model.layers if hasattr(l, 'kernel_mask'))
+    layers = (l for l in model.layers if hasattr(l, "kernel_mask"))
     for l, km in zip(layers, masks):
         l.kernel_mask = km

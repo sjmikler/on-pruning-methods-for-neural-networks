@@ -1,7 +1,6 @@
 import os
 import pickle
 from collections import Counter, abc
-from copy import deepcopy
 
 import numpy as np
 import tensorflow as tf
@@ -14,15 +13,15 @@ except ImportError:
 
 def set_memory_growth():
     print("SETTING MEMORY GROWTH!")
-    for gpu in tf.config.get_visible_devices('GPU'):
+    for gpu in tf.config.get_visible_devices("GPU"):
         tf.config.experimental.set_memory_growth(gpu, True)
 
 
-def set_visible_gpu(gpus=[]):
+def set_visible_gpu(gpus=()):
     if isinstance(gpus, abc.Iterable):
-        tf.config.set_visible_devices(gpus, 'GPU')
+        tf.config.set_visible_devices(gpus, "GPU")
     else:
-        tf.config.set_visible_devices([gpus], 'GPU')
+        tf.config.set_visible_devices([gpus], "GPU")
 
 
 def set_precision(precision):
@@ -32,45 +31,16 @@ def set_precision(precision):
     if precision == 16:
         policy = mixed_precision.Policy("mixed_float16")
     elif precision == 32:
-        policy = mixed_precision.Policy('float32')
+        policy = mixed_precision.Policy("float32")
     elif precision == 64:
-        policy = mixed_precision.Policy('float64')
+        policy = mixed_precision.Policy("float64")
     else:
         raise NameError(f"Available precision: 16, 32, 64. Not {precision}!")
     mixed_precision.set_policy(policy)
 
 
-def log_from_history(history, exp):
-    import datetime
-
-    min_loss = min(history["val_loss"])
-    max_acc = max(history["val_accuracy"])
-    final_acc = history["val_accuracy"][-1]
-
-    min_tr_loss = min(history["loss"])
-    max_tr_acc = max(history["accuracy"])
-
-    print(f"BEST ACCURACY: {max_acc}")
-
-    exp.TIME = datetime.datetime.now().strftime("%Y.%m.%d %H:%M")
-    exp.ACC = max_acc
-    exp.FINAL_ACCU = final_acc
-    exp.VALID_LOSS = min_loss
-    exp.TRAIN_ACCU = max_tr_acc
-    exp.TRAIN_LOSS = min_tr_loss
-
-    if hasattr(exp, 'tensorboard_log') and exp.tensorboard_log:
-        writer = tf.summary.create_file_writer(exp.tensorboard_log)
-        with writer.as_default():
-            for key in history:
-                for idx, value in enumerate(history[key]):
-                    tf.summary.scalar(key, value, idx + 1)
-            tf.summary.text("experiment", data=str(exp), step=0)
-    return exp
-
-
 def get_kernels(model):
-    return [l.kernel for l in model.layers if hasattr(l, 'kernel')]
+    return [l.kernel for l in model.layers if hasattr(l, "kernel")]
 
 
 def set_all_weights_from_model(model, source_model):
@@ -124,8 +94,13 @@ def clip_many(values, clip_at, clip_from=None, inplace=False):
 
 
 def concatenate_flattened(arrays):
-    return np.concatenate([x.flatten() if isinstance(x, np.ndarray)
-                           else x.numpy().flatten() for x in arrays], axis=0)
+    return np.concatenate(
+        [
+            x.flatten() if isinstance(x, np.ndarray) else x.numpy().flatten()
+            for x in arrays
+        ],
+        axis=0,
+    )
 
 
 def print_model_info(model):
@@ -133,13 +108,13 @@ def print_model_info(model):
     layer_counts = Counter()
     for layer in model.layers:
         if isinstance(layer, tf.keras.layers.Dense):
-            layer_counts['Dense'] += 1
+            layer_counts["Dense"] += 1
         if isinstance(layer, tf.keras.layers.Conv2D):
-            layer_counts['Conv2D'] += 1
+            layer_counts["Conv2D"] += 1
         if isinstance(layer, tf.keras.layers.BatchNormalization):
-            layer_counts['BatchNorm'] += 1
+            layer_counts["BatchNorm"] += 1
         if isinstance(layer, tf.keras.layers.Dropout):
-            layer_counts['Dropout'] += 1
+            layer_counts["Dropout"] += 1
     print(f"LAYER COUNTS: {dict(layer_counts)}")
 
     bn = 0
@@ -151,29 +126,31 @@ def print_model_info(model):
         trainable_w += n
 
     for layer in model.layers:
-        if hasattr(layer, 'beta') and layer.beta is not None:
+        if hasattr(layer, "beta") and layer.beta is not None:
             bn += layer.beta.shape.num_elements()
 
-        if hasattr(layer, 'gamma') and layer.gamma is not None:
+        if hasattr(layer, "gamma") and layer.gamma is not None:
             bn += layer.gamma.shape.num_elements()
 
-        if hasattr(layer, 'bias') and layer.bias is not None:
+        if hasattr(layer, "bias") and layer.bias is not None:
             biases += layer.bias.shape.num_elements()
 
-        if hasattr(layer, 'kernel'):
+        if hasattr(layer, "kernel"):
             kernels += layer.kernel.shape.num_elements()
 
     print(f"TRAINABLE WEIGHTS: {trainable_w}")
-    print(f"KERNELS: {kernels} ({kernels / trainable_w * 100:^6.2f}%), "
-          f"BIASES: {biases} ({biases / trainable_w * 100:^6.2f}%), "
-          f"BN: {bn} ({bn / trainable_w * 100:^6.2f}%)")
+    print(
+        f"KERNELS: {kernels} ({kernels / trainable_w * 100:^6.2f}%), "
+        f"BIASES: {biases} ({biases / trainable_w * 100:^6.2f}%), "
+        f"BN: {bn} ({bn / trainable_w * 100:^6.2f}%)"
+    )
 
 
 def save_optimizer(optimizer, path):
     if dirpath := os.path.dirname(path):
         os.makedirs(dirpath, exist_ok=True)
     weights = optimizer.get_weights()
-    with open(path, 'wb') as f:
+    with open(path, "wb") as f:
         pickle.dump(weights, f)
 
 
@@ -184,7 +161,7 @@ def save_model(model, path):
 
 
 def update_optimizer(optimizer, path):
-    with open(path, 'rb') as f:
+    with open(path, "rb") as f:
         weights = pickle.load(f)
     try:
         optimizer.set_weights(weights)
@@ -198,39 +175,10 @@ def build_optimizer(model, optimizer):
     optimizer.apply_gradients(zip(zero_grad, model.trainable_weights))
 
 
-class CheckpointAfterEpoch(tf.keras.callbacks.Callback):
-    def __init__(self, epoch2path, epoch2path_optim):
-        super().__init__()
-        self.epoch2path = epoch2path
-        self.epoch2path_optim = epoch2path_optim
-        self.created_model_ckp = []
-        self.created_optim_ckp = []
-
-    def on_epoch_end(self, epoch, logs=None):
-        next_epoch = epoch + 1
-
-        if next_epoch in self.epoch2path:
-            path = self.epoch2path[next_epoch]
-            save_model(self.model, path)
-            self.created_model_ckp.append(path)
-
-        if next_epoch in self.epoch2path_optim:
-            path = self.epoch2path_optim[next_epoch]
-            save_optimizer(self.model.optimizer, path)
-            self.created_optim_ckp.append(path)
-
-    def list_created_checkpoints(self):
-        print(f"CREATED MODEL CHECKPOINTS:")
-        for ckp in self.created_model_ckp:
-            print(ckp)
-        print(f"CREATED OPTIM CHECKPOINTS:")
-        for ckp in self.created_optim_ckp:
-            print(ckp)
-
-
 def get_optimizer_lr_metric(opt):
-    if hasattr(opt, '_decayed_lr'):
-        def lr(*args):
+    if hasattr(opt, "_decayed_lr"):
+
+        def lr(*_):
             return opt._decayed_lr(tf.float32)
 
         return lr
@@ -239,7 +187,7 @@ def get_optimizer_lr_metric(opt):
 
 
 def get_loss_fn_from_alias(alias):
-    if alias == 'crossentropy':
+    if alias == "crossentropy":
         return tf.losses.SparseCategoricalCrossentropy(from_logits=True)
     else:
         raise NotImplementedError(f"Unknown alias {alias}")

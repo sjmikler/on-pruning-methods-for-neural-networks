@@ -9,11 +9,11 @@ import yaml
 
 import tools
 
-print = tools.get_cprint(color='yellow')
+print = tools.get_cprint(color="yellow")
 
 
 class YamlExperimentQueue:
-    def __init__(self, experiments=None, path='.queue.yaml'):
+    def __init__(self, experiments=None, path=".queue.yaml"):
         self.path = path
         self.num_popped = 0
         if experiments:  # if None, can just read existing experiments
@@ -23,18 +23,20 @@ class YamlExperimentQueue:
             raise NotImplementedError("UNTESTED USAGE!")
 
     def read_content(self):
-        with open(self.path, 'r') as f:
+        with open(self.path, "r") as f:
             z = list(yaml.safe_load_all(f))
         return [tools.LazyExperiment(exp) for exp in z]
 
     def write_content(self, exps):
         assert isinstance(exps, Iterable)
 
-        with open(self.path, 'w') as f:
-            yaml.safe_dump_all((exp.todict() for exp in exps),
-                               stream=f,
-                               explicit_start=True,
-                               sort_keys=False)
+        with open(self.path, "w") as f:
+            yaml.safe_dump_all(
+                (exp.todict() for exp in exps),
+                stream=f,
+                explicit_start=True,
+                sort_keys=False,
+            )
 
     def append_content(self, exps):
         existing_content = self.read_content()
@@ -70,14 +72,14 @@ class YamlExperimentQueue:
 
 def cool_parse_exp(exp, exp_history, parent_scope=None):
     parent_scope = parent_scope or {}
-    assert 'E' not in parent_scope
-    assert 'E' not in exp
+    assert "E" not in parent_scope
+    assert "E" not in exp
 
     exp_history_dict = {}
     if exp_history:
         for idx, prev_exp in enumerate(exp_history):
             exp_history_dict[idx] = prev_exp
-            exp_history_dict[prev_exp.Name] = prev_exp  # make aliases in history
+            exp_history_dict[prev_exp.Name] = prev_exp  # create aliases in history
         exp_history_dict[-1] = exp_history[-1]
 
     scope = deepcopy(parent_scope)
@@ -86,11 +88,11 @@ def cool_parse_exp(exp, exp_history, parent_scope=None):
         if isinstance(value, tools.LazyExperiment):
             value = cool_parse_exp(value, exp_history, scope)
 
-        elif isinstance(value, str) and value.startswith('parse '):
+        elif isinstance(value, str) and value.startswith("parse "):
             org_expr = value
             value = value[6:].strip()
             escope = deepcopy(scope)
-            escope['E'] = exp_history_dict  # make experiment history available to user
+            escope["E"] = exp_history_dict  # make experiment history available to user
             value = eval(value, escope, escope)
             print(f"{key}: {org_expr} --> {value}")
 
@@ -105,30 +107,28 @@ def cool_parse_exp(exp, exp_history, parent_scope=None):
 
 
 def load_from_yaml(yaml_path, cmd_parameters=(), private_keys=()):
-    experiments = yaml.safe_load_all(open(yaml_path, "r"))
-    experiments = [tools.LazyExperiment(exp) for exp in experiments]
+    experiments = list(yaml.safe_load_all(open(yaml_path, "r")))
     default = experiments.pop(0)
+    assert "Global" in default, "Global missing from default confi!g"
 
-    assert 'Global' in default, "Global missing from default confi!g"
-
-    parameters = [p for p in cmd_parameters if p.startswith('+')]
+    parameters = [p for p in cmd_parameters if p.startswith("+")]
     print(f"RECOGNIZED CMD PARAMETERS: {parameters}")
 
     for cmd_param in parameters:
         try:
             sys.argv.remove(cmd_param)
-            param = cmd_param.strip('+ ')
-            param = 'default.' + param
+            param = cmd_param.strip("+ ")
+            param = "default." + param
             exec(param)
         except Exception as e:
             print(f"ERROR WHEN PARSING {cmd_param}!")
             raise e
 
-    default.HOST = socket.gethostname()
+    default["HOST"] = socket.gethostname()
     all_unpacked_experiments = []
 
     print("FANCY PARSING BEGINS! KEY: VALUE --> PARSED VALUE")
-    for global_rep in range(default.Global.repeat):
+    for global_rep in range(default["Global"]["repeat"]):
         unpacked_experiments = []
         for exp in experiments:
             nexp = deepcopy(exp)
@@ -148,17 +148,17 @@ def load_from_yaml(yaml_path, cmd_parameters=(), private_keys=()):
             else:
                 rnd_idx = random.randint(100000, 999999)
 
-            for rep in range(nexp.Repeat):
+            for rep in range(nexp["Repeat"]):
                 nexp_rep = deepcopy(nexp)
-                nexp_rep.RND_IDX = rnd_idx
-                nexp_rep.REP = rep
+                nexp_rep["RND_IDX"] = rnd_idx
+                nexp_rep["REP"] = rep
                 nexp_rep = cool_parse_exp(nexp_rep, unpacked_experiments)
                 unpacked_experiments.append(nexp_rep)
         all_unpacked_experiments.extend(unpacked_experiments)
 
-    if path := default.Global.queue:
+    if path := default["Global"]["queue"]:
         queue = YamlExperimentQueue(all_unpacked_experiments, path=path)
     else:
-        queue = all_unpacked_experiments
+        queue = [tools.LazyExperiment(exp) for exp in all_unpacked_experiments]
     print(f"QUEUE TYPE: {type(queue)} | QUEUE LENGTH: {len(queue)}")
-    return default, queue
+    return tools.LazyExperiment(default), queue

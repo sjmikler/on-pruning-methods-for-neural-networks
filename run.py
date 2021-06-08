@@ -6,20 +6,83 @@ import yaml
 
 import tools
 
-print = tools.get_cprint(color='red')
+print = tools.get_cprint(color="red", prefix="(cool) ")
 
-arg_parser = argparse.ArgumentParser(prefix_chars='-+')
-arg_parser.add_argument("--dry",
-                        action="store_true",
-                        help="skip execution but parse experiments")
-arg_parser.add_argument("--exp",
-                        default='experiment.yaml',
-                        type=str,
-                        help="path to .yaml file with experiments")
-arg_parser.add_argument("--pick",
-                        type=int,
-                        nargs='*',
-                        help="run only selected experiments, e.g. 0 1 3 or just 1")
+arg_parser = argparse.ArgumentParser(prefix_chars="-+")
+arg_parser.add_argument(
+    "--dry", action="store_true", help="skip execution but parse experiments"
+)
+arg_parser.add_argument(
+    "--exp",
+    default="experiment.yaml",
+    type=str,
+    help="path to .yaml file with experiments",
+)
+arg_parser.add_argument(
+    "--pick",
+    type=int,
+    nargs="*",
+    help="run only selected experiments, e.g. 0 1 3 or just 1",
+)
 args, unknown_args = arg_parser.parse_known_args()
 print(f"UNKNOWN CMD ARGUMENTS: {unknown_args}")
 print(f"  KNOWN CMD ARGUMENTS: {args.__dict__}")
+
+default_config, experiment_queue = tools.load_from_yaml(args.exp)
+print(f"GLOBAL CONFIG:\n{default_config.Global}")
+
+use_slack = "slack" in default_config.Global and default_config.Global.slack
+if use_slack:
+    slacklogger = tools.SlackLogger(
+        config=default_config.Global.slack_config,
+        host=default_config.HOST,
+        desc=default_config.Desc,
+    )
+
+for exp_idx, exp in enumerate(experiment_queue):
+    assert isinstance(exp, tools.LazyExperiment)
+
+    if args.pick and exp_idx not in args.pick:
+        print(f"SKIPPING EXPERIMENT {exp_idx} (not picked)")
+        continue
+    if not exp.Name or exp.Name == "skip":
+        print(f"SKIPPING EXPERIMENT {exp_idx} (Name = {exp.Name})")
+        continue
+
+    print()
+    print(f"NEW EXPERIMENT {exp_idx} / {len(experiment_queue)}:\n{exp}")
+
+    if args.dry:
+        continue
+
+    try:
+        t0 = time.time()
+        exp.Run(exp)  # RUN MODULE
+        exp.TIME_ELAPSED = time.time() - t0
+
+        if dirpath := os.path.dirname(exp.YamlLog):
+            os.makedirs(dirpath, exist_ok=True)
+        with open(exp.YamlLog, "a") as f:
+            yaml.safe_dump(exp.todict(), stream=f, explicit_start=True, sort_keys=False)
+        print(f"SAVED LOGS: {exp['YamlLog']}")
+        if use_slack:
+            slacklogger.add_exp_report(exp)
+
+    except KeyboardInterrupt:
+        print("\n")
+        print(f"SKIPPING EXPERIMENT {exp_idx}, WAITING 2 SECONDS BEFORE RESUMING...")
+        try:
+            time.sleep(2)
+        except KeyboardInterrupt:
+            if use_slack:
+                slacklogger.interrupt_short()
+            print(f"EXITED GRACEFULLY!")
+            raise KeyboardInterrupt
+
+if isinstance(experiment_queue, tools.YamlExperimentQueue):
+    print(f"REMOVING QUEUE {experiment_queue.path}")
+    experiment_queue.close()
+
+if use_slack:
+    slacklogger.finalize()
+    slacklogger.finalize_short()
