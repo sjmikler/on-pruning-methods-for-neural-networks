@@ -150,8 +150,9 @@ def VGG(
 
 
 def ResNet(
-    input_shape,
-    n_classes,
+    dataset=None,
+    input_shape=None,
+    n_classes=None,
     version=None,
     l1_reg=0,
     l2_reg=2e-4,
@@ -165,18 +166,50 @@ def ResNet(
     dropout=0,
     preactivate_blocks=True,
     regularize_bias=True,
-    shortcut_mode_a=False,
+    shortcut_type_A=False,
     head=(("conv", 16, 3, 1),),
     **kwds,
 ):
-    if version:
-        raise KeyError("Versions not defined yet!")
+    if dataset == 'cifar' or dataset == 'cifar10':
+        input_shape = (32, 32, 3)
+        n_classes = 10
+    elif dataset == 'cifar100':
+        input_shape = (32, 32, 3)
+        n_classes = 100
+    elif dataset == 'mnist':
+        input_shape = (28, 28, 1)
+        n_classes = 10
+    else:
+        assert input_shape is not None
+        assert n_classes is not None
+
+    if version == 20:
+        group_sizes = (3, 3, 3)
+    elif version == 56:
+        group_sizes = (9, 9, 9)
+    elif version == 110:
+        group_sizes = (18, 18, 18)
+    elif 'WRN' in version:
+        if '-' in version:
+            version = (int(x) for x in version.strip('WRN').strip('-').split('-'))
+        elif '_' in version:
+            version = (int(x) for x in version.strip('WRN').strip('_').split('_'))
+        else:
+            raise KeyError("WRN{N}-{K} is the proper format!")
+        N, K = version
+        assert (N - 4) % 6 == 0
+        size = int((N - 4) / 6)
+        group_sizes = (size, size, size),
+        features = (16 * K, 32 * K, 64 * K),
+    elif version is not None:
+        raise KeyError(f"Version {version} unknown!")
     print(f"ResNet: unknown parameters: {list(kwds)}")
 
     activation_func = eval(activation)
-    regularizer = (
-        tf.keras.regularizers.l1_l2(l1_reg, l2_reg) if l2_reg or l1_reg else None
-    )
+    if l2_reg or l1_reg:
+        regularizer = tf.keras.regularizers.l1_l2(l1_reg, l2_reg)
+    else:
+        regularizer = None
     bias_regularizer = regularizer if regularize_bias else None
 
     def conv(filters, kernel_size, use_bias=False, **kwds):
@@ -192,52 +225,61 @@ def ResNet(
         )
 
     def shortcut(x, filters, strides):
-        if x.shape[-1] != filters or strides != 1:
-            if shortcut_mode_a:
-                m_filters = filters - x.shape[-1]
-                m_width = x.shape[1] // strides
-                m_height = x.shape[2] // strides
-                return tf.pad(
-                    x[:, :m_width, :m_height], [[0, 0], [0, 0], [0, 0], [m_filters, 0]]
-                )
-            else:
-                return tf.keras.layers.Conv2D(
-                    filters,
-                    kernel_size=1,
-                    use_bias=False,
-                    strides=strides,
-                    kernel_initializer=initializer,
-                    kernel_regularizer=regularizer,
-                )(x)
+        if shortcut_type_A:
+            m_filters = filters - x.shape[-1]
+            m_width = x.shape[1] // strides
+            m_height = x.shape[2] // strides
+            return tf.pad(
+                x[:, :m_width, :m_height], [[0, 0], [0, 0], [0, 0], [m_filters, 0]]
+            )
         else:
-            return x
+            return tf.keras.layers.Conv2D(
+                filters,
+                kernel_size=1,
+                use_bias=False,
+                strides=strides,
+                kernel_initializer=initializer,
+                kernel_regularizer=regularizer,
+            )(x)
 
-    def bn_relu(x, remove_relu=False):
+    def bn_activate(x, remove_relu=False):
         x = tf.keras.layers.BatchNormalization(
             beta_regularizer=bias_regularizer, gamma_regularizer=bias_regularizer
         )(x)
         return x if remove_relu else activation_func(x)
 
     def simple_block(flow, filters, strides, preactivate):
+        projection_shortcut = flow.shape[-1] != filters or strides != 1
+        flow_shortcut = flow
+
         if preactivate:
-            flow = bn_relu(flow)
+            flow = bn_activate(flow)
+
+        if projection_shortcut:
+            flow_shortcut = shortcut(flow, filters, strides)
 
         flow = conv(filters, 3, strides=strides)(flow)
-        flow = bn_relu(flow)
+        flow = bn_activate(flow)
 
         if dropout:
             flow = tf.keras.layers.Dropout(dropout)(flow)
         flow = conv(filters, 3, strides=1)(flow)
-        return flow
+        return flow + flow_shortcut
 
     def bootleneck_block(flow, filters, strides, preactivate):
+        projection_shortcut = flow.shape[-1] != filters or strides != 1
+        flow_shortcut = flow
+
         if preactivate:
-            flow = bn_relu(flow)
+            flow = bn_activate(flow)
+
+        if projection_shortcut:
+            flow_shortcut = shortcut(flow, filters, strides)
 
         flow = conv(filters // 4, 1)(flow)
-        flow = conv(filters // 4, 3, strides=strides)(bn_relu(flow))
-        flow = conv(filters, 1)(bn_relu(flow))
-        return flow
+        flow = conv(filters // 4, 3, strides=strides)(bn_activate(flow))
+        flow = conv(filters, 1)(bn_activate(flow))
+        return flow + flow_shortcut
 
     if bootleneck:
         block = bootleneck_block
@@ -262,16 +304,13 @@ def ResNet(
     # BUILD THE RESIDUAL BLOCKS
     for group_size, width, stride in zip(group_sizes, features, strides):
         for _ in range(group_size):
-            if not preactivate_blocks:
-                flow = activation_func(flow)
-
-            residual = block(flow, width, stride, preactivate=preactivate_blocks)
-            flow = residual + shortcut(flow, width, stride)
-            stride = 1
+            flow = block(flow, width, stride, preactivate=preactivate_blocks)
+            stride = 1  # reset stride for the rest of the group
 
     # BUILDING THE CLASSIFIER
-    flow = bn_relu(flow, remove_relu=True)
+    flow = bn_activate(flow, remove_relu=True)
     flow = tf.nn.relu(flow)  # use relu here even if different activation is choosen
+    # this is for consistency in classifier inputs being non-negative
 
     outputs = classifier(
         flow,
@@ -283,32 +322,6 @@ def ResNet(
     )
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
     return model
-
-
-def WRN(N, K, *args, **kwds) -> tf.keras.Model:
-    """filter, kwds parameters:
-        * input_shape,
-        * n_classes,
-        * l2_reg=0,
-        * bootleneck=False,
-        * strides=(1, 2, 2),
-        * initializer='he_uniform',
-        * activation='tf.nn.relu',
-        * final_pooling='avgpool',
-        * dropout=0,
-        * regularize_bias=True,
-        * remove_first_relu=False,  # not tested
-        * pyramid=False,  # linear PyramidNet
-        * head=(('conv', 16, 3, 1),))
-    :param N: Number of layers
-    :param K: How wider should the network be
-    :return: tf.keras compatible model
-    """
-    assert (N - 4) % 6 == 0
-    size = int((N - 4) / 6)
-    return ResNet(
-        *args, group_sizes=(size, size, size), features=(16 * K, 32 * K, 64 * K), **kwds
-    )
 
 
 def LeNet(
@@ -390,8 +403,9 @@ def get_model_from_alias(alias, input_shape, n_classes):
 
     if m := re.match(r"WRN(\d+)-(\d+)", alias):
         N, K = m.groups()
-        return WRN(int(N), int(K), input_shape=input_shape, n_classes=n_classes)
-
+        return ResNet(input_shape=input_shape,
+                      n_classes=n_classes,
+                      version=f"WRN{N}-{K}")
     elif m := re.match(r"VGG(\d+)", alias):
         (N,) = m.groups()
         return VGG(input_shape=input_shape, n_classes=n_classes, version=int(N))
