@@ -8,6 +8,9 @@ try:
 except ImportError:
     pass
 
+_BATCH_NORM_DECAY = 0.997
+_BATCH_NORM_EPSILON = 1e-5
+
 
 class GemPool(tf.keras.layers.Layer):
     def __init__(self, pool_size=None, initial_value=3.0):
@@ -123,7 +126,8 @@ def VGG(
 
     def bn_relu(x):
         x = tf.keras.layers.BatchNormalization(
-            beta_regularizer=bias_regularizer, gamma_regularizer=bias_regularizer
+            beta_regularizer=bias_regularizer, gamma_regularizer=bias_regularizer,
+            momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON,
         )(x)
         return tf.keras.layers.ReLU()(x)
 
@@ -164,9 +168,10 @@ def ResNet(
     activation="tf.nn.relu",
     final_pooling="avgpool",
     dropout=0,
-    preactivate_blocks=True,
     regularize_bias=True,
-    shortcut_type_A=False,
+    # preactivate_blocks=True,
+    resnet_version=2,
+    shortcut_projection=True,
     head=(("conv", 16, 3, 1),),
     **kwds,
 ):
@@ -189,7 +194,7 @@ def ResNet(
         group_sizes = (9, 9, 9)
     elif version == 110:
         group_sizes = (18, 18, 18)
-    elif 'WRN' in version:
+    elif isinstance(version, str) and 'WRN' in version:
         if '-' in version:
             version = (int(x) for x in version.strip('WRN').strip('-').split('-'))
         elif '_' in version:
@@ -225,7 +230,7 @@ def ResNet(
         )
 
     def shortcut(x, filters, strides):
-        if shortcut_type_A:
+        if not shortcut_projection:
             m_filters = filters - x.shape[-1]
             m_width = x.shape[1] // strides
             m_height = x.shape[2] // strides
@@ -244,17 +249,15 @@ def ResNet(
 
     def bn_activate(x, remove_relu=False):
         x = tf.keras.layers.BatchNormalization(
-            beta_regularizer=bias_regularizer, gamma_regularizer=bias_regularizer
+            beta_regularizer=bias_regularizer, gamma_regularizer=bias_regularizer,
+            momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON,
         )(x)
         return x if remove_relu else activation_func(x)
 
-    def simple_block(flow, filters, strides, preactivate):
+    def simple_block2(flow, filters, strides):
         projection_shortcut = flow.shape[-1] != filters or strides != 1
         flow_shortcut = flow
-
-        if preactivate:
-            flow = bn_activate(flow)
-
+        flow = bn_activate(flow)
         if projection_shortcut:
             flow_shortcut = shortcut(flow, filters, strides)
 
@@ -266,25 +269,31 @@ def ResNet(
         flow = conv(filters, 3, strides=1)(flow)
         return flow + flow_shortcut
 
-    def bootleneck_block(flow, filters, strides, preactivate):
+    def simple_block1(flow, filters, strides):
         projection_shortcut = flow.shape[-1] != filters or strides != 1
         flow_shortcut = flow
 
-        if preactivate:
-            flow = bn_activate(flow)
-
         if projection_shortcut:
             flow_shortcut = shortcut(flow, filters, strides)
+            flow_shortcut = bn_activate(flow_shortcut, remove_relu=True)
 
-        flow = conv(filters // 4, 1)(flow)
-        flow = conv(filters // 4, 3, strides=strides)(bn_activate(flow))
-        flow = conv(filters, 1)(bn_activate(flow))
-        return flow + flow_shortcut
+        flow = conv(filters, 3, strides=strides)(flow)
+        flow = bn_activate(flow)
+
+        if dropout:
+            flow = tf.keras.layers.Dropout(dropout)(flow)
+        flow = conv(filters, 3, strides=1)(flow)
+        flow = bn_activate(flow, remove_relu=True)
+        return activation_func(flow + flow_shortcut)
 
     if bootleneck:
-        block = bootleneck_block
+        raise NotImplementedError
+    elif resnet_version == 2:
+        block = simple_block2
+    elif resnet_version == 1:
+        block = simple_block1
     else:
-        block = simple_block
+        raise NotImplementedError
 
     inputs = tf.keras.Input(input_shape)
     flow = inputs
@@ -301,16 +310,176 @@ def ResNet(
         if name == "relu":
             flow = tf.nn.relu(flow)
 
+    if resnet_version == 2:
+        flow = bn_activate(flow)
+
     # BUILD THE RESIDUAL BLOCKS
     for group_size, width, stride in zip(group_sizes, features, strides):
         for _ in range(group_size):
-            flow = block(flow, width, stride, preactivate=preactivate_blocks)
+            flow = block(flow, width, stride)
             stride = 1  # reset stride for the rest of the group
 
     # BUILDING THE CLASSIFIER
-    flow = bn_activate(flow, remove_relu=True)
-    flow = tf.nn.relu(flow)  # use relu here even if different activation is choosen
-    # this is for consistency in classifier inputs being non-negative
+    if resnet_version == 2:
+        flow = bn_activate(flow, remove_relu=True)
+        flow = tf.nn.relu(flow)
+        # use relu here even if different activation is choosen
+        # this is for consistency in classifier inputs being non-negative
+
+    outputs = classifier(
+        flow,
+        n_classes,
+        regularizer=regularizer,
+        bias_regularizer=bias_regularizer,
+        initializer=initializer,
+        pooling=final_pooling,
+    )
+    model = tf.keras.Model(inputs=inputs, outputs=outputs)
+    return model
+
+
+def ResNetStiff(
+    dataset=None,
+    input_shape=None,
+    n_classes=None,
+    resnet_version=2,
+    l1_reg=0,
+    l2_reg=2e-4,
+    initializer="he_uniform",
+    activation="tf.nn.relu",
+    BLOCKS_IN_GROUP=3,
+    final_pooling="avgpool",
+    dropout=0,
+    regularize_bias=True,
+    shortcut_conv_projection=True,
+):
+    if dataset == 'cifar' or dataset == 'cifar10':
+        input_shape = (32, 32, 3)
+        n_classes = 10
+    elif dataset == 'cifar100':
+        input_shape = (32, 32, 3)
+        n_classes = 100
+    elif dataset == 'mnist':
+        input_shape = (28, 28, 1)
+        n_classes = 10
+    else:
+        assert input_shape is not None
+        assert n_classes is not None
+
+    activation_func = eval(activation)
+    if l2_reg or l1_reg:
+        regularizer = tf.keras.regularizers.l1_l2(l1_reg, l2_reg)
+    else:
+        regularizer = None
+    bias_regularizer = regularizer if regularize_bias else None
+
+    def conv(filters, kernel_size, use_bias=False, **kwds):
+        return tf.keras.layers.Conv2D(
+            filters,
+            kernel_size,
+            padding="same",
+            use_bias=use_bias,
+            kernel_initializer=initializer,
+            kernel_regularizer=regularizer,
+            bias_regularizer=bias_regularizer,
+            **kwds,
+        )
+
+    def shortcut(x, filters, strides):
+        if not shortcut_conv_projection:
+            m_filters = filters - x.shape[-1]
+            m_width = x.shape[1] // strides
+            m_height = x.shape[2] // strides
+            return tf.pad(
+                x[:, :m_width, :m_height], [[0, 0], [0, 0], [0, 0], [m_filters, 0]]
+            )
+        else:
+            return tf.keras.layers.Conv2D(
+                filters,
+                kernel_size=1,
+                use_bias=False,
+                strides=strides,
+                kernel_initializer=initializer,
+                kernel_regularizer=regularizer,
+            )(x)
+
+    def bn_activate(x, remove_relu=False):
+        x = tf.keras.layers.BatchNormalization(
+            beta_regularizer=bias_regularizer, gamma_regularizer=bias_regularizer,
+            momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON,
+        )(x)
+        return x if remove_relu else activation_func(x)
+
+    def simple_block2(flow,
+                      filters,
+                      strides,
+                      activate_shortcut=False):
+        flow_shortcut = flow
+        flow = bn_activate(flow)
+        if activate_shortcut:
+            flow_shortcut = flow
+        if flow.shape[-1] != filters or strides != 1:
+            flow_shortcut = shortcut(flow_shortcut, filters, strides)
+
+        flow = conv(filters, 3, strides=strides)(flow)
+        flow = bn_activate(flow)
+
+        if dropout:
+            flow = tf.keras.layers.Dropout(dropout)(flow)
+        flow = conv(filters, 3, strides=1)(flow)
+        return flow + flow_shortcut
+
+    def simple_block1(flow, filters, strides):
+        flow_shortcut = flow
+        if flow.shape[-1] != filters or strides != 1:
+            flow_shortcut = shortcut(flow, filters, strides)
+            flow_shortcut = bn_activate(flow_shortcut, remove_relu=True)
+
+        flow = conv(filters, 3, strides=strides)(flow)
+        flow = bn_activate(flow)
+
+        if dropout:
+            flow = tf.keras.layers.Dropout(dropout)(flow)
+        flow = conv(filters, 3, strides=1)(flow)
+        flow = bn_activate(flow, remove_relu=True)
+        return activation_func(flow + flow_shortcut)
+
+    inputs = tf.keras.Input(input_shape)
+    flow = inputs
+
+    if resnet_version == 2:
+        flow = conv(16, 3, strides=1, use_bias=False)(flow)
+
+        flow = simple_block2(flow, filters=16, strides=1, activate_shortcut=True)
+        for _ in range(BLOCKS_IN_GROUP - 1):
+            flow = simple_block2(flow, filters=16, strides=1)
+
+        flow = simple_block2(flow, filters=32, strides=2, activate_shortcut=True)
+        for _ in range(BLOCKS_IN_GROUP - 1):
+            flow = simple_block2(flow, filters=32, strides=1)
+
+        flow = simple_block2(flow, filters=64, strides=2, activate_shortcut=True)
+        for _ in range(BLOCKS_IN_GROUP - 1):
+            flow = simple_block2(flow, filters=64, strides=1)
+
+        flow = bn_activate(flow, remove_relu=True)
+        flow = tf.nn.relu(flow)
+
+    elif resnet_version == 1:
+        flow = conv(16, 3, strides=1, use_bias=False)(flow)
+        flow = bn_activate(flow)
+
+        flow = simple_block1(flow, filters=16, strides=1)
+        for _ in range(BLOCKS_IN_GROUP - 1):
+            flow = simple_block1(flow, filters=16, strides=1)
+
+        flow = simple_block1(flow, filters=32, strides=2)
+        for _ in range(BLOCKS_IN_GROUP - 1):
+            flow = simple_block1(flow, filters=32, strides=1)
+
+        flow = simple_block1(flow, filters=64, strides=2)
+        for _ in range(BLOCKS_IN_GROUP - 1):
+            flow = simple_block1(flow, filters=64, strides=1)
 
     outputs = classifier(
         flow,

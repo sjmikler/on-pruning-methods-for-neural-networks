@@ -5,15 +5,17 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.container import ErrorbarContainer
+import yaml
 
 
 class PruningPlotter:
-    def __init__(self, nrows=1, ncols=1, width=9, height=5):
+    def __init__(self, nrows=1, ncols=1, width=9, height=5,
+                 x_data_format=0, y_data_format=0):
         matplotlib.rcParams.update(
             {
-                "font.family": "serif",
-                "font.serif": ["Calibri"],
-                "font.weight": "light",
+                "font.family": "sans-serif",
+                "font.sans-serif": ["Helvetica"],
+                # "font.weight": "light",
                 "axes.labelsize": 16,
                 "font.size": 20,
                 "legend.fontsize": 14,
@@ -34,8 +36,8 @@ class PruningPlotter:
 
         for ax in self.axes.flatten():
             ax.grid(True)
-            ax.all_x = []
-            ax.all_y = []
+            ax.all_x = []  # USED FOR CALCULATING RANGE ON X AXIS
+            ax.all_y = []  # USED FOR CALCULATING RANGE ON Y AXIS
 
             for spine in ax.spines:
                 ax.spines[spine].set_visible(False)
@@ -60,6 +62,19 @@ class PruningPlotter:
         ]
         self.lines = list(plt.Line2D.lineStyles)[:4]
         self.colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+        self.set_data_format(x_data_format, y_data_format)
+
+    def set_data_format(self, x_data_format, y_data_format):
+        # X DATA FORMAT
+        # 0: Compression ratio
+        # 1: Raw sparsity
+        # 2: Density
+        self.x_data_format = x_data_format
+
+        # Y DATA FORMAT
+        # 0: Delta of accuracy: run_accuracy - baseline accuracy
+        # 1: Raw accuracy
+        self.y_data_format = y_data_format
 
     def set_current_axis(self, idx=0):
         self.ax = self.axes[idx]
@@ -76,7 +91,7 @@ class PruningPlotter:
         return style
 
     @staticmethod
-    def get_acc_delta(accuracies, baseline):
+    def get_acc_deltas(accuracies, baseline):
         return [(x / baseline - 1) * 100 for x in accuracies]
 
     @staticmethod
@@ -88,7 +103,7 @@ class PruningPlotter:
         return [format_str.format(x) for x in data]
 
     def add_pruning_results(
-        self, *accuracies, sparsity, label="Unnamed", baseline_accuracy=1.0,
+        self, *accuracies, sparsities, label="Unnamed", baseline_accuracy=1.0,
     ):
         if label in self.label2style:
             style = self.label2style[label]
@@ -96,23 +111,33 @@ class PruningPlotter:
             style = self.get_next_style()
             self.label2style[label] = style
 
-        compression = self.get_compresion_ratios(sparsity)
-        self.ax.all_x.extend(compression)
+        if self.x_data_format == 1:
+            x_data = sparsities
+        elif self.x_data_format == 2:
+            x_data = [1 - sparsity for sparsity in sparsities]
+        elif self.x_data_format == 0:
+            x_data = self.get_compresion_ratios(sparsities)
+        else:
+            raise NotImplementedError
+        self.ax.all_x.extend(x_data)
 
-        for accs in accuracies:
-            accs[:] = self.get_acc_delta(accs, baseline_accuracy)
-            self.ax.all_y.extend(accs)
+        if self.y_data_format == 1:
+            y_data = accuracies
+        elif self.y_data_format == 0:
+            y_data = [self.get_acc_deltas(x, baseline_accuracy) for x in accuracies]
+        else:
+            raise NotImplementedError
+        self.ax.all_y.extend(sum(y_data, []))
 
-        accuracies = np.array(accuracies)
-        acc_median = np.nanmedian(accuracies, 0)
-        acc_topbar = np.nanmax(accuracies, 0) - acc_median
-        acc_botbar = acc_median - np.nanmin(accuracies, 0)
+        acc_median = [np.nanmedian(x) for x in y_data]
+        acc_topbar = [np.nanmax(x) - med for med, x in zip(acc_median, y_data)]
+        acc_botbar = [med - np.nanmin(x) for med, x in zip(acc_median, y_data)]
         self.ax.errorbar(
-            compression,
+            x_data,
             acc_median,
             label=label,
             markersize=10,
-            yerr=(acc_topbar, acc_botbar),
+            yerr=(acc_botbar, acc_topbar),
             capsize=4,
             **style,
         )
@@ -127,7 +152,7 @@ class PruningPlotter:
             ).round(precision)
         elif mode == "linspace":
             self.ax.set_xscale("linear")
-            xticks = np.linspace(xmin, xmax, num=num_ticks,).round(precision)
+            xticks = np.linspace(xmin, xmax, num=num_ticks, ).round(precision)
         else:
             raise NameError(f"Possible modes: logspace, linspace")
 
@@ -150,9 +175,9 @@ class PruningPlotter:
             ).round(precision)
         elif mode == "linspace":
             self.ax.set_yscale("linear")
-            yticks = np.linspace(ymin, ymax, num=num_ticks,).round(precision)
+            yticks = np.linspace(ymin, ymax, num=num_ticks).round(precision)
         else:
-            raise NameError(f"Possible modes: logspace, linspace")
+            raise NameError(f"Possible modes: linspace, logspace")
 
         if precision == 0:
             yticks = yticks.astype(int)
@@ -163,78 +188,77 @@ class PruningPlotter:
         self.ax.set_yticklabels(yticks_l)
         self.ax.set_ylabel(label)
 
-    def update(self, title=""):
+    def prepare(self, title=""):
         self.ax.set_title(title)
         self.ax.minorticks_off()
         self.ax.legend()
+
+    def add_data(self, data):
+        for entry in data:
+            baseline_accuracy = entry.get('baseline_accuracy') or 1.0
+            self.add_pruning_results(
+                *entry['accuracies'],
+                sparsities=entry['sparsities'],
+                label=entry['name'],
+                baseline_accuracy=baseline_accuracy
+            )
 
     def show(self):
         plt.tight_layout()
         self.fig.show()
 
 
-plotter = PruningPlotter()
-for _ in range(4):
-    plotter.add_pruning_results(
-        1 - np.random.rand(6) * 0.05,
-        1 - np.random.rand(6) * 0.05,
-        1 - np.random.rand(6) * 0.05,
-        1 - np.random.rand(6) * 0.05,
-        sparsity=np.random.rand(6),
-        label=f"test{_}",
+def load_axis(plotter, path, axis=0):
+    plotter.set_current_axis(idx=axis)
+    settings, *data = yaml.safe_load_all(open(path, 'r'))
+    plotter.set_data_format(settings['x_data_format'], settings['y_data_format'])
+    plotter.add_data(data)
+    plotter.update_x(
+        mode=settings['x_mode'],
+        precision=settings['x_precision'],
+        fmt=settings['x_fmt'],
+        label=settings['x_label'],
     )
+    plotter.update_y(
+        mode=settings['y_mode'],
+        precision=settings['y_precision'],
+        fmt=settings['y_fmt'],
+        label=settings['y_label'],
+    )
+    plotter.prepare(title=settings['title'])
+    return plotter
+
+
+plotter = PruningPlotter(x_data_format=1, y_data_format=1)
+
+plotter.add_pruning_results(
+    [0.9], [0.97, 0.93, 0.91, 0.90], [0.93, 0.9],
+    sparsities=[0.1, 0.9, 0.98],
+    baseline_accuracy=0.95,
+    label="test1"
+)
+
+plotter.add_pruning_results(
+    [0.92, 0.95], [0.93, 0.9, 0.88], [0.96],
+    sparsities=[0.1, 0.2, 0.995],
+    baseline_accuracy=0.95,
+    label="test2"
+)
 
 plotter.update_x(
-    mode="logspace", precision=2, fmt=r"{}$\times$", label="Compression ratio"
+    mode="logspace", precision=3, fmt=r"{}$\times$", label="Compression ratio"
 )
 plotter.update_y(
-    mode="linspace", num_ticks=20, precision=0, fmt="{}%", label=r"$\Delta$ Accuracy"
+    mode="linspace", num_ticks=20, precision=2, fmt="{}%", label=r"$\Delta$ Accuracy"
 )
-plotter.update("CIFAR-10 ResNet-56 Unstructured (iterative)")
+plotter.prepare("CIFAR-10 ResNet-56 Unstructured (iterative)")
 plotter.show()
-
 
 # %%
 
-import pathlib
-
-plotter = PruningPlotter(ncols=1)
-
-
-def plot_file(plotter, filename):
-    file = pathlib.Path(filename)
-    content = file.read_text()
-
-    for trial in content.split("label"):
-        if not trial:
-            continue
-        trial = trial.strip().split("\n")
-        label = trial[0].strip()
-        numeric = [x.strip() for x in trial[1:]]
-        numeric = [x.split() for x in numeric]
-        numeric = np.array(numeric, float)
-        sparsity = 1 - numeric[:, 0]
-        accs = numeric[:, 1:].T
-        plotter.add_pruning_results(
-            *accs, sparsity=sparsity, label=label, baseline_accuracy=0.9421
-        )
-
-
-plot_file(plotter, "simple_data/WRN52-1 One Shot Pruning")
-
-plotter.update_x(
-    mode="logspace",
-    num_ticks=8,
-    precision=2,
-    fmt=r"{}$\times$",
-    label="Compression ratio",
-)
-plotter.update_y(
-    mode="linspace", num_ticks=20, precision=0, fmt="{}%", label=r"$\Delta$ Accuracy"
-)
-plotter.update(title="WRN52-1 One Shot Pruning")
+plotter = PruningPlotter(nrows=1, ncols=2, height=6, width=15)
+plotter = load_axis(plotter, "data/ResNet20-LR-rewinding-results.yaml", 0)
+plotter = load_axis(plotter, "data/ResNet56-LR-rewinding-results.yaml", 1)
+plt.suptitle('CIFAR10 one-shot pruning')
 plotter.show()
-
-plotter.fig.savefig("filename.pdf", format="pdf")
-
-# %%
+plotter.fig.savefig("Resnet20vsResnet50.pdf")
