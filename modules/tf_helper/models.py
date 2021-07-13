@@ -369,7 +369,8 @@ def ResNetStiff(
         assert n_classes is not None
 
     if alias == 'WRN-16-8':
-        N, K = 16, 8
+        N = 16
+        K = 8
         assert (N - 4) % 6 == 0
         size = int((N - 4) / 6)
         BLOCKS_IN_GROUP = size
@@ -456,9 +457,9 @@ def ResNetStiff(
     inputs = tf.keras.Input(input_shape)
     flow = inputs
 
-    if resnet_version == 2:
-        flow = conv(features[0], 3, strides=1, use_bias=False)(flow)
+    flow = conv(16, 3, strides=1, use_bias=False)(flow)
 
+    if resnet_version == 2:
         flow = simple_block2(flow,
                              filters=features[0],
                              strides=1,
@@ -484,7 +485,6 @@ def ResNetStiff(
         flow = tf.nn.relu(flow)
 
     elif resnet_version == 1:
-        flow = conv(features[0], 3, strides=1, use_bias=False)(flow)
         flow = bn_activate(flow)
 
         flow = simple_block1(flow, filters=features[0], strides=1)
