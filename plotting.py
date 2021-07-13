@@ -13,9 +13,9 @@ class PruningPlotter:
                  x_data_format=0, y_data_format=0):
         matplotlib.rcParams.update(
             {
-                "font.family": "sans-serif",
-                "font.sans-serif": ["Helvetica"],
-                # "font.weight": "light",
+                "font.family": "serif",
+                "font.sans-serif": ["Computer Modern Roman"],
+                "font.weight": "light",
                 "axes.labelsize": 16,
                 "font.size": 20,
                 "legend.fontsize": 14,
@@ -130,8 +130,8 @@ class PruningPlotter:
         self.ax.all_y.extend(sum(y_data, []))
 
         acc_median = [np.nanmedian(x) for x in y_data]
-        acc_topbar = [np.nanmax(x) - med for med, x in zip(acc_median, y_data)]
-        acc_botbar = [med - np.nanmin(x) for med, x in zip(acc_median, y_data)]
+        acc_topbar = [np.percentile(x, 75) - med for med, x in zip(acc_median, y_data)]
+        acc_botbar = [med - np.percentile(x, 25) for med, x in zip(acc_median, y_data)]
         self.ax.errorbar(
             x_data,
             acc_median,
@@ -139,8 +139,28 @@ class PruningPlotter:
             markersize=10,
             yerr=(acc_botbar, acc_topbar),
             capsize=4,
+            linewidth=2,
+            capthick=2,
             **style,
         )
+
+    def add_horizontal_line(self, height):
+        xmin, xmax = min(self.ax.all_x), max(self.ax.all_x)
+        self.ax.plot([xmin, xmax],
+                     [height, height],
+                     color='red',
+                     linewidth=4,
+                     alpha=0.3,
+                     zorder=-1,
+                     linestyle='--')
+        self.ax.plot([xmin, xmax],
+                     [height, height],
+                     color='red',
+                     linewidth=8,
+                     alpha=0.2,
+                     zorder=-2,
+                     linestyle='-')
+        plt.plot()
 
     def update_x(self, num_ticks=4, mode="linspace", fmt="{}", precision=2, label=""):
         xmin, xmax = min(self.ax.all_x), max(self.ax.all_x)
@@ -193,7 +213,7 @@ class PruningPlotter:
         self.ax.minorticks_off()
         self.ax.legend()
 
-    def add_data(self, data):
+    def add_many_results(self, data):
         for entry in data:
             baseline_accuracy = entry.get('baseline_accuracy') or 1.0
             self.add_pruning_results(
@@ -212,22 +232,26 @@ def load_axis(plotter, path, axis=0):
     plotter.set_current_axis(idx=axis)
     settings, *data = yaml.safe_load_all(open(path, 'r'))
     plotter.set_data_format(settings['x_data_format'], settings['y_data_format'])
-    plotter.add_data(data)
+    plotter.add_many_results(data)
     plotter.update_x(
         mode=settings['x_mode'],
         precision=settings['x_precision'],
         fmt=settings['x_fmt'],
         label=settings['x_label'],
+        num_ticks=settings['x_num_ticks'],
     )
     plotter.update_y(
         mode=settings['y_mode'],
         precision=settings['y_precision'],
         fmt=settings['y_fmt'],
         label=settings['y_label'],
+        num_ticks=settings['y_num_ticks'],
     )
     plotter.prepare(title=settings['title'])
     return plotter
 
+
+# %%
 
 plotter = PruningPlotter(x_data_format=1, y_data_format=1)
 
@@ -239,7 +263,7 @@ plotter.add_pruning_results(
 )
 
 plotter.add_pruning_results(
-    [0.92, 0.95], [0.93, 0.9, 0.88], [0.96],
+    [0.92, 0.95], [0.93, 0.93, 0.93, 0.93, 0.93, 0.93, 0.93, 0.88], [0.96],
     sparsities=[0.1, 0.2, 0.995],
     baseline_accuracy=0.95,
     label="test2"
@@ -251,14 +275,26 @@ plotter.update_x(
 plotter.update_y(
     mode="linspace", num_ticks=20, precision=2, fmt="{}%", label=r"$\Delta$ Accuracy"
 )
+plotter.add_horizontal_line(height=0.91)
 plotter.prepare("CIFAR-10 ResNet-56 Unstructured (iterative)")
 plotter.show()
 
 # %%
 
-plotter = PruningPlotter(nrows=1, ncols=2, height=6, width=15)
-plotter = load_axis(plotter, "data/ResNet20-LR-rewinding-results.yaml", 0)
-plotter = load_axis(plotter, "data/ResNet56-LR-rewinding-results.yaml", 1)
-plt.suptitle('CIFAR10 one-shot pruning')
+plotter = PruningPlotter(nrows=1, ncols=2, height=5, width=15)
+plotter = load_axis(plotter, "data/repro_plot_data/ResNet20-cifar10.yaml", 0)
+# plotter.add_horizontal_line(height=0)
+plotter = load_axis(plotter, "data/repro_plot_data/ResNet56-cifar10.yaml", 1)
+# plotter.add_horizontal_line(height=0)
 plotter.show()
 plotter.fig.savefig("Resnet20vsResnet50.pdf")
+
+# %%
+
+plotter = PruningPlotter(nrows=1, ncols=2, height=5, width=15)
+plotter = load_axis(plotter, "data/repro_plot_data/WRN16-8-cifar10-one-shot.yaml", 0)
+# plotter.add_horizontal_line(height=0)
+plotter = load_axis(plotter, "data/repro_plot_data/WRN16-8-cifar10-iterative.yaml", 1)
+# plotter.add_horizontal_line(height=0)
+plotter.show()
+plotter.fig.savefig("WRN-16-8-unstructured-flawed.pdf")

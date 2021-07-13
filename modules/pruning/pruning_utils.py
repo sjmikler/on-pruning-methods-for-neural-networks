@@ -16,62 +16,31 @@ def globally_enable_pruning():
     print("PRUNING IS ENABLED GLOBALLY! LAYERS HAVE BEEN REPLACED...")
 
 
-def structurize_matrix(matrix, n_clusters):
-    shape = matrix.shape
+def structurize_saliences(saliences):
+    return {k: structurize_salience(v) for k, v in saliences.items()}
+
+
+def structurize_salience(saliences):
+    shape = saliences.shape
     if len(shape) == 2:
-        return structurize_dense(matrix, n_clusters)
+        return structurize_salience_dense(saliences)
     elif len(shape) == 4:
-        return structurize_conv(matrix, n_clusters)
+        return structurize_salience_conv(saliences)
     else:
         raise Exception
 
 
-def structurize_dense(matrix, n_clusters):
-    """
-    Finds similar structurized matirx with `n_clusters` unique rows
-    :param matrix: numpy 2-dimensional array
-    :param n_clusters: int, number of clusters to find
-    :return: structured array, the same shape and dtype and matrix
-    """
-    from sklearn.cluster import KMeans
-    kmeans = KMeans(n_clusters)
-
-    clusters = kmeans.fit_predict(matrix)
-    centers = kmeans.cluster_centers_
-
-    new_matrix = np.take(centers, clusters, axis=0)
-    return new_matrix
+def structurize_salience_dense(saliences):
+    means = np.mean(saliences, axis=1, keepdims=True)
+    return np.ones_like(saliences) * means
 
 
-def structurize_conv(matrix, n_clusters):
-    if matrix.shape[2] < n_clusters:
-        return matrix
-
-    matrix = np.moveaxis(matrix, 2, 0)
-    org_shape = matrix.shape
-    matrix = matrix.reshape(matrix.shape[0], -1)
-
-    from sklearn.cluster import KMeans
-    kmeans = KMeans(n_clusters)
-
-    clusters = kmeans.fit_predict(matrix)
-    centers = kmeans.cluster_centers_
-
-    new_matrix = np.take(centers, clusters, axis=0)
-    new_matrix = new_matrix.reshape(org_shape)
-    new_matrix = np.moveaxis(new_matrix, 0, 2)
-    return new_matrix
-
-
-def structurize_anything(structure, saliences):
-    if structure is True:
-        print(f"NEURON-WISE STRUCTURING!")
-        saliences = l1_saliences_over_channel(saliences)
-    elif isinstance(structure, int):
-        print(f"ENFORCING {structure} GROUPS!")
-        saliences = {key: structurize_matrix(value, structure) for key, value in
-                     saliences.items()}
-    return saliences
+def structurize_salience_conv(saliences):
+    shape = saliences.shape
+    saliences = np.reshape(saliences, (shape[0], shape[1], -1))
+    means = np.mean(saliences, axis=(0, 1), keepdims=True)
+    saliences = np.ones_like(saliences) * means
+    return np.reshape(saliences, shape)
 
 
 def snip_saliences(model, loader, batches=1):
@@ -210,26 +179,6 @@ def set_kernel_masks_for_model(model, masks_dict, silent=False):
                               f" (left {layer.left_unpruned})")
 
 
-def l1_saliences_over_channel(saliences):
-    for key, value in saliences.items():
-        org_shape = value.shape
-        if len(org_shape) == 2:
-            value = np.abs(value)
-            value = np.mean(value, 1)
-            value = np.repeat(np.expand_dims(value, 1), org_shape[1], axis=1)
-            saliences[key] = value
-
-        elif len(org_shape) == 4:
-            value = np.abs(value)
-            value = np.mean(value, 3)
-            value = np.repeat(np.expand_dims(value, 3), org_shape[3], axis=3)
-            saliences[key] = value
-
-        else:
-            raise TypeError('Weight matrix should have 2 or 4 dimensions!')
-    return saliences
-
-
 def prune_by_kernel_masks(model, config, silent=False):
     sparsity = config.get('sparsity') or 0.0
     structure = config.get('structure')
@@ -240,25 +189,7 @@ def prune_by_kernel_masks(model, config, silent=False):
             saliences[kernel.name] = layer.kernel_mask.numpy()
     saliences = extract_kernels(saliences)
     if structure:
-        saliences = structurize_anything(structure, saliences)
-    masks = saliences2masks(saliences, percentage=sparsity)
-    set_kernel_masks_for_model(model, masks, silent)
-    return model
-
-
-def prune_GraSP(model, dataset, config, silent=False):
-    """Hessian related pruning."""
-
-    raise NotImplementedError("Check if the implementation is correct!")
-
-    sparsity = config.get('sparsity') or 0.0
-    batches = config.get('batches') or 1
-    structure = config.get('structure')
-
-    saliences = grasp_saliences(model, dataset, batches=batches)
-    saliences = extract_kernels(saliences)
-    if structure:
-        saliences = structurize_anything(structure, saliences)
+        saliences = structurize_saliences(saliences)
     masks = saliences2masks(saliences, percentage=sparsity)
     set_kernel_masks_for_model(model, masks, silent)
     return model
@@ -274,7 +205,7 @@ def prune_SNIP(model, dataset, config, silent=False):
     saliences = snip_saliences(model, dataset, batches=batches)
     saliences = extract_kernels(saliences)
     if structure:
-        saliences = structurize_anything(structure, saliences)
+        saliences = structurize_saliences(saliences)
     masks = saliences2masks(saliences, percentage=sparsity)
     set_kernel_masks_for_model(model, masks, silent)
     return model
@@ -289,7 +220,7 @@ def prune_pseudo_SNIP(model, dataset, config, silent=False):
     saliences = psuedo_snip_saliences(model)
     saliences = extract_kernels(saliences)
     if structure:
-        saliences = structurize_anything(structure, saliences)
+        saliences = structurize_saliences(saliences)
     masks = saliences2masks(saliences, percentage=sparsity)
     set_kernel_masks_for_model(model, masks, silent)
     return model
@@ -303,7 +234,7 @@ def prune_random(model, config, silent=False):
     saliences = {w.name: np.random.rand(*w.shape) for w in model.trainable_weights}
     saliences = extract_kernels(saliences)
     if structure:
-        saliences = structurize_anything(structure, saliences)
+        saliences = structurize_saliences(saliences)
     masks = saliences2masks(saliences, percentage=sparsity)
     set_kernel_masks_for_model(model, masks, silent)
     return model
@@ -317,7 +248,7 @@ def prune_l1(model, config, silent=False):
     saliences = {w.name: np.abs(w.numpy()) for w in model.trainable_weights}
     saliences = extract_kernels(saliences)
     if structure:
-        saliences = structurize_anything(structure, saliences)
+        saliences = structurize_saliences(saliences)
     masks = saliences2masks(saliences, percentage=sparsity)
     set_kernel_masks_for_model(model, masks, silent)
     return model
@@ -432,17 +363,9 @@ def set_pruning_masks(model, pruning_method, pruning_config, dataset):
             model = prune_SNIP(model=model,
                                config=pruning_config,
                                dataset=dataset['train'])
-    elif contains_any(pruning_method.lower(), 'grasp'):
-        print('GRASP PRUNING')
-        model = prune_GraSP(model=model,
-                            config=pruning_config,
-                            dataset=dataset['train'])
     elif contains_any(pruning_method.lower(), 'l1', 'magnitude'):
         print('WEIGHT MAGNITUDE PRUNING')
         model = prune_l1(model=model, config=pruning_config)
-    elif contains_any(pruning_method.lower(), 'imp_complete'):
-        print('IMP COMPLETE PRUNING')
-        model = prune_IMP_complete(model=model, config=pruning_config)
     elif contains_any(pruning_method.lower(), 'kernel mask'):
         print("PRUNING BY KERNEL MASK VALUES")
         model = prune_by_kernel_masks(model=model, config=pruning_config)
