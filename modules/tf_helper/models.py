@@ -340,9 +340,11 @@ def ResNet(
 
 def ResNetStiff(
     dataset=None,
+    alias=None,
     input_shape=None,
     n_classes=None,
     resnet_version=2,
+    features=(16, 32, 64),
     l1_reg=0,
     l2_reg=2e-4,
     initializer="he_uniform",
@@ -365,6 +367,13 @@ def ResNetStiff(
     else:
         assert input_shape is not None
         assert n_classes is not None
+
+    if alias == 'WRN-16-8':
+        N, K = 16, 8
+        assert (N - 4) % 6 == 0
+        size = int((N - 4) / 6)
+        BLOCKS_IN_GROUP = size
+        features = (16 * K, 32 * K, 64 * K),
 
     activation_func = eval(activation)
     if l2_reg or l1_reg:
@@ -448,38 +457,47 @@ def ResNetStiff(
     flow = inputs
 
     if resnet_version == 2:
-        flow = conv(16, 3, strides=1, use_bias=False)(flow)
+        flow = conv(features[0], 3, strides=1, use_bias=False)(flow)
 
-        flow = simple_block2(flow, filters=16, strides=1, activate_shortcut=True)
+        flow = simple_block2(flow,
+                             filters=features[0],
+                             strides=1,
+                             activate_shortcut=True)
         for _ in range(BLOCKS_IN_GROUP - 1):
-            flow = simple_block2(flow, filters=16, strides=1)
+            flow = simple_block2(flow, filters=features[0], strides=1)
 
-        flow = simple_block2(flow, filters=32, strides=2, activate_shortcut=True)
+        flow = simple_block2(flow,
+                             filters=features[1],
+                             strides=2,
+                             activate_shortcut=True)
         for _ in range(BLOCKS_IN_GROUP - 1):
-            flow = simple_block2(flow, filters=32, strides=1)
+            flow = simple_block2(flow, filters=features[1], strides=1)
 
-        flow = simple_block2(flow, filters=64, strides=2, activate_shortcut=True)
+        flow = simple_block2(flow,
+                             filters=features[2],
+                             strides=2,
+                             activate_shortcut=True)
         for _ in range(BLOCKS_IN_GROUP - 1):
-            flow = simple_block2(flow, filters=64, strides=1)
+            flow = simple_block2(flow, filters=features[2], strides=1)
 
         flow = bn_activate(flow, remove_relu=True)
         flow = tf.nn.relu(flow)
 
     elif resnet_version == 1:
-        flow = conv(16, 3, strides=1, use_bias=False)(flow)
+        flow = conv(features[0], 3, strides=1, use_bias=False)(flow)
         flow = bn_activate(flow)
 
-        flow = simple_block1(flow, filters=16, strides=1)
+        flow = simple_block1(flow, filters=features[0], strides=1)
         for _ in range(BLOCKS_IN_GROUP - 1):
-            flow = simple_block1(flow, filters=16, strides=1)
+            flow = simple_block1(flow, filters=features[0], strides=1)
 
-        flow = simple_block1(flow, filters=32, strides=2)
+        flow = simple_block1(flow, filters=features[1], strides=2)
         for _ in range(BLOCKS_IN_GROUP - 1):
-            flow = simple_block1(flow, filters=32, strides=1)
+            flow = simple_block1(flow, filters=features[1], strides=1)
 
-        flow = simple_block1(flow, filters=64, strides=2)
+        flow = simple_block1(flow, filters=features[2], strides=2)
         for _ in range(BLOCKS_IN_GROUP - 1):
-            flow = simple_block1(flow, filters=64, strides=1)
+            flow = simple_block1(flow, filters=features[2], strides=1)
 
     outputs = classifier(
         flow,
