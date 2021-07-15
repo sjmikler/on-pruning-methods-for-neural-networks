@@ -350,6 +350,8 @@ def ResNetStiff(
     initializer="he_uniform",
     activation="tf.nn.relu",
     BLOCKS_IN_GROUP=3,
+    BATCH_NORM_DECAY=0.997,  # 0.9
+    BATCH_NORM_EPSILON=1e-5,  # 1e-3
     final_pooling="avgpool",
     dropout=0,
     regularize_bias=True,
@@ -416,7 +418,7 @@ def ResNetStiff(
     def bn_activate(x, remove_relu=False):
         x = tf.keras.layers.BatchNormalization(
             beta_regularizer=bias_regularizer, gamma_regularizer=bias_regularizer,
-            momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON,
+            momentum=BATCH_NORM_DECAY, epsilon=BATCH_NORM_EPSILON,
         )(x)
         return x if remove_relu else activation_func(x)
 

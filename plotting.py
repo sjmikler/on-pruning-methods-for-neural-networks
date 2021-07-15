@@ -208,10 +208,14 @@ class PruningPlotter:
         self.ax.set_yticklabels(yticks_l)
         self.ax.set_ylabel(label)
 
-    def prepare(self, title=""):
+    def prepare(self, title="", legend=True):
         self.ax.set_title(title)
         self.ax.minorticks_off()
-        self.ax.legend()
+        if legend:
+            self.ax.legend()
+        plt.tight_layout()
+
+    plt.margins(x=0, y=1)
 
     def add_many_results(self, data):
         for entry in data:
@@ -224,7 +228,6 @@ class PruningPlotter:
             )
 
     def show(self):
-        plt.tight_layout()
         self.fig.show()
 
 
@@ -247,7 +250,7 @@ def load_axis(plotter, path, axis=0):
         label=settings['y_label'],
         num_ticks=settings['y_num_ticks'],
     )
-    plotter.prepare(title=settings['title'])
+    plotter.prepare(title=settings['title'], legend=settings.get('legend'))
     return plotter
 
 
@@ -277,6 +280,7 @@ plotter.update_y(
 )
 plotter.add_horizontal_line(height=0.91)
 plotter.prepare("CIFAR-10 ResNet-56 Unstructured (iterative)")
+plotter.fig.legend()
 plotter.show()
 
 # %%
@@ -286,8 +290,16 @@ plotter = load_axis(plotter, "data/repro_plot_data/ResNet20-cifar10.yaml", 0)
 # plotter.add_horizontal_line(height=0)
 plotter = load_axis(plotter, "data/repro_plot_data/ResNet56-cifar10.yaml", 1)
 # plotter.add_horizontal_line(height=0)
+
+handles, labels = plotter.ax.get_legend_handles_labels()
+plotter.fig.legend(handles,
+                   labels,
+                   loc='lower center',
+                   ncol=3,
+                   bbox_to_anchor=(0.5, -0.01))
+plotter.fig.subplots_adjust(bottom=0.23)
 plotter.show()
-plotter.fig.savefig("Resnet20vsResnet50.pdf")
+plotter.fig.savefig("data/repro_plot_data/plots/C10-resnets-work.pdf")
 
 # %%
 
@@ -296,5 +308,51 @@ plotter = load_axis(plotter, "data/repro_plot_data/WRN16-8-cifar10-one-shot.yaml
 # plotter.add_horizontal_line(height=0)
 plotter = load_axis(plotter, "data/repro_plot_data/WRN16-8-cifar10-iterative.yaml", 1)
 # plotter.add_horizontal_line(height=0)
+
+handles, labels = plotter.ax.get_legend_handles_labels()
+plotter.fig.legend(handles,
+                   labels,
+                   loc='lower center',
+                   ncol=3,
+                   bbox_to_anchor=(0.5, -0.01))
+plotter.fig.subplots_adjust(bottom=0.23)
 plotter.show()
-plotter.fig.savefig("WRN-16-8-unstructured-flawed.pdf")
+plotter.fig.savefig("data/repro_plot_data/plots/WRN-16-8-LR-rewinding-is-flawed.pdf")
+
+# %%
+
+plotter = PruningPlotter(nrows=1, ncols=2, height=5, width=15)
+plotter = load_axis(plotter, "data/repro_plot_data/ResNet20-cifar10-structured.yaml", 1)
+# plotter.add_horizontal_line(height=0)
+# plotter.show()
+# plotter.fig.savefig("data/repro_plot_data/plots/C10-structured-resnet20-works.pdf")
+
+# plotter = PruningPlotter(nrows=1, ncols=1, height=5, width=8)
+plotter = load_axis(plotter, "data/repro_plot_data/ResNet20-cifar10-iterative.yaml", 0)
+# plotter.add_horizontal_line(height=0)
+handles, labels = plotter.ax.get_legend_handles_labels()
+plotter.fig.legend(handles,
+                   labels,
+                   loc='lower center',
+                   ncol=3,
+                   bbox_to_anchor=(0.5, -0.01))
+plotter.fig.subplots_adjust(bottom=0.23)
+plotter.show()
+plotter.fig.savefig("data/repro_plot_data/plots/C10-resnet20-iterative-struct-works.pdf")
+
+# %%
+
+plotter = PruningPlotter(nrows=1, ncols=1, height=5, width=8)
+plotter = load_axis(plotter, "data/repro_plot_data/ResNet56-cifar100.yaml", 0)
+# plotter.add_horizontal_line(height=0)
+handles, labels = plotter.ax.get_legend_handles_labels()
+plotter.fig.legend(handles,
+                   labels,
+                   loc='lower center',
+                   ncol=3,
+                   bbox_to_anchor=(0.5, -0.01))
+plotter.fig.subplots_adjust(bottom=0.23)
+plotter.show()
+plotter.fig.savefig("data/repro_plot_data/plots/C100-resnet56-works.pdf")
+
+# %%
