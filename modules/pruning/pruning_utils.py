@@ -35,10 +35,18 @@ def structurize_salience_dense(saliences):
     return np.ones_like(saliences) * means
 
 
+# def structurize_salience_conv(saliences):
+#     shape = saliences.shape
+#     saliences = np.reshape(saliences, (shape[0], shape[1], -1))
+#     means = np.mean(saliences, axis=(0, 1), keepdims=True)
+#     saliences = np.ones_like(saliences) * means
+#     return np.reshape(saliences, shape)
+
+
 def structurize_salience_conv(saliences):
     shape = saliences.shape
-    saliences = np.reshape(saliences, (shape[0], shape[1], -1))
-    means = np.mean(saliences, axis=(0, 1), keepdims=True)
+    saliences = np.reshape(saliences, (-1, shape[-1]))
+    means = np.mean(saliences, axis=0, keepdims=True)
     saliences = np.ones_like(saliences) * means
     return np.reshape(saliences, shape)
 

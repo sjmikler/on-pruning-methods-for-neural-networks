@@ -130,8 +130,8 @@ class PruningPlotter:
         self.ax.all_y.extend(sum(y_data, []))
 
         acc_median = [np.nanmedian(x) for x in y_data]
-        acc_topbar = [np.percentile(x, 75) - med for med, x in zip(acc_median, y_data)]
-        acc_botbar = [med - np.percentile(x, 25) for med, x in zip(acc_median, y_data)]
+        acc_topbar = [np.percentile(x, 90) - med for med, x in zip(acc_median, y_data)]
+        acc_botbar = [med - np.percentile(x, 10) for med, x in zip(acc_median, y_data)]
         self.ax.errorbar(
             x_data,
             acc_median,
@@ -288,7 +288,7 @@ plotter.show()
 plotter = PruningPlotter(nrows=1, ncols=2, height=5, width=15)
 plotter = load_axis(plotter, "data/repro_plot_data/ResNet20-cifar10.yaml", 0)
 # plotter.add_horizontal_line(height=0)
-plotter = load_axis(plotter, "data/repro_plot_data/ResNet56-cifar10.yaml", 1)
+plotter = load_axis(plotter, "data/repro_plot_data/ResNet20-cifar10-iterative.yaml", 1)
 # plotter.add_horizontal_line(height=0)
 
 handles, labels = plotter.ax.get_legend_handles_labels()
@@ -299,7 +299,23 @@ plotter.fig.legend(handles,
                    bbox_to_anchor=(0.5, -0.01))
 plotter.fig.subplots_adjust(bottom=0.23)
 plotter.show()
-plotter.fig.savefig("data/repro_plot_data/plots/C10-resnets-work.pdf")
+plotter.fig.savefig("data/repro_plot_data/plots/Resnet20-1s-iterative.pdf")
+
+# %%
+
+plotter = PruningPlotter(nrows=1, ncols=2, height=5, width=15)
+plotter = load_axis(plotter, "data/repro_plot_data/ResNet56-cifar10.yaml", 0)
+plotter = load_axis(plotter, "data/repro_plot_data/ResNet56-cifar10-iterative.yaml", 1)
+
+handles, labels = plotter.ax.get_legend_handles_labels()
+plotter.fig.legend(handles,
+                   labels,
+                   loc='lower center',
+                   ncol=3,
+                   bbox_to_anchor=(0.5, -0.01))
+plotter.fig.subplots_adjust(bottom=0.23)
+plotter.show()
+plotter.fig.savefig("data/repro_plot_data/plots/Resnet56-1s-iterative.pdf")
 
 # %%
 
@@ -321,15 +337,11 @@ plotter.fig.savefig("data/repro_plot_data/plots/WRN-16-8-LR-rewinding-is-flawed.
 
 # %%
 
-plotter = PruningPlotter(nrows=1, ncols=2, height=5, width=15)
-plotter = load_axis(plotter, "data/repro_plot_data/ResNet20-cifar10-structured.yaml", 1)
+plotter = PruningPlotter(nrows=1, ncols=1, height=5, width=8)
+plotter = load_axis(plotter,
+                    "data/repro_plot_data/WRN16-8-cifar10-iterative-steps.yaml", 0)
 # plotter.add_horizontal_line(height=0)
-# plotter.show()
-# plotter.fig.savefig("data/repro_plot_data/plots/C10-structured-resnet20-works.pdf")
 
-# plotter = PruningPlotter(nrows=1, ncols=1, height=5, width=8)
-plotter = load_axis(plotter, "data/repro_plot_data/ResNet20-cifar10-iterative.yaml", 0)
-# plotter.add_horizontal_line(height=0)
 handles, labels = plotter.ax.get_legend_handles_labels()
 plotter.fig.legend(handles,
                    labels,
@@ -338,7 +350,22 @@ plotter.fig.legend(handles,
                    bbox_to_anchor=(0.5, -0.01))
 plotter.fig.subplots_adjust(bottom=0.23)
 plotter.show()
-plotter.fig.savefig("data/repro_plot_data/plots/C10-resnet20-iterative-struct-works.pdf")
+plotter.fig.savefig("data/repro_plot_data/plots/WRN-16-8-LR-rew-compare2v3.pdf")
+
+# %%
+
+plotter = PruningPlotter(nrows=1, ncols=1, height=5, width=8)
+plotter = load_axis(plotter, "data/repro_plot_data/ResNet20-cifar10-structured.yaml", 0)
+
+handles, labels = plotter.ax.get_legend_handles_labels()
+plotter.fig.legend(handles,
+                   labels,
+                   loc='lower center',
+                   ncol=3,
+                   bbox_to_anchor=(0.5, -0.01))
+plotter.fig.subplots_adjust(bottom=0.23)
+plotter.show()
+plotter.fig.savefig("data/repro_plot_data/plots/Resnet20-structured.pdf")
 
 # %%
 
@@ -353,6 +380,6 @@ plotter.fig.legend(handles,
                    bbox_to_anchor=(0.5, -0.01))
 plotter.fig.subplots_adjust(bottom=0.23)
 plotter.show()
-plotter.fig.savefig("data/repro_plot_data/plots/C100-resnet56-works.pdf")
+plotter.fig.savefig("data/repro_plot_data/plots/Resnet56-C100.pdf")
 
 # %%
