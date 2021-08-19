@@ -58,9 +58,11 @@ class PiecewisePruningCallback(tf.keras.callbacks.Callback):
             boundaries, values
         )
         self.value = values[0]
+        self.step = 0
 
     def on_train_batch_begin(self, batch, logs=None):
-        density = self.schedule(batch)
+        self.step += 1
+        density = self.schedule(self.step)
         if density != self.value:
             self.value = density
             model = pruning_utils.prune_l1(model=self.model,
