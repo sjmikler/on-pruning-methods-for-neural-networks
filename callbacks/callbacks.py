@@ -48,3 +48,22 @@ class PolynomialPruningCallback(tf.keras.callbacks.Callback):
                                            config={"sparsity": 1 - density},
                                            silent=silent)
             pruning_utils.apply_pruning_for_model(model)
+
+
+class PiecewisePruningCallback(tf.keras.callbacks.Callback):
+    def __init__(self, boundaries, values):
+        super().__init__()
+        assert len(boundaries) + 1 == len(values)
+        self.schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
+            boundaries, values
+        )
+        self.value = values[0]
+
+    def on_train_batch_begin(self, batch, logs=None):
+        density = self.schedule(batch)
+        if density != self.value:
+            self.value = density
+            model = pruning_utils.prune_l1(model=self.model,
+                                           config={"sparsity": 1 - density},
+                                           silent=False)
+            pruning_utils.apply_pruning_for_model(model)
