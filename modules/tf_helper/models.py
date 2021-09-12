@@ -8,9 +8,6 @@ try:
 except ImportError:
     pass
 
-_BATCH_NORM_DECAY = 0.997
-_BATCH_NORM_EPSILON = 1e-5
-
 
 class GemPool(tf.keras.layers.Layer):
     def __init__(self, pool_size=None, initial_value=3.0):
@@ -127,7 +124,7 @@ def VGG(
     def bn_relu(x):
         x = tf.keras.layers.BatchNormalization(
             beta_regularizer=bias_regularizer, gamma_regularizer=bias_regularizer,
-            momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON,
+            # momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON,
         )(x)
         return tf.keras.layers.ReLU()(x)
 
@@ -169,7 +166,6 @@ def ResNet(
     final_pooling="avgpool",
     dropout=0,
     regularize_bias=True,
-    # preactivate_blocks=True,
     resnet_version=2,
     shortcut_projection=True,
     head=(("conv", 16, 3, 1),),
@@ -250,7 +246,7 @@ def ResNet(
     def bn_activate(x, remove_relu=False):
         x = tf.keras.layers.BatchNormalization(
             beta_regularizer=bias_regularizer, gamma_regularizer=bias_regularizer,
-            momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON,
+            # momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON,
         )(x)
         return x if remove_relu else activation_func(x)
 
@@ -350,8 +346,8 @@ def ResNetStiff(
     initializer="he_uniform",
     activation="tf.nn.relu",
     BLOCKS_IN_GROUP=3,
-    BATCH_NORM_DECAY=0.997,  # 0.9
-    BATCH_NORM_EPSILON=1e-5,  # 1e-3
+    BATCH_NORM_DECAY=0.99,  # tensorflow defaults
+    BATCH_NORM_EPSILON=1e-3,
     final_pooling="avgpool",
     dropout=0,
     regularize_bias=True,

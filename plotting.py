@@ -1,8 +1,10 @@
 import math
 from collections import Iterable
+import os.path
 
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.ticker
 import numpy as np
 from matplotlib.container import ErrorbarContainer
 import yaml
@@ -103,7 +105,12 @@ class PruningPlotter:
         return [format_str.format(x) for x in data]
 
     def add_pruning_results(
-        self, *accuracies, sparsities, label="Unnamed", baseline_accuracy=1.0,
+        self,
+        *accuracies,
+        sparsities,
+        label="Unnamed",
+        baseline_accuracy=1.0,
+        error_percentile=90,
     ):
         if label in self.label2style:
             style = self.label2style[label]
@@ -130,14 +137,17 @@ class PruningPlotter:
         self.ax.all_y.extend(sum(y_data, []))
 
         acc_median = [np.nanmedian(x) for x in y_data]
-        acc_topbar = [np.percentile(x, 90) - med for med, x in zip(acc_median, y_data)]
-        acc_botbar = [med - np.percentile(x, 10) for med, x in zip(acc_median, y_data)]
+        acc_topbar = [np.percentile(x, error_percentile) - med
+                      for med, x in zip(acc_median, y_data)]
+        acc_botbar = [med - np.percentile(x, 100 - error_percentile)
+                      for med, x in zip(acc_median, y_data)]
+        yerr = (acc_botbar, acc_topbar) if acc_topbar != acc_botbar else None
         self.ax.errorbar(
             x_data,
             acc_median,
+            yerr=yerr,
             label=label,
             markersize=10,
-            yerr=(acc_botbar, acc_topbar),
             capsize=4,
             linewidth=2,
             capthick=2,
@@ -215,171 +225,82 @@ class PruningPlotter:
             self.ax.legend()
         plt.tight_layout()
 
-    plt.margins(x=0, y=1)
-
-    def add_many_results(self, data):
-        for entry in data:
-            baseline_accuracy = entry.get('baseline_accuracy') or 1.0
-            self.add_pruning_results(
-                *entry['accuracies'],
-                sparsities=entry['sparsities'],
-                label=entry['name'],
-                baseline_accuracy=baseline_accuracy
-            )
-
     def show(self):
         self.fig.show()
 
 
-def load_axis(plotter, path, axis=0):
+def find_entry(name, source):
+    for entry in yaml.safe_load_all(open(source, 'r')):
+        if entry is None:
+            continue
+
+        if entry['name'] == name:
+            break
+    else:
+        raise UserWarning(f"Missing name {name} in {source}!")
+    return entry
+
+
+def load_axis_from_recipe(plotter: PruningPlotter, path, axis=0):
     plotter.set_current_axis(idx=axis)
     settings, *data = yaml.safe_load_all(open(path, 'r'))
-    plotter.set_data_format(settings['x_data_format'], settings['y_data_format'])
-    plotter.add_many_results(data)
-    plotter.update_x(
-        mode=settings['x_mode'],
-        precision=settings['x_precision'],
-        fmt=settings['x_fmt'],
-        label=settings['x_label'],
-        num_ticks=settings['x_num_ticks'],
-    )
-    plotter.update_y(
-        mode=settings['y_mode'],
-        precision=settings['y_precision'],
-        fmt=settings['y_fmt'],
-        label=settings['y_label'],
-        num_ticks=settings['y_num_ticks'],
-    )
+    plotter.set_data_format(settings['x_axis'].pop('data_format'),
+                            settings['y_axis'].pop('data_format'))
+
+    for new_trace in data:
+        trace = settings.copy()
+        trace.update(new_trace)
+        source = trace['source']
+
+        optional_params = {
+            key: value for key, value in trace.items()
+            if key in (
+                'baseline_accuracy',
+                'error_percentile',
+            )
+        }
+
+        entry = find_entry(trace['name'], source)
+        sparsities, accuracies = zip(*entry['pruning_accuracies'].items())
+        plotter.add_pruning_results(
+            *accuracies,
+            sparsities=sparsities,
+            label=trace['label'],
+            **optional_params,
+        )
+
+    plotter.update_x(**settings['x_axis'])
+    plotter.update_y(**settings['y_axis'])
+
     plotter.prepare(title=settings['title'], legend=settings.get('legend'))
     return plotter
 
 
-# %%
+def compose_plots(
+    *names,
+    nrows=1,
+    ncols=None,
+    height=None,
+    width=None,
+    path=""
+):
+    if ncols is None:
+        ncols = len(names)
+    if height is None:
+        height = 5 * nrows
+    if width is None:
+        width = 8 * ncols
+    plotter = PruningPlotter(nrows=nrows, ncols=ncols, height=height, width=width)
 
-plotter = PruningPlotter(x_data_format=1, y_data_format=1)
+    for idx, name in enumerate(names):
+        plotter = load_axis_from_recipe(plotter, os.path.join(path, name), idx)
 
-plotter.add_pruning_results(
-    [0.9], [0.97, 0.93, 0.91, 0.90], [0.93, 0.9],
-    sparsities=[0.1, 0.9, 0.98],
-    baseline_accuracy=0.95,
-    label="test1"
-)
-
-plotter.add_pruning_results(
-    [0.92, 0.95], [0.93, 0.93, 0.93, 0.93, 0.93, 0.93, 0.93, 0.88], [0.96],
-    sparsities=[0.1, 0.2, 0.995],
-    baseline_accuracy=0.95,
-    label="test2"
-)
-
-plotter.update_x(
-    mode="logspace", precision=3, fmt=r"{}$\times$", label="Compression ratio"
-)
-plotter.update_y(
-    mode="linspace", num_ticks=20, precision=2, fmt="{}%", label=r"$\Delta$ Accuracy"
-)
-plotter.add_horizontal_line(height=0.91)
-plotter.prepare("CIFAR-10 ResNet-56 Unstructured (iterative)")
-plotter.fig.legend()
-plotter.show()
-
-# %%
-
-plotter = PruningPlotter(nrows=1, ncols=2, height=5, width=15)
-plotter = load_axis(plotter, "data/repro_plot_data/ResNet20-cifar10.yaml", 0)
-# plotter.add_horizontal_line(height=0)
-plotter = load_axis(plotter, "data/repro_plot_data/ResNet20-cifar10-iterative.yaml", 1)
-# plotter.add_horizontal_line(height=0)
-
-handles, labels = plotter.ax.get_legend_handles_labels()
-plotter.fig.legend(handles,
-                   labels,
-                   loc='lower center',
-                   ncol=3,
-                   bbox_to_anchor=(0.5, -0.01))
-plotter.fig.subplots_adjust(bottom=0.23)
-plotter.show()
-plotter.fig.savefig("data/repro_plot_data/plots/Resnet20-1s-iterative.pdf")
-
-# %%
-
-plotter = PruningPlotter(nrows=1, ncols=2, height=5, width=15)
-plotter = load_axis(plotter, "data/repro_plot_data/ResNet56-cifar10.yaml", 0)
-plotter = load_axis(plotter, "data/repro_plot_data/ResNet56-cifar10-iterative.yaml", 1)
-
-handles, labels = plotter.ax.get_legend_handles_labels()
-plotter.fig.legend(handles,
-                   labels,
-                   loc='lower center',
-                   ncol=3,
-                   bbox_to_anchor=(0.5, -0.01))
-plotter.fig.subplots_adjust(bottom=0.23)
-plotter.show()
-plotter.fig.savefig("data/repro_plot_data/plots/Resnet56-1s-iterative.pdf")
-
-# %%
-
-plotter = PruningPlotter(nrows=1, ncols=2, height=5, width=15)
-plotter = load_axis(plotter, "data/repro_plot_data/WRN16-8-cifar10-one-shot.yaml", 0)
-# plotter.add_horizontal_line(height=0)
-plotter = load_axis(plotter, "data/repro_plot_data/WRN16-8-cifar10-iterative.yaml", 1)
-# plotter.add_horizontal_line(height=0)
-
-handles, labels = plotter.ax.get_legend_handles_labels()
-plotter.fig.legend(handles,
-                   labels,
-                   loc='lower center',
-                   ncol=3,
-                   bbox_to_anchor=(0.5, -0.01))
-plotter.fig.subplots_adjust(bottom=0.23)
-plotter.show()
-plotter.fig.savefig("data/repro_plot_data/plots/WRN-16-8-LR-rewinding-is-flawed.pdf")
-
-# %%
-
-plotter = PruningPlotter(nrows=1, ncols=1, height=5, width=8)
-plotter = load_axis(plotter,
-                    "data/repro_plot_data/WRN16-8-cifar10-iterative-steps.yaml", 0)
-# plotter.add_horizontal_line(height=0)
-
-handles, labels = plotter.ax.get_legend_handles_labels()
-plotter.fig.legend(handles,
-                   labels,
-                   loc='lower center',
-                   ncol=3,
-                   bbox_to_anchor=(0.5, -0.01))
-plotter.fig.subplots_adjust(bottom=0.23)
-plotter.show()
-plotter.fig.savefig("data/repro_plot_data/plots/WRN-16-8-LR-rew-compare2v3.pdf")
-
-# %%
-
-plotter = PruningPlotter(nrows=1, ncols=1, height=5, width=8)
-plotter = load_axis(plotter, "data/repro_plot_data/ResNet20-cifar10-structured.yaml", 0)
-
-handles, labels = plotter.ax.get_legend_handles_labels()
-plotter.fig.legend(handles,
-                   labels,
-                   loc='lower center',
-                   ncol=3,
-                   bbox_to_anchor=(0.5, -0.01))
-plotter.fig.subplots_adjust(bottom=0.23)
-plotter.show()
-plotter.fig.savefig("data/repro_plot_data/plots/Resnet20-structured.pdf")
-
-# %%
-
-plotter = PruningPlotter(nrows=1, ncols=1, height=5, width=8)
-plotter = load_axis(plotter, "data/repro_plot_data/ResNet56-cifar100.yaml", 0)
-# plotter.add_horizontal_line(height=0)
-handles, labels = plotter.ax.get_legend_handles_labels()
-plotter.fig.legend(handles,
-                   labels,
-                   loc='lower center',
-                   ncol=3,
-                   bbox_to_anchor=(0.5, -0.01))
-plotter.fig.subplots_adjust(bottom=0.23)
-plotter.show()
-plotter.fig.savefig("data/repro_plot_data/plots/Resnet56-C100.pdf")
-
-# %%
+    handles, labels = plotter.ax.get_legend_handles_labels()
+    plotter.fig.legend(handles,
+                       labels,
+                       loc='lower center',
+                       ncol=5,
+                       bbox_to_anchor=(0.5, -0.01))
+    plotter.fig.subplots_adjust(bottom=0.23)
+    plotter.show()
+    return plotter.fig
