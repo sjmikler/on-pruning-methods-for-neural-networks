@@ -1,3 +1,13 @@
+### Quick Start
+
+```
+python run.py --exp experiment-resnet.yaml
+python run.py --exp experiment-vgg.yaml
+python run.py --exp experiment-wrn.yaml
+```
+
+---
+
 Experiments running orchestra that manages definitions and results of experiments.
 
 ```

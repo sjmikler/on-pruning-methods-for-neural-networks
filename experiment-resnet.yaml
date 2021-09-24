@@ -1,0 +1,224 @@
+Global:
+    repeat: 1
+    queue: null
+    slack: false
+    slack_config:
+        token: TOKEN
+        say: f"{exp.RND_IDX} - {exp.Name:>40} - {exp.ACC if 'ACC' in exp else '??':<20}"
+        channel_final: cool-runner
+        channel_short: cool-runner-short
+
+# DEFAULT CONFIG
+Name: null
+Repeat: 1
+Run: solve modules.pruning.main
+YamlLog: parse f"{_dir}/{Name}/id{RND_IDX}/rep{REP}.yaml"
+
+precision: 32
+custom_training: False
+_dir: data/temp/2021.09.20
+tensorboard_log: parse f"{_dir}/{Name}/id{RND_IDX}/rep{REP}"
+
+epochs: 36
+steps_per_epoch: 2000
+initial_epoch: 0
+
+_save_epochs: []
+_save_dir: parse f"{_dir}/{Name}/id{RND_IDX}/rep{REP}"
+save_model: "parse {ep: f'{_save_dir}/ep{ep}.h5'  for ep in _save_epochs}"
+save_optim: "parse {ep: f'{_save_dir}/ep{ep}.pkl' for ep in _save_epochs}"
+
+_lr_kwds:
+    boundaries: [36000, 54000]
+    values: [0.1, 0.01, 0.001]
+_optim_kwds:
+    learning_rate: solve tensorflow.keras.optimizers.schedules.PiecewiseConstantDecay(**_lr_kwds)
+    momentum: 0.9
+    nesterov: true
+optimizer: solve tensorflow.keras.optimizers.SGD(**_optim_kwds)
+
+_: solve modules.pruning.pruning_utils.globally_enable_pruning()
+
+_model_args:
+    input_shape: (32, 32, 3)
+    n_classes: 10
+    l2_reg: 0.0001
+    features: [16, 32, 64]
+    resnet_version: 2
+    BLOCKS_IN_GROUP: 9
+    BATCH_NORM_DECAY: 0.997
+    BATCH_NORM_EPSILON: 0.00001
+model: solve modules.tf_helper.models.ResNetStiff(**_model_args)
+
+_ds_args:
+    version: 10
+    dtype: float32
+    data_dir: tensorflow_datasets
+dataset: solve modules.tf_helper.datasets.cifar(**_ds_args)  #!
+
+loss_fn: crossentropy
+
+pruning: null
+pruning_config:
+    sparsity: 0.0
+    structure: false
+
+Desc: ResNet-56-2 IMP30 rewinding to 1, 18, 27, 36 SWR
+---
+_save_epochs: [1, 9, 18, 27, 36]
+Name: parse f"ResNet-56-2-baseline"
+Repeat: 1
+
+
+---
+_save_epochs: [1, 36]
+load_model_before_pruning: parse E[0].save_model[36]
+load_model_after_pruning: parse E[0].save_model[1]
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.3
+Name: parse f"ResNet-56-2-rewind-to-1ep-sp{pruning_config.sparsity}"
+Repeat: 1
+---
+_save_epochs: [1, 36]
+load_model_before_pruning: parse E[-1].save_model[36]
+load_model_after_pruning: parse E[-1].save_model[1]
+
+pruning: magnitude
+pruning_config:
+    sparsity: parse 1 - (1 - E[-1].pruning_config.sparsity) * 0.7
+Name: parse f"ResNet-56-2-rewind-to-1ep-sp{pruning_config.sparsity}"
+Repeat: 16
+
+
+---
+_save_epochs: [1, 36]
+load_model_before_pruning: parse E[0].save_model[36]
+load_model_after_pruning: parse E[0].save_model[1]
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.3
+Name: parse f"ResNet-56-2-rewind-to-1ep-sp{pruning_config.sparsity}"
+Repeat: 1
+---
+_save_epochs: [1, 36]
+load_model_before_pruning: parse E[-1].save_model[36]
+load_model_after_pruning: parse E[-1].save_model[1]
+
+pruning: magnitude
+pruning_config:
+    sparsity: parse 1 - (1 - E[-1].pruning_config.sparsity) * 0.7
+Name: parse f"ResNet-56-2-rewind-to-1ep-sp{pruning_config.sparsity}"
+Repeat: 16
+---
+_save_epochs: [9, 36]
+load_model_before_pruning: parse E[0].save_model[36]
+load_model_after_pruning: parse E[0].save_model[9]
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.3
+Name: parse f"ResNet-56-2-rewind-to-9ep-sp{pruning_config.sparsity}"
+Repeat: 1
+---
+_save_epochs: [9, 36]
+load_model_before_pruning: parse E[-1].save_model[36]
+load_model_after_pruning: parse E[-1].save_model[9]
+
+pruning: magnitude
+pruning_config:
+    sparsity: parse 1 - (1 - E[-1].pruning_config.sparsity) * 0.7
+Name: parse f"ResNet-56-2-rewind-to-9ep-sp{pruning_config.sparsity}"
+Repeat: 16
+
+
+
+
+---
+_save_epochs: [18, 36]
+load_model_before_pruning: parse E[0].save_model[36]
+load_model_after_pruning: parse E[0].save_model[18]
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.3
+Name: parse f"ResNet-56-2-rewind-to-18ep-sp{pruning_config.sparsity}"
+Repeat: 1
+---
+_save_epochs: [18, 36]
+load_model_before_pruning: parse E[-1].save_model[36]
+load_model_after_pruning: parse E[-1].save_model[18]
+
+pruning: magnitude
+pruning_config:
+    sparsity: parse 1 - (1 - E[-1].pruning_config.sparsity) * 0.7
+Name: parse f"ResNet-56-2-rewind-to-18ep-sp{pruning_config.sparsity}"
+Repeat: 16
+
+
+---
+_save_epochs: [27, 36]
+load_model_before_pruning: parse E[0].save_model[36]
+load_model_after_pruning: parse E[0].save_model[27]
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.3
+Name: parse f"ResNet-56-2-rewind-to-27ep-sp{pruning_config.sparsity}"
+Repeat: 1
+---
+_save_epochs: [27, 36]
+load_model_before_pruning: parse E[-1].save_model[36]
+load_model_after_pruning: parse E[-1].save_model[27]
+
+pruning: magnitude
+pruning_config:
+    sparsity: parse 1 - (1 - E[-1].pruning_config.sparsity) * 0.7
+Name: parse f"ResNet-56-2-rewind-to-27ep-sp{pruning_config.sparsity}"
+Repeat: 16
+
+
+
+---
+_save_epochs: [36]
+load_model_before_pruning: parse E[0].save_model[36]
+load_model_after_pruning: parse E[0].save_model[36]
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.3
+Name: parse f"ResNet-56-2-rewind-to-36ep-sp{pruning_config.sparsity}"
+Repeat: 1
+---
+_save_epochs: [36]
+load_model_before_pruning: parse E[-1].save_model[36]
+load_model_after_pruning: parse E[-1].save_model[36]
+
+pruning: magnitude
+pruning_config:
+    sparsity: parse 1 - (1 - E[-1].pruning_config.sparsity) * 0.7
+Name: parse f"ResNet-56-2-rewind-to-36ep-sp{pruning_config.sparsity}"
+Repeat: 16
+
+---
+_save_epochs: [1, 36]
+load_model_before_pruning: parse E[0].save_model[36]
+load_model_after_pruning: parse E[0].save_model[1]
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.3
+Name: parse f"ResNet-56-2-stable-weight-rewinding-1ep-sp{pruning_config.sparsity}"
+Repeat: 1
+---
+_save_epochs: [1, 36]
+load_model_before_pruning: parse E[-1].save_model[36]
+load_model_after_pruning: parse E[0].save_model[1]
+
+pruning: magnitude
+pruning_config:
+    sparsity: parse 1 - (1 - E[-1].pruning_config.sparsity) * 0.7
+Name: parse f"ResNet-56-2-stable-weight-rewinding-1ep-sp{pruning_config.sparsity}"
+Repeat: 16

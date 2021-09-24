@@ -1,0 +1,204 @@
+Global:
+    repeat: 1
+    queue: null
+    slack: false
+    slack_config:
+        token: TOKEN
+        say: f"{exp.RND_IDX} - {exp.Name:>40} - {exp.ACC if 'ACC' in exp else '??':<20}"
+        channel_final: cool-runner
+        channel_short: cool-runner-short
+
+# DEFAULT CONFIG
+Name: null
+Repeat: 1
+Run: solve modules.pruning.main
+YamlLog: parse f"{_dir}/{Name}/id{RND_IDX}/rep{REP}.yaml"
+
+precision: 32
+custom_training: False
+_dir: data/temp/2021.09.20
+tensorboard_log: parse f"{_dir}/{Name}/id{RND_IDX}/rep{REP}"
+
+epochs: 40
+steps_per_epoch: 2000
+initial_epoch: 0
+
+_save_epochs: []
+_save_dir: parse f"{_dir}/{Name}/id{RND_IDX}/rep{REP}"
+save_model: "parse {ep: f'{_save_dir}/ep{ep}.h5'  for ep in _save_epochs}"
+save_optim: "parse {ep: f'{_save_dir}/ep{ep}.pkl' for ep in _save_epochs}"
+
+_lr_kwds:
+    boundaries: [32000, 48000, 64000]
+    values: [0.1, 0.02, 0.004, 0.0008]
+_optim_kwds:
+    learning_rate: solve tensorflow.keras.optimizers.schedules.PiecewiseConstantDecay(**_lr_kwds)
+    momentum: 0.9
+    nesterov: true
+optimizer: solve tensorflow.keras.optimizers.SGD(**_optim_kwds)
+
+_: solve modules.pruning.pruning_utils.globally_enable_pruning()
+
+_model_args:
+    input_shape: (32, 32, 3)
+    n_classes: 10
+    l2_reg: 2e-4
+    BLOCKS_IN_GROUP: 2
+    features: [128, 256, 512]
+    resnet_version: 2
+model: solve modules.tf_helper.models.ResNetStiff(**_model_args)
+
+_ds_args:
+    version: 10
+    dtype: float32
+    data_dir: tensorflow_datasets
+dataset: solve modules.tf_helper.datasets.cifar(**_ds_args)  #!
+
+loss_fn: crossentropy
+
+pruning: null
+pruning_config:
+    sparsity: 0.0
+    structure: false
+
+Desc: WRN16-8 bn099 IMP 30 SWR rewind 1, 10, 20, 30, 40
+
+---
+_save_epochs: [0, 1, 10, 20, 30, 40]
+Name: parse f"WRN16-8-bn099-baseline"
+Repeat: 1
+
+
+---
+_save_epochs: [1, 40]
+load_model_before_pruning: parse E[0].save_model[40]
+load_model_after_pruning: parse E[0].save_model[1]
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.3
+Name: parse f"WRN16-8-bn099-stable-weight-rewinding-1ep-sp{pruning_config.sparsity}"
+Repeat: 1
+---
+_save_epochs: [1, 40]
+load_model_before_pruning: parse E[-1].save_model[40]
+load_model_after_pruning: parse E[0].save_model[1]
+
+pruning: magnitude
+pruning_config:
+    sparsity: parse 1 - (1 - E[-1].pruning_config.sparsity) * 0.7
+Name: parse f"WRN16-8-bn099-stable-weight-rewinding-1ep-sp{pruning_config.sparsity}"
+Repeat: 20
+
+
+
+---
+_save_epochs: [1, 40]
+load_model_before_pruning: parse E[0].save_model[40]
+load_model_after_pruning: parse E[0].save_model[1]
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.3
+Name: parse f"WRN16-8-bn099-rewinding-to-1ep-sp{pruning_config.sparsity}"
+Repeat: 1
+---
+_save_epochs: [1, 40]
+load_model_before_pruning: parse E[-1].save_model[40]
+load_model_after_pruning: parse E[-1].save_model[1]
+
+pruning: magnitude
+pruning_config:
+    sparsity: parse 1 - (1 - E[-1].pruning_config.sparsity) * 0.7
+Name: parse f"WRN16-8-bn099-rewinding-to-1ep-sp{pruning_config.sparsity}"
+Repeat: 20
+
+
+---
+_save_epochs: [10, 40]
+#load_model_before_pruning: parse E[0].save_model[40]
+load_model_before_pruning: data/temp/2021.09.14/WRN16-8-bn099-rewinding-to-10ep-sp0.98022673257/id583447/rep9/ep40.h5
+load_model_after_pruning: data/temp/2021.09.14/WRN16-8-bn099-rewinding-to-10ep-sp0.98022673257/id583447/rep9/ep10.h5
+#load_model_after_pruning: parse E[0].save_model[10]
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.986158712799
+Name: parse f"WRN16-8-bn099-rewinding-to-10ep-sp{pruning_config.sparsity}"
+Repeat: 1
+---
+_save_epochs: [10, 40]
+load_model_before_pruning: parse E[-1].save_model[40]
+load_model_after_pruning: parse E[-1].save_model[10]
+
+pruning: magnitude
+pruning_config:
+    sparsity: parse 1 - (1 - E[-1].pruning_config.sparsity) * 0.7
+Name: parse f"WRN16-8-bn099-rewinding-to-10ep-sp{pruning_config.sparsity}"
+Repeat: 20
+
+
+---
+_save_epochs: [20, 40]
+load_model_before_pruning: parse E[0].save_model[40]
+load_model_after_pruning: parse E[0].save_model[20]
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.3
+Name: parse f"WRN16-8-bn099-rewinding-to-20ep-sp{pruning_config.sparsity}"
+Repeat: 1
+---
+_save_epochs: [20, 40]
+load_model_before_pruning: parse E[-1].save_model[40]
+load_model_after_pruning: parse E[-1].save_model[20]
+
+pruning: magnitude
+pruning_config:
+    sparsity: parse 1 - (1 - E[-1].pruning_config.sparsity) * 0.7
+Name: parse f"WRN16-8-bn099-rewinding-to-20ep-sp{pruning_config.sparsity}"
+Repeat: 20
+
+
+---
+_save_epochs: [30, 40]
+load_model_before_pruning: parse E[0].save_model[40]
+load_model_after_pruning: parse E[0].save_model[30]
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.3
+Name: parse f"WRN16-8-bn099-rewinding-to-30ep-sp{pruning_config.sparsity}"
+Repeat: 1
+---
+_save_epochs: [30, 40]
+load_model_before_pruning: parse E[-1].save_model[40]
+load_model_after_pruning: parse E[-1].save_model[30]
+
+pruning: magnitude
+pruning_config:
+    sparsity: parse 1 - (1 - E[-1].pruning_config.sparsity) * 0.7
+Name: parse f"WRN16-8-bn099-rewinding-to-30ep-sp{pruning_config.sparsity}"
+Repeat: 20
+
+
+---
+_save_epochs: [40]
+load_model_before_pruning: parse E[0].save_model[40]
+load_model_after_pruning: parse E[0].save_model[40]
+
+pruning: magnitude
+pruning_config:
+    sparsity: 0.3
+Name: parse f"WRN16-8-bn099-rewinding-to-40ep-sp{pruning_config.sparsity}"
+Repeat: 1
+---
+_save_epochs: [40]
+load_model_before_pruning: parse E[-1].save_model[40]
+load_model_after_pruning: parse E[-1].save_model[40]
+
+pruning: magnitude
+pruning_config:
+    sparsity: parse 1 - (1 - E[-1].pruning_config.sparsity) * 0.7
+Name: parse f"WRN16-8-bn099-rewinding-to-40ep-sp{pruning_config.sparsity}"
+Repeat: 20
