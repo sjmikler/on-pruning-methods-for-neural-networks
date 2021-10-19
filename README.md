@@ -6,6 +6,8 @@ python run.py --exp experiment-vgg.yaml
 python run.py --exp experiment-wrn.yaml
 ```
 
+[Click for Thesis PDF](On%20Pruning%20Methods%20for%20Neural%20Networks.md)
+
 ---
 
 ### Original repository: https://github.com/gahaalt/cool-runner
