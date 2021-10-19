@@ -8,6 +8,10 @@ python run.py --exp experiment-wrn.yaml
 
 ---
 
+### Original repository: https://github.com/gahaalt/cool-runner
+
+---
+
 Experiments running orchestra that manages definitions and results of experiments.
 
 ```
