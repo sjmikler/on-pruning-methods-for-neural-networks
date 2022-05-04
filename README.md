@@ -82,11 +82,6 @@ Script `run.py` launches experiments specified in experiment definition.
 
 * You can update default config straight from command line by passing arguments with `+` prefix instead of `-`, e.g. `python run.py +Global.queue=queue.yaml` without any spaces. Use quotations if needed.
 
-# Modules
-
-Module is a package that provides a function accepting one argument `exp` which is a dict-like structure with details defined in experiment definition (e.g. `experiment.yaml`). They contain code for running an actual experiment. They use experiments parsed by `run.py`. Besides these parameters, they might define their own command line arguments. It is recommended that only a few settings related to hardware are defined as command line arguments, and the rest are in experiment definition.
-
-[Available modules](modules/README.md)
 
 # python run.py
 
