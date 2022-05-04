@@ -27,6 +27,8 @@ Requirements:
 
 There's a single file that contains your **experiment definition** (by default `experiment.yaml`). Its first element is always **default config** which contains default values for experiments that come after it. If a settings repeats between default config and experiments, experiments have the priority.
 
+You can learn how to use it just by reading provided examples. However, if you prefer, I explain it in details in this README.
+
 **Names added by `run.py`**
 
 1. `REP`: repetition index in range `[0, REPEAT-1]`
